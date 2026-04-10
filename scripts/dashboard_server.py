@@ -194,6 +194,265 @@ def _generate_coaching_tip(
     }
 
 
+def _generate_thinking_guidance(board: chess.Board) -> dict:
+    """Generate structured thinking guidance for a position.
+
+    Analyzes material, piece activity, pawn structure, king safety,
+    threats, and center control to teach the player how to evaluate
+    positions like a stronger player.
+    """
+    turn = "White" if board.turn == chess.WHITE else "Black"
+    opp = "Black" if board.turn == chess.WHITE else "White"
+
+    insights: list[dict] = []
+    step_by_step: list[str] = []
+
+    # 1. Material assessment
+    piece_vals = {
+        chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3,
+        chess.ROOK: 5, chess.QUEEN: 9, chess.KING: 0,
+    }
+    w_mat = sum(
+        piece_vals.get(board.piece_at(s).piece_type, 0)
+        for s in chess.SQUARES
+        if board.piece_at(s) and board.piece_at(s).color == chess.WHITE
+    )
+    b_mat = sum(
+        piece_vals.get(board.piece_at(s).piece_type, 0)
+        for s in chess.SQUARES
+        if board.piece_at(s) and board.piece_at(s).color == chess.BLACK
+    )
+    diff = w_mat - b_mat
+    if diff > 0:
+        step_by_step.append(
+            f"1. Material: White is ahead by {diff} point{'s' if diff > 1 else ''}. "
+            f"Look to trade pieces and simplify into a winning endgame."
+        )
+    elif diff < 0:
+        step_by_step.append(
+            f"1. Material: Black is ahead by {abs(diff)} point{'s' if abs(diff) > 1 else ''}. "
+            f"You need to create complications — avoid trades."
+        )
+    else:
+        step_by_step.append(
+            "1. Material: Equal. The position is about strategy and tactics, not material."
+        )
+
+    # 2. King safety
+    turn_king_sq = board.king(board.turn)
+    opp_king_sq = board.king(not board.turn)
+    turn_pawn_shield = 0
+    opp_pawn_shield = 0
+    if turn_king_sq is not None:
+        for s in chess.SQUARES:
+            p = board.piece_at(s)
+            if (
+                p
+                and p.piece_type == chess.PAWN
+                and p.color == board.turn
+                and chess.square_distance(s, turn_king_sq) <= 2
+            ):
+                turn_pawn_shield += 1
+    if opp_king_sq is not None:
+        for s in chess.SQUARES:
+            p = board.piece_at(s)
+            if (
+                p
+                and p.piece_type == chess.PAWN
+                and p.color != board.turn
+                and chess.square_distance(s, opp_king_sq) <= 2
+            ):
+                opp_pawn_shield += 1
+
+    if turn_pawn_shield < 2 and _count_pieces(board) > 10:
+        step_by_step.append(
+            "2. King Safety: Your king has little pawn protection! "
+            "Consider castling or building a pawn shield. "
+            "Exposed kings get checkmated."
+        )
+    else:
+        step_by_step.append(
+            "2. King Safety: Your king looks reasonably safe. "
+            "Still check for potential sacrifices or forcing sequences."
+        )
+
+    # 3. Piece activity — find best and worst pieces
+    turn_pieces: list[tuple[str, int]] = []
+    piece_names = {
+        chess.PAWN: "Pawn", chess.KNIGHT: "Knight", chess.BISHOP: "Bishop",
+        chess.ROOK: "Rook", chess.QUEEN: "Queen",
+    }
+    for sq in chess.SQUARES:
+        p = board.piece_at(sq)
+        if p and p.color == board.turn and p.piece_type != chess.KING:
+            # Count squares attacked/defended by this piece
+            attacks = len(board.attacks(sq))
+            name = piece_names.get(p.piece_type, "Piece")
+            sq_name = chess.square_name(sq)
+            turn_pieces.append((f"{name} on {sq_name}", attacks))
+
+    if turn_pieces:
+        turn_pieces.sort(key=lambda x: x[1], reverse=True)
+        best_piece = turn_pieces[0]
+        worst_piece = turn_pieces[-1]
+        step_by_step.append(
+            f"3. Piece Activity: Your most active piece is the "
+            f"{best_piece[0]} (controls {best_piece[1]} squares). "
+            f"Your least active is the {worst_piece[0]} "
+            f"(only {worst_piece[1]} squares). "
+            f"Stronger players ask: 'What is my worst piece and how can I improve it?'"
+        )
+
+    # 4. Center control
+    center_squares = [chess.D4, chess.E4, chess.D5, chess.E5]
+    w_center = sum(
+        1 for cs in center_squares
+        if board.is_attacked_by(chess.WHITE, cs)
+    )
+    b_center = sum(
+        1 for cs in center_squares
+        if board.is_attacked_by(chess.BLACK, cs)
+    )
+    turn_center = w_center if board.turn == chess.WHITE else b_center
+    opp_center = b_center if board.turn == chess.WHITE else w_center
+    if turn_center > opp_center:
+        step_by_step.append(
+            f"4. Center: You control {turn_center}/4 center squares. "
+            f"Use your central advantage to launch an attack."
+        )
+    else:
+        step_by_step.append(
+            f"4. Center: Opponent controls {opp_center}/4 center squares vs your "
+            f"{turn_center}. Try to challenge the center with pawn breaks or pieces."
+        )
+
+    # 5. Tactical threats
+    checks = []
+    captures = []
+    for move in board.legal_moves:
+        if board.gives_check(move):
+            san = board.san(move)
+            checks.append(san)
+        if board.is_capture(move):
+            san = board.san(move)
+            captures.append(san)
+
+    threat_text = ""
+    if checks:
+        threat_text += f"Checks available: {', '.join(checks[:3])}. "
+    if captures:
+        threat_text += f"Captures available: {', '.join(captures[:3])}. "
+
+    if threat_text:
+        step_by_step.append(
+            f"5. Tactics: {threat_text}"
+            "Stronger players always look at forcing moves (checks, captures, threats) FIRST."
+        )
+    else:
+        step_by_step.append(
+            "5. Tactics: No immediate forcing moves. "
+            "Focus on improving piece positions and planning."
+        )
+
+    # 6. Engine top moves with explanation
+    engine_insight = ""
+    try:
+        stockfish_path = find_stockfish()
+        engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        try:
+            results = engine.analyse(
+                board, chess.engine.Limit(depth=18), multipv=3
+            )
+            top_moves = []
+            for r in results:
+                if r.get("pv"):
+                    mv = r["pv"][0]
+                    san = board.san(mv)
+                    score = r.get("score", {})
+                    score_str = ""
+                    if score and score.relative is not None:
+                        rel = score.relative
+                        if rel.score() is not None:
+                            cp = rel.score()
+                            pawns = cp / 100
+                            score_str = f"+{pawns:.1f}" if pawns >= 0 else f"{pawns:.1f}"
+                        elif rel.mate() is not None:
+                            m = rel.mate()
+                            score_str = f"Mate in {abs(m)}"
+                    top_moves.append(f"{san} ({score_str})")
+
+            engine_insight = (
+                f"How stronger players evaluate this position: "
+                f"Top moves are {', '.join(top_moves)}. "
+            )
+
+            # Add positional eval
+            eval_info = results[0].get("score", {})
+            if eval_info and eval_info.relative is not None:
+                rel = eval_info.relative
+                if rel.score() is not None:
+                    cp = rel.score()
+                    if board.turn == chess.BLACK:
+                        cp = -cp
+                    if cp > 200:
+                        engine_insight += f"{turn} has a winning advantage."
+                    elif cp > 80:
+                        engine_insight += f"{turn} has a clear advantage."
+                    elif cp > 30:
+                        engine_insight += f"{turn} is slightly better."
+                    elif cp > -30:
+                        engine_insight += "The position is roughly equal."
+                    elif cp > -80:
+                        engine_insight += f"{opp} is slightly better."
+                    else:
+                        engine_insight += f"{opp} has a significant advantage."
+                elif rel.mate() is not None:
+                    m = rel.mate()
+                    if m > 0:
+                        engine_insight += f"There is a forced mate in {m}!"
+                    else:
+                        engine_insight += f"{turn} is getting mated in {abs(m)}!"
+
+        finally:
+            engine.quit()
+    except (FileNotFoundError, Exception):
+        engine_insight = "Engine analysis unavailable."
+
+    # Master thinking process summary
+    master_process = (
+        "How a master thinks step-by-step:\n"
+        "1. What is my opponent threatening? (Check their last move)\n"
+        "2. Are any of my pieces hanging? (Blunder check)\n"
+        "3. What are the forcing moves? (Checks, captures, threats)\n"
+        "4. What is my worst piece? (Improve it)\n"
+        "5. What is my plan? (Attack king, control center, create passed pawn)"
+    )
+
+    return {
+        "turn": turn,
+        "step_by_step": step_by_step,
+        "engine_insight": engine_insight,
+        "master_process": master_process,
+        "material": {"white": w_mat, "black": b_mat},
+        "center_control": {"white": w_center, "black": b_center},
+        "forcing_moves": {
+            "checks": checks[:5],
+            "captures": captures[:5],
+        },
+    }
+
+
+def _count_pieces(board: chess.Board) -> int:
+    """Count total non-pawn, non-king pieces on the board."""
+    return sum(
+        1
+        for sq in chess.SQUARES
+        if board.piece_at(sq)
+        and board.piece_at(sq).piece_type
+        not in (chess.PAWN, chess.KING)
+    )
+
+
 def _annotate_player_move(
     board_before: chess.Board,
     player_move: chess.Move,
@@ -652,6 +911,8 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._handle_new_game()
         elif self.path == "/api/switch-game":
             self._handle_switch_game()
+        elif self.path == "/api/thinking-coach":
+            self._handle_thinking_coach()
         else:
             self.send_error(404)
 
@@ -937,6 +1198,38 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
 
         self._json_response({"ok": True, "game_id": game_id, "state": game_state})
 
+    def _handle_thinking_coach(self) -> None:
+        """Generate strategic thinking guidance for the current position.
+
+        Uses Stockfish analysis + positional heuristics to teach the player
+        how to think about the position like a stronger player would.
+        """
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
+        try:
+            data = json.loads(body)
+            fen = data.get("fen", "").strip()
+            if not fen:
+                # Fall back to current game state
+                if _GAME_FILE.exists():
+                    game_state = json.loads(_GAME_FILE.read_text())
+                    fen = game_state.get("fen", "")
+                if not fen:
+                    self._json_response({"error": "no position"}, 400)
+                    return
+        except (json.JSONDecodeError, KeyError):
+            self._json_response({"error": "invalid request"}, 400)
+            return
+
+        try:
+            board = chess.Board(fen)
+        except (ValueError, chess.InvalidBoardError):
+            self._json_response({"error": "invalid fen"}, 400)
+            return
+
+        guidance = _generate_thinking_guidance(board)
+        self._json_response(guidance)
+
     def _handle_delete_game(self, game_id: str) -> None:
         """Delete a game from the games directory."""
         with _game_lock:
@@ -971,13 +1264,16 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
         active_game_id = _get_active_game_id()
 
         try:
-            for game_file in _GAMES_DIR.glob("*.json"):
+            for idx, game_file in enumerate(
+                sorted(_GAMES_DIR.glob("*.json"), key=lambda f: f.stat().st_ctime)
+            ):
                 try:
                     game_state = json.loads(game_file.read_text())
                     game_info = {
                         "game_id": game_state.get("game_id", game_file.stem),
+                        "game_number": idx + 1,
                         "fen": game_state.get("fen", ""),
-                        "moves": len(game_state.get("move_list", [])),
+                        "move_count": len(game_state.get("move_list", [])),
                         "player_color": game_state.get("player_color", "white"),
                         "result": game_state.get("result"),
                         "is_game_over": game_state.get("is_game_over", False),

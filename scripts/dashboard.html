@@ -660,6 +660,8 @@
     <div class="panel coach-panel" data-panel-id="coach" id="coach-panel">
       <h2>Coach</h2>
       <div id="coach-message"><span class="coach-empty">Tips will appear here during the game</span></div>
+      <button id="thinking-coach-btn" style="margin-top:8px;padding:6px 14px;background:var(--surface2);color:var(--text);border:1px solid var(--surface3);border-radius:4px;cursor:pointer;font-size:0.85rem;width:100%;">How should I think here?</button>
+      <div id="thinking-coach-output" style="display:none;margin-top:8px;font-size:0.85rem;line-height:1.6;"></div>
     </div>
     <div class="panel" data-panel-id="material" style="border-left-color: var(--blue);">
       <h2>Material Balance</h2>
@@ -868,6 +870,11 @@
   let currentGameId = null;
   let focusMode = false;
 
+  // Expose on window for inline onclick handlers
+  window.switchGame = null;
+  window.newGame = null;
+  window.closeGame = null;
+
   // === MULTI-GAME FUNCTIONS ===
 
   async function loadGameTabs() {
@@ -941,6 +948,7 @@
       console.error('Failed to switch game:', e);
     }
   }
+  window.switchGame = switchGame;
 
   async function newGame() {
     try {
@@ -965,6 +973,7 @@
       console.error('Failed to create new game:', e);
     }
   }
+  window.newGame = newGame;
 
   async function closeGame(gameId) {
     if (currentGames.length <= 1) {
@@ -983,15 +992,16 @@
       await loadGameTabs();
       // If we closed the current game, switch to another
       if (gameId === currentGameId && currentGames.length > 0) {
-        const newGame = currentGames.find(g => g.id !== gameId) || currentGames[0];
-        if (newGame) {
-          await switchGame(newGame.id);
+        const nextGame = currentGames.find(g => g.id !== gameId) || currentGames[0];
+        if (nextGame) {
+          await switchGame(nextGame.id);
         }
       }
     } catch (e) {
       console.error('Failed to close game:', e);
     }
   }
+  window.closeGame = closeGame;
 
   function toggleFocusMode() {
     focusMode = !focusMode;
@@ -1301,6 +1311,10 @@
     // Wire up focus toggle button
     const focusToggle = document.getElementById('focus-toggle');
     if (focusToggle) focusToggle.addEventListener('click', toggleFocusMode);
+
+    // Wire up thinking coach button
+    const thinkingBtn = document.getElementById('thinking-coach-btn');
+    if (thinkingBtn) thinkingBtn.addEventListener('click', showThinkingCoach);
 
     // Load game tabs on initialization
     loadGameTabs();
@@ -1676,6 +1690,75 @@
     } catch (e) {
       return { classification: 'good', cp_loss: 0, warning: null };
     }
+  }
+
+  // --- Thinking Coach ---
+
+  async function showThinkingCoach() {
+    var btn = document.getElementById('thinking-coach-btn');
+    var output = document.getElementById('thinking-coach-output');
+    if (!btn || !output) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Analyzing position...';
+    output.style.display = 'block';
+    output.innerHTML = '<span style="color:var(--text-dim);">Thinking...</span>';
+
+    try {
+      var resp = await fetch('/api/thinking-coach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fen: lastFen || (chessGame ? chessGame.fen() : '') })
+      });
+      if (!resp.ok) { output.innerHTML = '<span style="color:var(--red);">Analysis failed</span>'; return; }
+      var data = await resp.json();
+
+      var html = '<div style="border-left:3px solid var(--accent);padding-left:10px;margin-bottom:8px;">';
+      html += '<strong style="color:var(--accent);">' + esc(data.turn) + ' to move</strong>';
+      html += '</div>';
+
+      // Step by step thinking
+      (data.step_by_step || []).forEach(function(step) {
+        html += '<div style="margin:6px 0;padding:4px 8px;background:rgba(255,255,255,0.03);border-radius:4px;">';
+        html += esc(step);
+        html += '</div>';
+      });
+
+      // Engine insight
+      if (data.engine_insight) {
+        html += '<div style="margin-top:8px;padding:6px 10px;background:rgba(76,175,80,0.1);border-left:3px solid var(--green);border-radius:4px;">';
+        html += '<strong style="color:var(--green);">Engine: </strong>' + esc(data.engine_insight);
+        html += '</div>';
+      }
+
+      // Forcing moves
+      var forcing = data.forcing_moves || {};
+      if ((forcing.checks && forcing.checks.length) || (forcing.captures && forcing.captures.length)) {
+        html += '<div style="margin-top:6px;font-size:0.8rem;color:var(--text-dim);">';
+        if (forcing.checks && forcing.checks.length) {
+          html += 'Checks: ' + forcing.checks.map(esc).join(', ') + ' ';
+        }
+        if (forcing.captures && forcing.captures.length) {
+          html += 'Captures: ' + forcing.captures.map(esc).join(', ');
+        }
+        html += '</div>';
+      }
+
+      // Master thinking process
+      if (data.master_process) {
+        html += '<details style="margin-top:8px;cursor:pointer;">';
+        html += '<summary style="color:var(--accent);font-weight:600;font-size:0.85rem;">How masters think (click to expand)</summary>';
+        html += '<pre style="font-size:0.8rem;color:var(--text-dim);margin-top:4px;white-space:pre-wrap;font-family:inherit;">' + esc(data.master_process) + '</pre>';
+        html += '</details>';
+      }
+
+      output.innerHTML = html;
+    } catch (e) {
+      output.innerHTML = '<span style="color:var(--red);">Connection error</span>';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'How should I think here?';
   }
 
   // --- Coach Tip Generator ---
