@@ -40,6 +40,7 @@ class GameState:
     last_move_to: str | None = None
     king_in_check_square: str | None = None
     fen_history: list[str] = field(default_factory=list)
+    coaching_tip: dict | None = None
 
 
 @dataclass

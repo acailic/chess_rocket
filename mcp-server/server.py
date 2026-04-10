@@ -250,6 +250,7 @@ def _build_game_state(game_id: str, game: dict) -> dict:
         last_move_to=last_move_to,
         king_in_check_square=king_in_check_square,
         fen_history=fen_history,
+        coaching_tip=game.get("coaching_tip"),
     )
     return asdict(state)
 
@@ -612,6 +613,40 @@ def evaluate_move(game_id: str, move: str) -> dict:
     _sync_game_json(state)
 
     return minify_move_evaluation(asdict(evaluation))
+
+
+@mcp.tool()
+def send_tip(game_id: str, message: str, tip_type: str = "teach") -> dict:
+    """Send a coaching tip to the dashboard for the student.
+
+    Displays a message in the dashboard Coach panel alongside the board.
+    Use this to surface teaching explanations, praise, warnings, and
+    corrections visually in the browser.
+
+    Args:
+        game_id: UUID of the game.
+        message: Coaching message to display (supports basic formatting).
+        tip_type: One of 'teach' (explanation), 'praise' (positive reinforcement),
+                  'warn' (alert about a threat), 'correct' (showing the right move),
+                  'info' (general information). Defaults to 'teach'.
+
+    Returns:
+        Dict with ok status.
+    """
+    game = _get_game(game_id)
+    if game is None:
+        return {"error": f"Game not found: {game_id}"}
+
+    valid_types = {"teach", "praise", "warn", "correct", "info"}
+    if tip_type not in valid_types:
+        return {"error": f"Invalid tip_type: {tip_type}. Must be one of {valid_types}"}
+
+    game["coaching_tip"] = {"message": message, "type": tip_type}
+
+    state = _build_game_state(game_id, game)
+    _sync_game_json(state)
+
+    return {"ok": True, "tip_type": tip_type}
 
 
 @mcp.tool()
