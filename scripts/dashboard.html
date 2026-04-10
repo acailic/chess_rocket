@@ -518,6 +518,60 @@
   .puzzle-feedback.incorrect { display: block; background: rgba(244,67,54,0.15); color: var(--red); }
   .puzzle-feedback.hint { display: block; background: rgba(255,193,7,0.15); color: var(--yellow); }
 
+  /* Settings modal */
+  .settings-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+  }
+  .settings-overlay.open { opacity: 1; pointer-events: auto; }
+  .settings-modal {
+    background: var(--surface); border: 1px solid var(--surface3);
+    border-radius: var(--radius-lg); padding: 20px 24px;
+    max-width: 380px; width: 90%; box-shadow: var(--shadow-lg);
+    animation: fadeSlideIn 0.2s ease;
+  }
+  .settings-modal h2 {
+    font-size: 1rem; font-weight: 700; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .settings-modal h2 button {
+    background: none; border: none; color: var(--text-dim);
+    font-size: 1.2rem; cursor: pointer; padding: 0 4px;
+  }
+  .settings-modal h2 button:hover { color: var(--text); }
+  .settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 0.9rem; color: var(--text); }
+  .settings-label small { display: block; color: var(--text-dim); font-size: 0.75rem; margin-top: 2px; }
+  /* Toggle switch */
+  .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--surface2); border-radius: 22px; cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute; width: 16px; height: 16px;
+    left: 3px; bottom: 3px; background: var(--text-dim);
+    border-radius: 50%; transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); background: #fff; }
+  .toggle-switch input:focus-visible + .toggle-slider { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .settings-footer { margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end; }
+  .settings-footer button {
+    padding: 6px 16px; border: none; border-radius: var(--radius-sm);
+    font-size: 0.85rem; cursor: pointer; font-weight: 500;
+  }
+  .settings-footer .btn-reset { background: var(--surface2); color: var(--text); }
+  .settings-footer .btn-reset:hover { background: var(--surface3); }
+
   /* Blunder warning */
   .blunder-warning {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -547,6 +601,7 @@
     <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle panels">▶ Panels</button>
     <button class="sidebar-toggle" id="focus-toggle" title="Focus mode: board + coach only">🎯 Focus</button>
     <button id="puzzle-mode-btn" style="background: var(--surface2); color: var(--text); border: 1px solid var(--surface2); border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 0.85rem;">Puzzles</button>
+    <button class="sidebar-toggle" id="settings-btn" title="Panel settings">&#9881; Settings</button>
   </div>
 </header>
 
@@ -583,15 +638,15 @@
     </div>
   </div>
   <div class="panels">
-    <div class="panel" style="border-left-color: var(--accent);">
+    <div class="panel" data-panel-id="opening" style="border-left-color: var(--accent);">
       <h2>Opening</h2>
       <div id="opening-display"><span class="out-of-book">Starting position</span></div>
     </div>
-    <div class="panel coach-panel" id="coach-panel">
+    <div class="panel coach-panel" data-panel-id="coach" id="coach-panel">
       <h2>Coach</h2>
       <div id="coach-message"><span class="coach-empty">Tips will appear here during the game</span></div>
     </div>
-    <div class="panel" style="border-left-color: var(--blue);">
+    <div class="panel" data-panel-id="material" style="border-left-color: var(--blue);">
       <h2>Material Balance</h2>
       <div class="material-row">
         <span class="material-label">White</span>
@@ -610,7 +665,7 @@
         <div class="captured" id="captured-black" title="Pieces captured by Black"></div>
       </div>
     </div>
-    <div class="panel" style="border-left-color: var(--green);">
+    <div class="panel" data-panel-id="eval" style="border-left-color: var(--green);">
       <h2>Evaluation</h2>
       <div class="eval-container">
         <div class="eval-bar-outer">
@@ -619,7 +674,7 @@
         <span class="eval-score" id="eval-score">0.0</span>
       </div>
     </div>
-    <div class="panel" style="border-left-color: var(--yellow);">
+    <div class="panel" data-panel-id="status" style="border-left-color: var(--yellow);">
       <h2>Game Status</h2>
       <div class="status-grid">
         <span class="status-label">Move</span>
@@ -634,7 +689,7 @@
         <span class="status-value" id="check-status">--</span>
       </div>
     </div>
-    <div class="panel" style="border-left-color: var(--light-green);">
+    <div class="panel" data-panel-id="learning" style="border-left-color: var(--light-green);">
       <h2>Learning Progress</h2>
       <div class="learn-grid">
         <span class="status-label">Phase</span>
@@ -684,7 +739,7 @@
       </div>
       <div class="puzzle-feedback" id="puzzle-feedback"></div>
     </div>
-    <div class="panel" style="border-left-color: var(--orange);">
+    <div class="panel" data-panel-id="history" style="border-left-color: var(--orange);">
       <h2>Move History</h2>
       <div class="move-history" id="move-history"></div>
     </div>
@@ -694,6 +749,43 @@
     </div>
   </div>
 </template>
+
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-modal">
+    <h2>Panel Settings <button id="settings-close">&times;</button></h2>
+    <div class="settings-row">
+      <span class="settings-label">Opening<small>Current opening name &amp; ECO</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="opening" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Coach<small>Tips &amp; feedback</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="coach" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Material Balance<small>Piece values &amp; captured</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="material" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Evaluation<small>Eval bar &amp; score</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="eval" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Game Status<small>Move, turn, accuracy</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="status" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Learning Progress<small>Phase, lesson, Elo, SRS</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="learning" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Move History<small>Move list with annotations</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="history" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-footer" style="margin-top: 14px;">
+      <button class="btn-reset" id="settings-reset">Reset to defaults</button>
+    </div>
+  </div>
+</div>
 
 <div class="blunder-warning" id="blunder-warning" style="display: none;">
   <div class="blunder-warning-content">
@@ -949,6 +1041,56 @@
     } catch(e) {}
   }
 
+  // --- Settings modal ---
+  function initSettings() {
+    var overlay = document.getElementById('settings-overlay');
+    var btn = document.getElementById('settings-btn');
+    var closeBtn = document.getElementById('settings-close');
+    var resetBtn = document.getElementById('settings-reset');
+    if (!overlay || !btn) return;
+
+    function open() { overlay.classList.add('open'); syncCheckboxes(); }
+    function close() { overlay.classList.remove('open'); }
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+
+    resetBtn.addEventListener('click', function() {
+      localStorage.removeItem('panel-visibility');
+      document.querySelectorAll('.settings-row input[data-panel]').forEach(function(cb) { cb.checked = true; });
+      applyPanelVisibility();
+    });
+
+    overlay.querySelectorAll('input[data-panel]').forEach(function(cb) {
+      cb.addEventListener('change', function() { applyPanelVisibility(); });
+    });
+  }
+
+  function applyPanelVisibility() {
+    var visibility = {};
+    document.querySelectorAll('.settings-row input[data-panel]').forEach(function(cb) {
+      visibility[cb.getAttribute('data-panel')] = cb.checked;
+    });
+    localStorage.setItem('panel-visibility', JSON.stringify(visibility));
+
+    document.querySelectorAll('.panel[data-panel-id]').forEach(function(panel) {
+      var id = panel.getAttribute('data-panel-id');
+      if (visibility.hasOwnProperty(id)) {
+        panel.style.display = visibility[id] ? '' : 'none';
+      }
+    });
+  }
+
+  function syncCheckboxes() {
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem('panel-visibility') || '{}'); } catch(e) {}
+    document.querySelectorAll('.settings-row input[data-panel]').forEach(function(cb) {
+      var id = cb.getAttribute('data-panel');
+      cb.checked = saved.hasOwnProperty(id) ? saved[id] : true;
+    });
+    applyPanelVisibility();
+  }
+
   function isPlayerTurn() {
     return !gameActive ? false : chessGame.turn() === playerColor[0];
   }
@@ -960,6 +1102,8 @@
     main.innerHTML = '';
     main.appendChild(tmpl.content.cloneNode(true));
     initPanelToggles();
+    initSettings();
+    syncCheckboxes();
     board = Chessboard('board', {
       position: 'start',
       orientation: orientation || 'white',
