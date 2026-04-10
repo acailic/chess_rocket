@@ -902,17 +902,19 @@
     tabsContainer.style.display = 'flex';
     let html = '';
 
-    currentGames.forEach(game => {
+    currentGames.forEach((game, idx) => {
       const isActive = game.id === currentGameId;
       const moveCount = game.move_count || 0;
       const colorLabel = game.player_color === 'white' ? 'W' : 'B';
-      html += '<div class="game-tab' + (isActive ? ' active' : '') + '" data-game-id="' + esc(game.id) + '">';
+      const shortcutNum = idx < 9 ? (idx + 1) : '';
+      html += '<div class="game-tab' + (isActive ? ' active' : '') + '" data-game-id="' + esc(game.id) + '" title="Ctrl+' + shortcutNum + '">';
+      if (shortcutNum) html += '<span style="opacity:0.5;font-size:0.7rem;margin-right:2px;">' + shortcutNum + '</span>';
       html += 'Game ' + game.game_number + ' (' + colorLabel + ') - ' + moveCount + ' moves';
       html += '<span class="close" onclick="event.stopPropagation(); closeGame(\'' + esc(game.id) + '\')">×</span>';
       html += '</div>';
     });
 
-    html += '<div class="game-tab-new" onclick="newGame()" title="Start a new game">+</div>';
+    html += '<div class="game-tab-new" onclick="newGame()" title="New game (Ctrl+N)">+</div>';
     tabsContainer.innerHTML = html;
 
     // Add click handlers to tabs
@@ -1318,6 +1320,54 @@
 
     // Load game tabs on initialization
     loadGameTabs();
+
+    // Keyboard shortcuts for game tabs
+    document.addEventListener('keydown', function(e) {
+      // Ctrl+1..9: switch to game N
+      if (e.ctrlKey && !e.altKey && !e.shiftKey && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        var idx = parseInt(e.key) - 1;
+        if (currentGames[idx] && currentGames[idx].id !== currentGameId) {
+          switchGame(currentGames[idx].id);
+        }
+        return;
+      }
+      // Ctrl+N: new game
+      if (e.ctrlKey && !e.altKey && !e.shiftKey && e.key === 'n') {
+        e.preventDefault();
+        newGame();
+        return;
+      }
+      // Ctrl+W: close current game (if more than 1)
+      if (e.ctrlKey && !e.altKey && !e.shiftKey && e.key === 'w') {
+        e.preventDefault();
+        if (currentGames.length > 1 && currentGameId) {
+          closeGame(currentGameId);
+        }
+        return;
+      }
+      // Ctrl+Shift+T: toggle focus mode
+      if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+        e.preventDefault();
+        toggleFocusMode();
+        return;
+      }
+      // Ctrl+Shift+P: toggle sidebar panels
+      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+        e.preventDefault();
+        var panelsEl = document.querySelector('.panels');
+        var mainEl = document.querySelector('.main');
+        if (panelsEl && mainEl) {
+          var hidden = panelsEl.classList.toggle('hidden');
+          mainEl.classList.toggle('sidebar-collapsed', hidden);
+          var btn = document.getElementById('sidebar-toggle');
+          if (btn) btn.textContent = hidden ? '◀ Panels' : '▶ Panels';
+          localStorage.setItem('sidebar-hidden', hidden ? '1' : '0');
+          setTimeout(function() { if (board) board.resize(); }, 50);
+        }
+        return;
+      }
+    });
 
     // Wire up blunder warning dialog buttons
     const blunderConfirm = document.getElementById('blunder-confirm');
