@@ -89,6 +89,222 @@ def _atomic_write_json(path: Path, data: dict) -> None:
         raise
 
 
+def _classify_move(cp_loss: int) -> str:
+    """Classify a move by centipawn loss."""
+    if cp_loss == 0:
+        return "best"
+    if cp_loss <= 30:
+        return "great"
+    if cp_loss <= 80:
+        return "good"
+    if cp_loss <= 150:
+        return "inaccuracy"
+    if cp_loss <= 300:
+        return "mistake"
+    return "blunder"
+
+
+def _generate_coaching_tip(
+    classification: str,
+    move_san: str,
+    best_san: str | None,
+    cp_loss: int,
+    player_color: str,
+    board_before_move: chess.Board,
+) -> dict | None:
+    """Generate a contextual coaching tip for the player's move.
+
+    Returns a dict with 'type' and 'message', or None for good moves.
+    """
+    # Insights about how stronger players think
+    thinking_tips = {
+        "best": [
+            "Strong players always check: 'What does my opponent want?' before moving.",
+            "A key habit of masters: before every move, verify your pieces are safe.",
+            "Good players think in plans, not just individual moves.",
+        ],
+        "great": [
+            "Strong players look at the whole board, not just where the action is.",
+            "Masters count attackers and defenders before every trade.",
+            "Good players ask: 'What is my worst-placed piece?' and improve it.",
+        ],
+        "good": [
+            "Before moving, stronger players always check: 'What is my opponent threatening?'",
+            "A master habit: look at your opponent's last move and ask 'Why did they play that?'",
+            "Better players consider at least 2-3 candidate moves before deciding.",
+        ],
+    }
+
+    import random as _rng
+
+    if classification == "best":
+        tip = _rng.choice(thinking_tips["best"])
+        return {
+            "type": "correct",
+            "message": f"{move_san} is the best move! {tip}",
+        }
+    if classification == "great":
+        tip = _rng.choice(thinking_tips["great"])
+        return {
+            "type": "praise",
+            "message": f"{move_san} is a strong move. {tip}",
+        }
+    if classification == "good":
+        tip = _rng.choice(thinking_tips["good"])
+        if best_san and best_san != move_san:
+            return {
+                "type": "info",
+                "message": f"{move_san} is fine, but {best_san} was slightly stronger. {tip}",
+            }
+        return {
+            "type": "info",
+            "message": f"{move_san} is okay. {tip}",
+        }
+    if classification == "inaccuracy":
+        return {
+            "type": "warn",
+            "message": (
+                f"{move_san} is okay, but {best_san} was stronger. "
+                f"Stronger players look for moves that improve piece activity or control the center. "
+                f"Tip: ask yourself 'What is my opponent planning?' before every move."
+            ),
+        }
+    if classification == "mistake":
+        pawns = max(1, round(cp_loss / 100))
+        return {
+            "type": "teach",
+            "message": (
+                f"{move_san} loses about {pawns} pawn{'s' if pawns > 1 else ''} of advantage. "
+                f"The best move was {best_san}. "
+                f"How stronger players think: before moving, check (1) are my pieces safe? "
+                f"(2) what is my opponent threatening? (3) is there a stronger move?"
+            ),
+        }
+    # blunder
+    pawns = max(1, round(cp_loss / 100))
+    return {
+        "type": "teach",
+        "message": (
+            f"{move_san} is a big mistake (loses ~{pawns} pawn{'s' if pawns > 1 else ''})! "
+            f"The best move was {best_san}. "
+            f"Master habit: before every move, do a 'blunder check' — "
+            f"look at what your opponent can take or threaten. "
+            f"Most blunders come from ignoring the opponent's last move."
+        ),
+    }
+
+
+def _annotate_player_move(
+    board_before: chess.Board,
+    player_move: chess.Move,
+    move_san: str,
+    old_annotations: list,
+    ply_index: int,
+    player_color: str,
+) -> tuple[list, dict | None]:
+    """Analyze the player's move with Stockfish and return updated annotations + tip.
+
+    Returns (updated_annotations_list, coaching_tip_dict_or_None).
+    """
+    try:
+        stockfish_path = find_stockfish()
+    except FileNotFoundError:
+        return old_annotations, None
+
+    try:
+        engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        try:
+            # Get top 3 moves before the player's move
+            results = engine.analyse(
+                board_before, chess.engine.Limit(depth=15), multipv=3
+            )
+            best_move = results[0]["pv"][0] if results[0].get("pv") else None
+            best_san = board_before.san(best_move) if best_move else None
+
+            # Get eval of best move (from player's perspective)
+            best_eval_cp = 0
+            eval_info = results[0].get("score", {})
+            if eval_info and eval_info.relative is not None:
+                rel = eval_info.relative
+                if rel.score() is not None:
+                    best_eval_cp = rel.score()
+                elif rel.mate() is not None:
+                    best_eval_cp = 10000 if rel.mate() > 0 else -10000
+
+            # Flip eval for black's perspective
+            if board_before.turn == chess.BLACK:
+                best_eval_cp = -best_eval_cp
+
+            # Check if player move is in top 3
+            top_moves = [r["pv"][0] for r in results if r.get("pv")]
+            is_top = player_move in top_moves
+
+            # Evaluate position after player's move
+            board_after = board_before.copy()
+            board_after.push(player_move)
+            result_after = engine.analyse(
+                board_after, chess.engine.Limit(depth=15)
+            )
+            after_eval = result_after.get("score", {})
+            after_eval_cp = 0
+            if after_eval and after_eval.relative is not None:
+                rel = after_eval.relative
+                if rel.score() is not None:
+                    after_eval_cp = rel.score()
+                elif rel.mate() is not None:
+                    after_eval_cp = 10000 if rel.mate() > 0 else -10000
+
+            # Flip for perspective
+            if board_after.turn == chess.BLACK:
+                after_eval_cp = -after_eval_cp
+
+            # Calculate cp_loss
+            if is_top:
+                cp_loss = 0
+            else:
+                cp_loss = max(0, best_eval_cp - after_eval_cp)
+
+            classification = _classify_move(cp_loss)
+
+            # Build best arrow (from/to squares)
+            best_arrow = None
+            if best_move and not is_top:
+                best_arrow = {
+                    "from": best_move.from_square
+                    and chess.square_name(best_move.from_square),
+                    "to": chess.square_name(best_move.to_square),
+                }
+
+            annotation = {
+                "ply": ply_index,
+                "move": move_san,
+                "classification": classification,
+                "best_move": best_san,
+                "cp_loss": cp_loss,
+                "best_arrow": best_arrow,
+            }
+
+            new_annotations = list(old_annotations)
+            new_annotations.append(annotation)
+
+            # Generate coaching tip
+            tip = _generate_coaching_tip(
+                classification,
+                move_san,
+                best_san,
+                cp_loss,
+                player_color,
+                board_before,
+            )
+
+            return new_annotations, tip
+
+        finally:
+            engine.quit()
+    except Exception:
+        return old_annotations, None
+
+
 def _compute_material(board: chess.Board) -> dict:
     """Compute material value and captured pieces for both sides."""
     piece_values = {
@@ -338,11 +554,24 @@ def process_move(move_san: str, game_state: dict) -> tuple[dict | None, str | No
 
     # Record the SAN before pushing (board state changes after push)
     player_san = board.san(move)
+    player_color = game_state.get("player_color", "white")
+    ply_index = len(game_state.get("move_list", []))
+
+    # Annotate the player's move (evaluate before pushing)
+    board_before = board.copy()
+    annotations, coaching_tip = _annotate_player_move(
+        board_before, move, player_san,
+        game_state.get("move_annotations", []),
+        ply_index, player_color,
+    )
+
     board.push(move)
 
     # Check if game is over after player move
     if board.is_game_over():
         new_state = build_updated_state(board, game_state, move)
+        new_state["move_annotations"] = annotations
+        new_state["coaching_tip"] = coaching_tip
         return new_state, None
 
     # Get engine response if target_elo is configured
@@ -381,6 +610,8 @@ def process_move(move_san: str, game_state: dict) -> tuple[dict | None, str | No
             pass
 
     new_state = build_updated_state(board, game_state, move)
+    new_state["move_annotations"] = annotations
+    new_state["coaching_tip"] = coaching_tip
     return new_state, None
 
 
@@ -407,6 +638,8 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._serve_puzzles()
         elif path == "/api/games":
             self._serve_games()
+        elif path.startswith("/api/references/"):
+            self._serve_reference(path)
         else:
             self.send_error(404)
 
@@ -830,6 +1063,32 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
         self._cors_headers()
         self.end_headers()
         self.wfile.write(payload)
+
+    def _serve_reference(self, path: str) -> None:
+        """Serve a reference markdown file as structured JSON.
+
+        Supported names: curriculum, common-mistakes, tactical-patterns,
+        opening-guide, elo-milestones, chess-pedagogy, learning-science.
+        """
+        refs_dir = _PROJECT_ROOT / "references"
+        name = path.split("/")[-1]
+        # Allow with or without .md extension
+        if not name.endswith(".md"):
+            name += ".md"
+        ref_path = refs_dir / name
+
+        if not ref_path.exists() or not ref_path.is_file():
+            self._json_response({"error": f"reference not found: {name}"}, 404)
+            return
+
+        try:
+            content = ref_path.read_text()
+            self._json_response({
+                "name": name.replace(".md", ""),
+                "content": content,
+            })
+        except OSError as exc:
+            self._json_response({"error": str(exc)}, 500)
 
     def _serve_srs_cards(self) -> None:
         """Serve SRS cards with due card filtering."""

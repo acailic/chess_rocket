@@ -572,6 +572,21 @@
   .settings-footer .btn-reset { background: var(--surface2); color: var(--text); }
   .settings-footer .btn-reset:hover { background: var(--surface3); }
 
+  /* Learn panel */
+  .learn-panel .learn-tab { transition: background 0.15s, color 0.15s; }
+  .learn-panel .learn-tab:hover { opacity: 0.85; }
+  .learn-content h1 { font-size: 1rem; margin: 8px 0 4px; color: var(--accent); }
+  .learn-content h2 { font-size: 0.95rem; margin: 8px 0 4px; color: var(--text); }
+  .learn-content h3 { font-size: 0.9rem; margin: 6px 0 3px; color: var(--text-dim); }
+  .learn-content p { margin: 4px 0; color: var(--text-dim); }
+  .learn-content ul, .learn-content ol { margin: 4px 0; padding-left: 20px; color: var(--text-dim); }
+  .learn-content li { margin: 2px 0; }
+  .learn-content strong { color: var(--text); }
+  .learn-content em { color: var(--yellow); }
+  .learn-content code { background: var(--bg); padding: 1px 4px; border-radius: 3px; font-size: 0.8rem; }
+  .learn-content hr { border: none; border-top: 1px solid var(--surface2); margin: 8px 0; }
+  .learn-content blockquote { border-left: 3px solid var(--accent); padding-left: 8px; margin: 6px 0; color: var(--text-dim); font-style: italic; }
+
   /* Blunder warning */
   .blunder-warning {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -743,6 +758,18 @@
       <h2>Move History</h2>
       <div class="move-history" id="move-history"></div>
     </div>
+    <div class="panel learn-panel" data-panel-id="learn" style="border-left-color: var(--blue);">
+      <h2>Learn</h2>
+      <div class="learn-tabs" style="display:flex;gap:4px;margin-bottom:8px;">
+        <button class="learn-tab active" data-ref="curriculum" style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;background:var(--accent);color:#fff;">Curriculum</button>
+        <button class="learn-tab" data-ref="common-mistakes" style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;background:var(--surface2);color:var(--text);">Mistakes</button>
+        <button class="learn-tab" data-ref="tactical-patterns" style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;background:var(--surface2);color:var(--text);">Tactics</button>
+        <button class="learn-tab" data-ref="opening-guide" style="padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;background:var(--surface2);color:var(--text);">Openings</button>
+      </div>
+      <div class="learn-content" id="learn-content" style="font-size:0.85rem;line-height:1.6;max-height:300px;overflow-y:auto;">
+        <span style="color:var(--text-dim);font-style:italic;">Loading...</span>
+      </div>
+    </div>
     <div class="game-over-banner" id="game-over">
       <div class="game-over-result" id="game-over-result"></div>
       <div class="game-over-details" id="game-over-details"></div>
@@ -780,6 +807,10 @@
     <div class="settings-row">
       <span class="settings-label">Move History<small>Move list with annotations</small></span>
       <label class="toggle-switch"><input type="checkbox" data-panel="history" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Learn<small>Curriculum, tactics, tips</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="learn" checked><span class="toggle-slider"></span></label>
     </div>
     <div class="settings-footer" style="margin-top: 14px;">
       <button class="btn-reset" id="settings-reset">Reset to defaults</button>
@@ -1091,6 +1122,93 @@
     applyPanelVisibility();
   }
 
+  // --- Learn panel ---
+  var _learnCache = {};
+  var _activeLearnRef = 'curriculum';
+
+  function initLearnPanel() {
+    var tabs = document.querySelectorAll('.learn-tab');
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        tabs.forEach(function(t) { t.style.background = 'var(--surface2)'; t.style.color = 'var(--text)'; t.classList.remove('active'); });
+        tab.style.background = 'var(--accent)';
+        tab.style.color = '#fff';
+        tab.classList.add('active');
+        _activeLearnRef = tab.getAttribute('data-ref');
+        loadLearnContent(_activeLearnRef);
+      });
+    });
+    loadLearnContent('curriculum');
+  }
+
+  async function loadLearnContent(ref) {
+    var el = document.getElementById('learn-content');
+    if (!el) return;
+
+    if (_learnCache[ref]) {
+      el.innerHTML = _learnCache[ref];
+      return;
+    }
+
+    el.innerHTML = '<span style="color:var(--text-dim);font-style:italic;">Loading...</span>';
+    try {
+      var resp = await fetch('/api/references/' + ref);
+      if (!resp.ok) { el.innerHTML = '<span style="color:var(--red);">Failed to load</span>'; return; }
+      var data = await resp.json();
+      var html = renderMarkdown(data.content || '');
+      // Truncate to first ~2000 chars of rendered content to keep panel manageable
+      if (html.length > 3000) {
+        html = html.substring(0, 3000) + '<p style="color:var(--accent);cursor:pointer;" onclick="loadFullLearnContent(\'' + esc(ref) + '\')">Show more...</p>';
+      }
+      _learnCache[ref] = html;
+      el.innerHTML = html;
+    } catch (e) {
+      el.innerHTML = '<span style="color:var(--red);">Error loading content</span>';
+    }
+  }
+
+  window.loadFullLearnContent = async function(ref) {
+    var el = document.getElementById('learn-content');
+    if (!el) return;
+    try {
+      var resp = await fetch('/api/references/' + ref);
+      if (!resp.ok) return;
+      var data = await resp.json();
+      var html = renderMarkdown(data.content || '');
+      _learnCache[ref] = html;
+      el.innerHTML = html;
+    } catch (e) {}
+  };
+
+  function renderMarkdown(md) {
+    // Simple markdown to HTML renderer (good enough for reference files)
+    var html = esc(md);
+    // Headers
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // Bold and italic
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Horizontal rules
+    html = html.replace(/^---+$/gm, '<hr>');
+    // Lists (unordered)
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+    // Lists (ordered)
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    // Blockquotes
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+    // Paragraphs (lines not already wrapped)
+    html = html.replace(/^(?!<[hluob]|<hr|<li|<\/)(.*\S.*)$/gm, '<p>$1</p>');
+    // Clean up excessive newlines
+    html = html.replace(/\n{3,}/g, '\n\n');
+    return html;
+  }
+
   function isPlayerTurn() {
     return !gameActive ? false : chessGame.turn() === playerColor[0];
   }
@@ -1104,6 +1222,7 @@
     initPanelToggles();
     initSettings();
     syncCheckboxes();
+    initLearnPanel();
     board = Chessboard('board', {
       position: 'start',
       orientation: orientation || 'white',
