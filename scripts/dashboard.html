@@ -125,6 +125,12 @@
   .game-over-banner.visible { display: block; }
   .game-over-result { font-size: 1.3rem; font-weight: 700; }
   .game-over-details { font-size: 0.9rem; color: var(--text-dim); margin-top: 4px; }
+  /* Learning Progress panel */
+  .learn-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 0.9rem; }
+  .phase-progress { margin-top: 8px; }
+  .phase-bar-outer { height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
+  .phase-bar-inner { height: 100%; background: linear-gradient(90deg, var(--light-green), var(--green)); transition: width 0.5s ease; border-radius: 4px; }
+  .phase-bar-label { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; text-align: right; }
   /* Waiting state */
   .waiting {
     text-align: center; padding: 60px 20px;
@@ -132,6 +138,96 @@
   }
   .waiting .pulse { animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  /* Move input */
+  .move-input-bar {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .move-input-bar input {
+    flex: 1; padding: 10px 14px;
+    background: var(--bg); border: 1px solid var(--surface2);
+    border-radius: 6px; color: var(--text);
+    font-size: 1rem; font-family: 'SF Mono', 'Consolas', monospace;
+    outline: none; transition: border-color 0.2s;
+  }
+  .move-input-bar input:focus { border-color: var(--accent); }
+  .move-input-bar input::placeholder { color: var(--text-dim); }
+  .move-input-bar button {
+    padding: 10px 20px; background: var(--accent);
+    color: #fff; border: none; border-radius: 6px;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .move-input-bar button:hover { opacity: 0.85; }
+  .move-input-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .move-status {
+    font-size: 0.8rem; margin-top: 4px; min-height: 1.2em;
+  }
+  .move-status.ok { color: var(--green); }
+  .move-status.waiting { color: var(--yellow); }
+  .move-status.error { color: var(--red); }
+  /* Last move highlight */
+  .highlight-last-move {
+    background: rgba(255, 215, 0, 0.4) !important;
+  }
+  /* Check indicator */
+  .highlight-check {
+    background: radial-gradient(
+      circle,
+      rgba(255, 0, 0, 0.6) 0%,
+      rgba(255, 0, 0, 0.3) 40%,
+      rgba(255, 0, 0, 0.1) 65%,
+      transparent 100%
+    ) !important;
+  }
+  /* Legal move dot indicator (empty squares) */
+  .legal-move-dot {
+    position: relative;
+  }
+  .legal-move-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 26%;
+    height: 26%;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+  }
+  /* Legal move capture ring indicator (occupied squares) */
+  .legal-move-capture {
+    position: relative;
+  }
+  .legal-move-capture::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    border: 5px solid rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    box-sizing: border-box;
+  }
+  /* Active (clicked) move in move list */
+  .active-move {
+    background: var(--surface2);
+    border-radius: 3px;
+    padding: 1px 4px;
+  }
+  .move-san.clickable {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .move-san.clickable:hover {
+    background: var(--surface2);
+    border-radius: 3px;
+  }
   /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
@@ -162,6 +258,14 @@
     <div class="board-info">
       <span id="player-info">Playing as: White</span>
       <span id="engine-info">Engine: 800 Elo</span>
+    </div>
+    <div class="panel" style="border-left-color: var(--accent);">
+      <h2>Your Move</h2>
+      <div class="move-input-bar">
+        <input type="text" id="move-input" placeholder="e.g. Nf3, e5, O-O" autocomplete="off">
+        <button id="move-submit">Move</button>
+      </div>
+      <div class="move-status" id="move-status"></div>
     </div>
   </div>
   <div class="panels">
@@ -212,6 +316,27 @@
         <span class="status-value" id="check-status">--</span>
       </div>
     </div>
+    <div class="panel" style="border-left-color: var(--light-green);">
+      <h2>Learning Progress</h2>
+      <div class="learn-grid">
+        <span class="status-label">Phase</span>
+        <span class="status-value" id="learn-phase">--</span>
+        <span class="status-label">Lesson</span>
+        <span class="status-value" id="learn-lesson">--</span>
+        <span class="status-label">Elo</span>
+        <span class="status-value" id="learn-elo">--</span>
+        <span class="status-label">Streak</span>
+        <span class="status-value" id="learn-streak">--</span>
+        <span class="status-label">SRS Due</span>
+        <span class="status-value" id="learn-srs">--</span>
+      </div>
+      <div class="phase-progress">
+        <div class="phase-bar-outer">
+          <div class="phase-bar-inner" id="phase-bar" style="width:0%"></div>
+        </div>
+        <div class="phase-bar-label" id="phase-bar-label">0% to next phase</div>
+      </div>
+    </div>
     <div class="panel" style="border-left-color: var(--orange);">
       <h2>Move History</h2>
       <div class="move-history" id="move-history"></div>
@@ -225,6 +350,7 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script>
 (function() {
   'use strict';
@@ -246,8 +372,19 @@
   let board = null;
   let lastFen = null;
   let gameActive = false;
+  let chessGame = new Chess();
+  let moveSubmitting = false;
+  let playerColor = 'white';
+  let learningProgress = null;
+  let curriculumData = null;
+  let srsData = null;
+
+  function isPlayerTurn() {
+    return !gameActive ? false : chessGame.turn() === playerColor[0];
+  }
 
   function initBoard(orientation) {
+    playerColor = orientation || 'white';
     const main = document.getElementById('main-content');
     const tmpl = document.getElementById('game-template');
     main.innerHTML = '';
@@ -255,11 +392,91 @@
     board = Chessboard('board', {
       position: 'start',
       orientation: orientation || 'white',
-      draggable: false,
+      draggable: true,
       pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+      onDragStart: function(source, piece, position, orientation) {
+        if (chessGame.game_over()) return false;
+        if (chessGame.turn() !== playerColor[0]) return false;
+        if ((chessGame.turn() === 'w' && piece.search(/^b/) !== -1) ||
+            (chessGame.turn() === 'b' && piece.search(/^w/) !== -1)) return false;
+      },
+      onDrop: function(source, target) {
+        const move = chessGame.move({
+          from: source,
+          to: target,
+          promotion: 'q'
+        });
+        if (move === null) return 'snapback';
+        submitMove(move.san);
+      },
+      onSnapEnd: function() {
+        board.position(chessGame.fen());
+      }
     });
     window.addEventListener('resize', () => board.resize());
     gameActive = true;
+
+    // Load learning progress data
+    loadLearningProgress();
+
+    // Wire up text input
+    const input = document.getElementById('move-input');
+    const btn = document.getElementById('move-submit');
+    btn.addEventListener('click', () => submitTextInput());
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitTextInput(); });
+  }
+
+  function submitTextInput() {
+    const input = document.getElementById('move-input');
+    const san = input.value.trim();
+    if (!san) return;
+    // Validate with chess.js
+    const move = chessGame.move(san);
+    if (move === null) {
+      setMoveStatus('Invalid move: ' + san, 'error');
+      return;
+    }
+    submitMove(move.san);
+    input.value = '';
+  }
+
+  async function submitMove(san) {
+    if (moveSubmitting) return;
+    moveSubmitting = true;
+    setMoveStatus('Sending move...', 'waiting');
+    const btn = document.getElementById('move-submit');
+    if (btn) btn.disabled = true;
+
+    try {
+      const resp = await fetch('/api/move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ move: san })
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        setMoveStatus('Move sent: ' + san + ' (waiting for engine...)', 'ok');
+      } else {
+        setMoveStatus('Error: ' + (data.error || 'unknown'), 'error');
+        // Undo the chess.js move since it wasn't accepted
+        chessGame.undo();
+        board.position(chessGame.fen());
+      }
+    } catch (e) {
+      setMoveStatus('Connection error', 'error');
+      chessGame.undo();
+      board.position(chessGame.fen());
+    }
+
+    moveSubmitting = false;
+    if (btn) btn.disabled = false;
+  }
+
+  function setMoveStatus(text, cls) {
+    const el = document.getElementById('move-status');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'move-status ' + (cls || '');
   }
 
   function capturedToUnicode(pieces, color) {
@@ -271,6 +488,118 @@
       const displayKey = color === 'white' ? p.toLowerCase() : p;
       return PIECE_UNICODE[displayKey] || p;
     }).join(' ');
+  }
+
+  // Learning Progress functions
+  async function fetchLearningProgress() {
+    try {
+      const resp = await fetch('/api/progress');
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function fetchSRSData() {
+    try {
+      const resp = await fetch('/api/srs');
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function fetchCurriculumData() {
+    try {
+      const resp = await fetch('/api/curriculum');
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function updateLearningProgressPanel(progress, srsData, curriculumData) {
+    const phaseEl = document.getElementById('learn-phase');
+    const lessonEl = document.getElementById('learn-lesson');
+    const eloEl = document.getElementById('learn-elo');
+    const streakEl = document.getElementById('learn-streak');
+    const srsEl = document.getElementById('learn-srs');
+    const phaseBar = document.getElementById('phase-bar');
+    const phaseBarLabel = document.getElementById('phase-bar-label');
+
+    if (!progress) {
+      phaseEl.textContent = '--';
+      lessonEl.textContent = '--';
+      eloEl.textContent = '--';
+      streakEl.textContent = '--';
+      srsEl.textContent = '--';
+      if (phaseBar) phaseBar.style.width = '0%';
+      if (phaseBarLabel) phaseBarLabel.textContent = '0% to next phase';
+      return;
+    }
+
+    // Update basic metrics
+    const dueCount = srsData ? srsData.due_count : 0;
+    srsEl.textContent = dueCount;
+    eloEl.textContent = progress.estimated_elo || '--';
+    streakEl.textContent = progress.current_streak || 0;
+
+    // Highlight streak if >= 3
+    if (progress.current_streak >= 3) {
+      streakEl.style.color = 'var(--accent)';
+    } else {
+      streakEl.style.color = '';
+    }
+
+    // Update curriculum info
+    if (curriculumData && curriculumData.phases) {
+      const currentPhase = progress.current_phase || 1;
+      const currentLesson = progress.current_lesson || '1.1';
+
+      const phaseInfo = curriculumData.phases.find(p => p.title.includes('Phase ' + currentPhase));
+      if (phaseInfo) {
+        phaseEl.textContent = 'Phase ' + currentPhase;
+
+        // Find the current lesson
+        const lessonInfo = phaseInfo.lessons.find(l => l.number === currentLesson);
+        if (lessonInfo) {
+          lessonEl.textContent = lessonInfo.title;
+        } else {
+          lessonEl.textContent = 'Lesson ' + currentLesson;
+        }
+
+        // Update phase progress bar
+        if (phaseBar && phaseBarLabel) {
+          const totalLessons = phaseInfo.lessons.length;
+          const currentLessonNum = parseInt(currentLesson.split('.')[1]) || 1;
+          const progressPct = Math.round((currentLessonNum / totalLessons) * 100);
+          phaseBar.style.width = progressPct + '%';
+          phaseBarLabel.textContent = progressPct + '% through Phase ' + currentPhase;
+        }
+      } else {
+        phaseEl.textContent = 'Phase ' + currentPhase;
+        lessonEl.textContent = 'Lesson ' + currentLesson;
+        if (phaseBar) phaseBar.style.width = '0%';
+        if (phaseBarLabel) phaseBarLabel.textContent = '0% to next phase';
+      }
+    } else {
+      phaseEl.textContent = 'Phase ' + (progress.current_phase || 1);
+      lessonEl.textContent = 'Lesson ' + (progress.current_lesson || '1.1');
+      if (phaseBar) phaseBar.style.width = '0%';
+      if (phaseBarLabel) phaseBarLabel.textContent = '0% to next phase';
+    }
+  }
+
+  async function loadLearningProgress() {
+    const [progress, srsData, curriculumData] = await Promise.all([
+      fetchLearningProgress(),
+      fetchSRSData(),
+      fetchCurriculumData()
+    ]);
+    updateLearningProgressPanel(progress, srsData, curriculumData);
   }
 
   function updatePanels(state) {
@@ -390,11 +719,65 @@
       else if (state.result === '0-1') resultText = '0-1 \u2014 Black wins';
       else if (state.result === '1/2-1/2') resultText = '\u00BD-\u00BD \u2014 Draw';
       document.getElementById('game-over-result').textContent = resultText;
+
+      // Enhanced game-over statistics
       const totalMoves = Math.ceil(moveList.length / 2);
       const playerColor = state.player_color || 'white';
       const playerAcc = acc[playerColor] || 0;
-      document.getElementById('game-over-details').textContent =
-        'Accuracy: ' + playerAcc.toFixed(1) + '% \u00B7 ' + totalMoves + ' moves';
+
+      // Count move classifications
+      let bestMoves = 0, greatMoves = 0, goodMoves = 0;
+      let inaccuracies = 0, mistakes = 0, blunders = 0;
+      annotations.forEach(a => {
+        if (a.classification === 'best') bestMoves++;
+        else if (a.classification === 'great') greatMoves++;
+        else if (a.classification === 'good') goodMoves++;
+        else if (a.classification === 'inaccuracy') inaccuracies++;
+        else if (a.classification === 'mistake') mistakes++;
+        else if (a.classification === 'blunder') blunders++;
+      });
+
+      const totalPlayerMoves = bestMoves + greatMoves + goodMoves + inaccuracies + mistakes + blunders;
+      const accuracyPct = totalPlayerMoves > 0 ? playerAcc : 0;
+
+      // Build detailed game-over message
+      let details = 'Accuracy: ' + accuracyPct.toFixed(1) + '% \u00B7 ' + totalMoves + ' moves';
+
+      // Add mistakes breakdown line
+      if (bestMoves > 0 || greatMoves > 0 || goodMoves > 0 || inaccuracies > 0 || mistakes > 0 || blunders > 0) {
+        details += '\nMoves: ';
+        let moveParts = [];
+        if (bestMoves > 0) moveParts.push(bestMoves + ' best');
+        if (greatMoves > 0) moveParts.push(greatMoves + ' great');
+        if (goodMoves > 0) moveParts.push(goodMoves + ' good');
+        if (inaccuracies > 0) moveParts.push(inaccuracies + ' inacc.');
+        if (mistakes > 0) moveParts.push(mistakes + ' mistake' + (mistakes > 1 ? 's' : ''));
+        if (blunders > 0) moveParts.push(blunders + ' blunder' + (blunders > 1 ? 's' : ''));
+        details += moveParts.join(', ');
+      }
+
+      // Add teaching tip based on worst mistake classification
+      let teachingTip = '';
+      if (blunders > 0) {
+        teachingTip = 'Focus: Review tactical patterns to avoid blunders';
+      } else if (mistakes > 0) {
+        teachingTip = 'Focus: Practice calculating 2-3 moves ahead';
+      } else if (inaccuracies > 0) {
+        teachingTip = 'Focus: Look for stronger alternatives before moving';
+      } else {
+        teachingTip = 'Great game! Keep up the solid play';
+      }
+      details += '\n' + teachingTip;
+
+      // Add total puzzles solved from progress data
+      if (learningProgress && learningProgress.total_puzzles_solved !== undefined) {
+        details += '\nPuzzles solved: ' + learningProgress.total_puzzles_solved;
+      }
+
+      document.getElementById('game-over-details').textContent = details;
+
+      // Refresh learning progress after game ends
+      loadLearningProgress();
     } else {
       banner.classList.remove('visible');
     }
@@ -411,11 +794,182 @@
     return '<span class="move-cell"><span class="move-san">' + esc(san) + '</span>' + badgeHtml + '</span>';
   }
 
+  function updateLearningPanel(curriculum, srsData) {
+    if (!curriculum) {
+      // Show defaults if no curriculum data
+      document.getElementById('learn-phase').textContent = '--';
+      document.getElementById('learn-lesson').textContent = '--';
+      document.getElementById('learn-elo').textContent = '--';
+      document.getElementById('learn-streak').textContent = '--';
+      document.getElementById('learn-srs').textContent = '--';
+      document.getElementById('phase-bar').style.width = '0%';
+      document.getElementById('phase-bar-label').textContent = '0% to next phase';
+      return;
+    }
+
+    // Set phase and lesson
+    const phaseName = curriculum.phase_name || 'Unknown Phase';
+    const lessonTitle = curriculum.lesson_title || 'Unknown Lesson';
+    document.getElementById('learn-phase').textContent = phaseName + ': ' + lessonTitle;
+    document.getElementById('learn-lesson').textContent = 'Lesson ' + (curriculum.current_lesson || '--');
+
+    // Set Elo with milestone
+    const currentElo = curriculum.estimated_elo || '--';
+    const nextMilestone = curriculum.next_milestone_elo || '--';
+    document.getElementById('learn-elo').textContent = currentElo + ' / ' + nextMilestone;
+
+    // Set streak with fire emoji for streaks >= 3
+    const streak = curriculum.current_streak || 0;
+    document.getElementById('learn-streak').textContent = streak + (streak >= 3 ? ' \uD83D\uDD25' : '');
+
+    // Set SRS due count with yellow color if > 0
+    const srsDue = srsData && srsData.due_count ? srsData.due_count : 0;
+    const srsEl = document.getElementById('learn-srs');
+    srsEl.textContent = srsDue;
+    srsEl.style.color = srsDue > 0 ? 'var(--yellow)' : '';
+
+    // Update phase progress bar
+    const progressPct = curriculum.progress_pct || 0;
+    document.getElementById('phase-bar').style.width = progressPct + '%';
+    document.getElementById('phase-bar-label').textContent = progressPct + '% to next phase';
+  }
+
   function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   function esc(s) {
     const d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+  }
+
+  // --- Visual Teaching Enhancements ---
+
+  // Track the currently active move in the move list
+  let activeMoveEl = null;
+
+  /**
+   * Clear all board square highlights (last-move, check, legal-move dots).
+   */
+  function clearHighlights() {
+    $('.highlight-last-move, .highlight-check, .legal-move-dot, .legal-move-capture')
+      .removeClass('highlight-last-move highlight-check legal-move-dot legal-move-capture');
+  }
+
+  /**
+   * Highlight the from/to squares of the last move (UCI format like "e2e4").
+   */
+  function highlightLastMove(lastMove) {
+    if (!lastMove || lastMove.length < 4) return;
+    var from = lastMove.substring(0, 2);
+    var to = lastMove.substring(2, 4);
+    var $from = $('.square-' + from);
+    var $to = $('.square-' + to);
+    if ($from.length) $from.addClass('highlight-last-move');
+    if ($to.length) $to.addClass('highlight-last-move');
+  }
+
+  /**
+   * Find the king square that is in check from the FEN position.
+   * chess.js 0.10.3 does not expose this directly, so we parse the FEN.
+   */
+  function findKingInCheck(fen) {
+    if (!fen) return null;
+    var parts = fen.split(' ');
+    var turn = parts[1]; // 'w' or 'b' — the side to move (the one in check)
+    var piecePlacement = parts[0];
+    // Build an 8x8 board array from FEN
+    var rows = piecePlacement.split('/');
+    var boardArr = [];
+    for (var r = 0; r < 8; r++) {
+      var row = [];
+      for (var c = 0; c < rows[r].length; c++) {
+        var ch = rows[r][c];
+        if (ch >= '1' && ch <= '8') {
+          for (var e = 0; e < parseInt(ch); e++) row.push(null);
+        } else {
+          row.push(ch);
+        }
+      }
+      boardArr.push(row);
+    }
+    // Find the king of the side to move (the one in check)
+    var kingChar = turn === 'w' ? 'K' : 'k';
+    for (var r2 = 0; r2 < 8; r2++) {
+      for (var c2 = 0; c2 < 8; c2++) {
+        if (boardArr[r2][c2] === kingChar) {
+          var file = String.fromCharCode(97 + c2); // 'a'-'h'
+          var rank = String(8 - r2);               // '8'-'1'
+          return file + rank;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Highlight the king's square with a red glow when in check.
+   */
+  function highlightCheck(isCheck, fen) {
+    if (!isCheck) return;
+    var kingSquare = findKingInCheck(fen);
+    if (kingSquare) {
+      var $sq = $('.square-' + kingSquare);
+      if ($sq.length) $sq.addClass('highlight-check');
+    }
+  }
+
+  /**
+   * Apply all board highlights based on the current game state.
+   * Called from poll() after the board position is updated.
+   */
+  function applyHighlights(state) {
+    clearHighlights();
+    highlightLastMove(state.last_move);
+    highlightCheck(state.is_check, state.fen);
+  }
+
+  /**
+   * Show legal move indicators on the board for the piece being dragged.
+   * Uses chess.js verbose moves to find target squares from the source.
+   */
+  function showLegalMoveDots(source) {
+    clearLegalMoveDots();
+    if (!chessGame || chessGame.game_over()) return;
+    var moves = chessGame.moves({ verbose: true });
+    var targetSquares = {};
+    for (var i = 0; i < moves.length; i++) {
+      if (moves[i].from === source) {
+        targetSquares[moves[i].to] = true;
+      }
+    }
+    var keys = Object.keys(targetSquares);
+    for (var j = 0; j < keys.length; j++) {
+      var sq = keys[j];
+      var $sq = $('.square-' + sq);
+      // If the target square has a piece on it, show capture ring; otherwise show dot
+      if ($sq.find('img').length > 0) {
+        $sq.addClass('legal-move-capture');
+      } else {
+        $sq.addClass('legal-move-dot');
+      }
+    }
+  }
+
+  /**
+   * Remove legal move dot indicators from the board.
+   */
+  function clearLegalMoveDots() {
+    $('.legal-move-dot, .legal-move-capture').removeClass('legal-move-dot legal-move-capture');
+  }
+
+  /**
+   * Handle click on a move in the move list. Highlights it visually.
+   */
+  function onMoveClick(el) {
+    if (activeMoveEl) {
+      activeMoveEl.classList.remove('active-move');
+    }
+    el.classList.add('active-move');
+    activeMoveEl = el;
   }
 
   // Polling loop
@@ -432,7 +986,14 @@
 
       if (state.fen !== lastFen) {
         board.position(state.fen, true);
+        // Keep chess.js in sync with server state
+        try { chessGame.load(state.fen); } catch(e) {}
         lastFen = state.fen;
+        // Clear move status once engine has responded
+        if (moveSubmitting) {
+          setMoveStatus('', '');
+          moveSubmitting = false;
+        }
       }
 
       // Check orientation
@@ -442,6 +1003,30 @@
       }
 
       updatePanels(state);
+
+      // Fetch curriculum and SRS data
+      try {
+        const [curriculumResp, srsResp] = await Promise.all([
+          fetch('/api/curriculum'),
+          fetch('/api/srs')
+        ]);
+
+        if (curriculumResp.ok) {
+          const curriculum = await curriculumResp.json();
+          curriculumData = curriculum;
+        }
+
+        if (srsResp.ok) {
+          const srs = await srsResp.json();
+          srsData = srs;
+        }
+
+        // Update learning panel with fetched data
+        updateLearningPanel(curriculumData, srsData);
+      } catch (e) {
+        // Gracefully handle API errors - show defaults
+        updateLearningPanel(null, null);
+      }
     } catch (e) {
       // Server might be down, just retry
     }

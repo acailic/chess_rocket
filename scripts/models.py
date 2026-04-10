@@ -36,6 +36,10 @@ class GameState:
     is_checkmate: bool = False
     is_stalemate: bool = False
     move_annotations: list[dict] = field(default_factory=list)
+    last_move_from: str | None = None
+    last_move_to: str | None = None
+    king_in_check_square: str | None = None
+    fen_history: list[str] = field(default_factory=list)
 
 
 @dataclass

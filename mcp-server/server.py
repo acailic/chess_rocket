@@ -102,15 +102,54 @@ def _get_captured_pieces(board: chess.Board) -> dict:
 
 
 def _build_move_annotations(game: dict) -> list[dict]:
-    """Build move annotation list from stored move_evals."""
+    """Build move annotation list from stored move_evals.
+
+    Includes best_move and best_arrow (from/to squares of the engine's
+    recommended move) so the dashboard can draw arrows for suboptimal plays.
+    The board is replayed from the starting position so that SAN-to-move
+    conversion is accurate at each ply.
+    """
     annotations = []
-    for ev in game.get("move_evals", []):
+    move_evals = game.get("move_evals", [])
+    if not move_evals:
+        return annotations
+
+    board: chess.Board = game["board"]
+    starting_fen = game["starting_fen"]
+
+    # Replay from start to build a per-ply board map
+    replay = chess.Board(starting_fen)
+    ply_boards: list[chess.Board] = [replay.copy()]
+    for m in board.move_stack:
+        replay.push(m)
+        ply_boards.append(replay.copy())
+
+    for ev in move_evals:
+        ply = ev.get("ply", 0)
+        best_move_san = ev.get("best_move_san", "")
+        cp_loss = ev.get("cp_loss", 0)
+        move_san = ev.get("move_san", "")
+
+        best_arrow = None
+        if best_move_san and ply < len(ply_boards):
+            try:
+                ply_board = ply_boards[ply]
+                best_chess_move = ply_board.parse_san(best_move_san)
+                best_arrow = {
+                    "from": chess.square_name(best_chess_move.from_square),
+                    "to": chess.square_name(best_chess_move.to_square),
+                }
+            except (chess.InvalidMoveError, chess.IllegalMoveError, chess.AmbiguousMoveError):
+                pass
+
         annotations.append({
-            "move": ev.get("move_san", ""),
+            "move": move_san,
             "classification": ev.get("classification", ""),
-            "cp_loss": ev.get("cp_loss", 0),
-            "ply": ev.get("ply", 0),
+            "cp_loss": cp_loss,
+            "ply": ply,
             "color": ev.get("color", "white"),
+            "best_move": best_move_san,
+            "best_arrow": best_arrow,
         })
     return annotations
 
@@ -160,6 +199,29 @@ def _build_game_state(game_id: str, game: dict) -> dict:
                 "moves_matched": match["moves_matched"],
             }
 
+    # last_move_from / last_move_to: from/to squares of the last move
+    last_move_from = None
+    last_move_to = None
+    if board.move_stack:
+        last = board.move_stack[-1]
+        last_move_from = chess.square_name(last.from_square)
+        last_move_to = chess.square_name(last.to_square)
+
+    # king_in_check_square: square of the king currently in check (if any)
+    king_in_check_square = None
+    if board.is_check():
+        king_sq = board.king(board.turn)
+        if king_sq is not None:
+            king_in_check_square = chess.square_name(king_sq)
+
+    # fen_history: FEN after each position (starting position + after each move)
+    fen_history = []
+    hist_board = chess.Board(game["starting_fen"])
+    fen_history.append(hist_board.fen())
+    for m in board.move_stack:
+        hist_board.push(m)
+        fen_history.append(hist_board.fen())
+
     state = GameState(
         game_id=game_id,
         fen=board.fen(),
@@ -184,6 +246,10 @@ def _build_game_state(game_id: str, game: dict) -> dict:
         is_checkmate=board.is_checkmate(),
         is_stalemate=board.is_stalemate(),
         move_annotations=_build_move_annotations(game),
+        last_move_from=last_move_from,
+        last_move_to=last_move_to,
+        king_in_check_square=king_in_check_square,
+        fen_history=fen_history,
     )
     return asdict(state)
 
