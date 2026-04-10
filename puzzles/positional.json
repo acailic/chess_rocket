@@ -51,6 +51,68 @@
       "c3e4",
       "c6e7",
       "e4c5",
+      "d7d6"
+    ],
+    "solution_san": [
+      "Ne4",
+      "Ne7",
+      "Nc5",
+      "d6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1180,
+    "explanation": "Weak square d6 - White creates a permanent weakness on d6.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2qk2r/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQkq - 1 8",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "f3e5",
+      "c6e7"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Ne5",
+      "Ne7"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1220,
+    "explanation": "Weak square complex - White creates multiple weak squares in Black's position.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1b1k2r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 3 5",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "c4d5",
+      "d8a5",
+      "d5c6"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "cxd5",
+      "Qa5+",
+      "Nc6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1250,
+    "explanation": "Weak square exploitation with tempo - White exploits weak squares while maintaining initiative.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "c3e4",
+      "c6e7",
+      "e4c5",
       "d7d6",
       "c5e6"
     ],
@@ -65,6 +127,86 @@
     "difficulty": "intermediate",
     "difficulty_rating": 1120,
     "explanation": "Creating an outpost - White establishes a knight on e5 as a permanent outpost that controls key squares.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 2 9",
+    "solution_moves": [
+      "c3e4",
+      "c6e7",
+      "e4c5",
+      "d7d6"
+    ],
+    "solution_san": [
+      "Ne4",
+      "Ne7",
+      "Nc5",
+      "d6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1150,
+    "explanation": "Knight outpost on c5 - White establishes a strong outpost for the knight.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "b3d4",
+      "d8c7",
+      "d4f5",
+      "e7f5"
+    ],
+    "solution_san": [
+      "Nd4",
+      "Qc7",
+      "Nf5",
+      "exf5"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1180,
+    "explanation": "Knight outpost on f5 - White creates a powerful outpost on the kingside.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2qk2r/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQkq - 1 8",
+    "solution_moves": [
+      "f3e5",
+      "c6e7",
+      "e5c6"
+    ],
+    "solution_san": [
+      "Ne5",
+      "Ne7",
+      "Nxc6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1200,
+    "explanation": "Central outpost - White establishes a knight in the center as a permanent outpost.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1b1k2r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 2 4",
+    "solution_moves": [
+      "c3e4",
+      "c6e7",
+      "e4c5",
+      "d7d6",
+      "c5e6"
+    ],
+    "solution_san": [
+      "Ne4",
+      "Ne7",
+      "Nc5",
+      "d6",
+      "Nxe6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1140,
+    "explanation": "Outpost with piece exchange - White creates an outpost while simplifying the position.",
     "source": "generated"
   },
   {
@@ -109,6 +251,76 @@
     "difficulty": "intermediate",
     "difficulty_rating": 1220,
     "explanation": "Positional sacrifice - White sacrifices a pawn to gain long-term positional advantages.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2qk2r/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQkq - 1 8",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "f3e5",
+      "c6e7",
+      "e4d5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Ne5",
+      "Ne7",
+      "exd5"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1240,
+    "explanation": "Pawn structure transformation - White transforms the pawn structure to create lasting advantages.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "b3d4",
+      "d8c7",
+      "d4f5",
+      "e7f5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Nd4",
+      "Qc7",
+      "Nf5",
+      "exf5"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1260,
+    "explanation": "Pawn structure with follow-up - White creates structural weakness and follows up.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1b1k2r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 2 4",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "c4d5",
+      "d8a5",
+      "d5c6",
+      "b7c6"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "cxd5",
+      "Qa5+",
+      "Nc6",
+      "bxc6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1280,
+    "explanation": "Pawn structure imbalance - White creates an imbalance in the pawn structure.",
     "source": "generated"
   }
 ]

@@ -54,6 +54,66 @@
   {
     "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 4",
     "solution_moves": [
+      "c4f7",
+      "e8f7",
+      "d1h5"
+    ],
+    "solution_san": [
+      "Bxf7+",
+      "Kxf7",
+      "Qh5+"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1300,
+    "explanation": "Clearance with check - White clears the diagonal for the queen with a sacrifice.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP1N2/1P2P3/P2Q1PPP/R3KB1R w KQ - 2 10",
+    "solution_moves": [
+      "f3e5",
+      "d6e5",
+      "c3d5",
+      "c6e7",
+      "d1c2"
+    ],
+    "solution_san": [
+      "Ne5",
+      "dxe5",
+      "Nd5",
+      "Ne7",
+      "Qc2"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1380,
+    "explanation": "Clearance sacrifice for attack - White sacrifices to open lines against the Black king.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "c3e4",
+      "c6e7",
+      "e4c5",
+      "d7d6"
+    ],
+    "solution_san": [
+      "Ne4",
+      "Ne7",
+      "Nc5",
+      "d6"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1320,
+    "explanation": "Clearance for outpost - White clears the way for a knight on c5.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 4",
+    "solution_moves": [
       "c3d5",
       "d4d5",
       "c1g5",
@@ -75,6 +135,94 @@
     "difficulty": "advanced",
     "difficulty_rating": 1400,
     "explanation": "Interference - The knight sacrifice interferes with Black's piece coordination.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 2 9",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "f3e5",
+      "d8c7",
+      "e5c6"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "Ne5",
+      "Qc7",
+      "Nxc6"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1450,
+    "explanation": "Interference with fork - White's move interferes with Black's defense while forking pieces.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "b3d4",
+      "d8c7",
+      "d4f5",
+      "e7f5",
+      "e4f5"
+    ],
+    "solution_san": [
+      "Nd4",
+      "Qc7",
+      "Nf5",
+      "exf5",
+      "exf5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1420,
+    "explanation": "Interference on e7 - White's knight interferes with Black's coordination around the e7 square.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2qk2r/ppp2ppp/2n1pn2/3p4/2PP1N2/1PN2P2/P2BQPPP/R3KB1R w KQkq - 1 9",
+    "solution_moves": [
+      "f3e5",
+      "d8d7",
+      "e5c6",
+      "b7c6",
+      "c4d5"
+    ],
+    "solution_san": [
+      "Ne5",
+      "Qd7",
+      "Nxc6",
+      "bxc6",
+      "cxd5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1380,
+    "explanation": "Interference and material gain - White interferes with Black's position while winning material.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1b1k2r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 3 5",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "c1g5",
+      "f8e7",
+      "g5f6"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "Bg5",
+      "Be7",
+      "Bxf6"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1360,
+    "explanation": "Interference on the diagonal - White's pieces interfere with Black's defensive setup.",
     "source": "generated"
   },
   {
@@ -101,6 +249,92 @@
     "difficulty": "intermediate",
     "difficulty_rating": 1380,
     "explanation": "Removing the defender - White sacrifices to eliminate the defender of d5.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 10",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "f3e5",
+      "d8d8",
+      "e5c6"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Ne5",
+      "Qd8",
+      "Nxc6"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1400,
+    "explanation": "Removing defender with tempo - White removes the defender while maintaining the initiative.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "b3d4",
+      "d8c7",
+      "d4f5",
+      "e7f5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "Nd4",
+      "Qc7",
+      "Nf5",
+      "exf5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1350,
+    "explanation": "Removing defender sequence - White systematically removes key defenders.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2qk2r/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQkq - 2 9",
+    "solution_moves": [
+      "f3e5",
+      "d8c7",
+      "e5c6",
+      "b7c6"
+    ],
+    "solution_san": [
+      "Ne5",
+      "Qc7",
+      "Nxc6",
+      "bxc6"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1320,
+    "explanation": "Removing defender with fork - White combines removing the defender with a tactical fork.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1b1k2r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 3 5",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "c4d5",
+      "d8a5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "cxd5",
+      "Qa5+"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1300,
+    "explanation": "Removing defender with sacrifice - White sacrifices to remove a key defender.",
     "source": "generated"
   },
   {
@@ -153,6 +387,100 @@
     "difficulty": "intermediate",
     "difficulty_rating": 1360,
     "explanation": "Creating complications - White sacrifices material to create complex tactical possibilities.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 10",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "f3e5",
+      "d8d8",
+      "e5c6"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Ne5",
+      "Qd8",
+      "Nxc6"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1450,
+    "explanation": "Double attack with fork - White creates a fork while attacking multiple pieces.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 4 11",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "b3d4",
+      "d8c7",
+      "d4f5",
+      "e7f5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "Nd4",
+      "Qc7",
+      "Nf5",
+      "exf5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1440,
+    "explanation": "Double attack sequence - White creates multiple threats in sequence.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2qk2r/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2B1PPP/R3K2R w KQkq - 1 9",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "f3e5",
+      "c6e7",
+      "d1c2"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Ne5",
+      "Ne7",
+      "Qc2"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1420,
+    "explanation": "Double attack with queen - White's queen creates multiple threats after the knight sacrifice.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1b1k2r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 3 5",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "c1g5",
+      "f8e7",
+      "g5f6",
+      "e7f6",
+      "d1d5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "Bg5",
+      "Be7",
+      "Bxf6",
+      "Bxf6",
+      "Qxd5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1480,
+    "explanation": "Double attack with bishop pair - White uses both bishops to create multiple threats.",
     "source": "generated"
   }
 ]
