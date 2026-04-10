@@ -22,8 +22,11 @@ data/openings_trie.json
 .DS_Store
 Thumbs.db
 
-# Claude Code
+# Claude Code (user-specific config, hooks, sessions)
 .claude/
+
+# MCP server config (contains local paths)
+.mcp.json
 
 # OMC state
 .omc/
