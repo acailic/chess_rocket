@@ -1,0 +1,114 @@
+[
+  {
+    "fen": "r1bqk2r/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQkq - 0 8",
+    "solution_moves": [
+      "c3e4",
+      "c6e7",
+      "e4c5",
+      "d7d6",
+      "c5e6",
+      "f8e7"
+    ],
+    "solution_san": [
+      "Ne4",
+      "Ne7",
+      "Nc5",
+      "d6",
+      "Nxe6",
+      "Bxe6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1150,
+    "explanation": "Creating and exploiting weak squares - White maneuvers to create a weak pawn on d6 and establish a knight outpost.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2B1PPP/R3K2R w KQ - 1 8",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "f3e5",
+      "c6e7",
+      "e4d5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Ne5",
+      "Ne7",
+      "exd5"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1200,
+    "explanation": "Weak pawn exploitation - White creates a weak pawn structure and plans to attack the weaknesses.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "c3e4",
+      "c6e7",
+      "e4c5",
+      "d7d6",
+      "c5e6"
+    ],
+    "solution_san": [
+      "Ne4",
+      "Ne7",
+      "Nc5",
+      "d6",
+      "Nxe6"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1120,
+    "explanation": "Creating an outpost - White establishes a knight on e5 as a permanent outpost that controls key squares.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2B1PPP/R3K2R w KQ - 1 8",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "f3e5",
+      "c6e7",
+      "e4d5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Ne5",
+      "Ne7",
+      "exd5"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1160,
+    "explanation": "Pawn structure exploitation - White creates a weak pawn structure and plans to attack the weaknesses.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 9",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "b3d4",
+      "d8c7",
+      "d4f5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Nd4",
+      "Qc7",
+      "Nf5"
+    ],
+    "motif": "positional",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1220,
+    "explanation": "Positional sacrifice - White sacrifices a pawn to gain long-term positional advantages.",
+    "source": "generated"
+  }
+]

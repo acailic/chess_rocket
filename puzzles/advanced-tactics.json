@@ -1,0 +1,158 @@
+[
+  {
+    "fen": "r1bqk2r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQKB1R w KQkq - 2 5",
+    "solution_moves": [
+      "c4f7",
+      "e8f8",
+      "c2c4",
+      "f8e7",
+      "c4g8",
+      "e8g8",
+      "g8e7"
+    ],
+    "solution_san": [
+      "Bxf7+",
+      "Kxf7",
+      "c4",
+      "Ke7",
+      "Bxg8+",
+      "Kg8",
+      "Bxe7"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1350,
+    "explanation": "Clearance sacrifice - White sacrifices the bishop on f7 to open lines and clear the diagonal for the other bishop.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 3 10",
+    "solution_moves": [
+      "c3d5",
+      "e6d5",
+      "b3d4",
+      "d8c7",
+      "d4f5",
+      "c8e6",
+      "f5e7"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Nd4",
+      "Qc7",
+      "Nf5",
+      "Be6",
+      "Nxe7"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1400,
+    "explanation": "Interference sacrifice - The knight on d5 interferes with Black's coordination.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 4",
+    "solution_moves": [
+      "c3d5",
+      "d4d5",
+      "c1g5",
+      "f8e7",
+      "g5f6",
+      "e7f6",
+      "d1d5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "exd5",
+      "Bg5",
+      "Be7",
+      "Bxf6",
+      "Bxf6",
+      "Qxd5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1400,
+    "explanation": "Interference - The knight sacrifice interferes with Black's piece coordination.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/2PP4/1PN1PN2/P2BQPPP/R3KB1R w KQ - 4 11",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "b3d4",
+      "d8c7",
+      "d4f5",
+      "e7f5",
+      "e4f5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "Nd4",
+      "Qc7",
+      "Nf5",
+      "exf5",
+      "exf5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1380,
+    "explanation": "Removing the defender - White sacrifices to eliminate the defender of d5.",
+    "source": "generated"
+  },
+  {
+    "fen": "r2q1rk1/ppp2ppp/2n1pn2/3p4/2PP1N2/1P2P3/P2Q1PPP/R3KB1R w KQ - 2 10",
+    "solution_moves": [
+      "f3e5",
+      "d6e5",
+      "c3d5",
+      "c6e7",
+      "d1c2",
+      "f8e8",
+      "c2g6"
+    ],
+    "solution_san": [
+      "Ne5",
+      "dxe5",
+      "Nd5",
+      "Ne7",
+      "Qc2",
+      "Rf8",
+      "Qxg6"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "advanced",
+    "difficulty_rating": 1470,
+    "explanation": "Double attack combination - White creates multiple threats that cannot all be defended.",
+    "source": "generated"
+  },
+  {
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+    "solution_moves": [
+      "c3d5",
+      "c6d5",
+      "c4d5",
+      "d8a5",
+      "d5c6",
+      "b7c6",
+      "f3e5"
+    ],
+    "solution_san": [
+      "Nd5",
+      "cxd5",
+      "cxd5",
+      "Qa5+",
+      "Nc6",
+      "bxc6",
+      "Ne5"
+    ],
+    "motif": "advanced_tactics",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1360,
+    "explanation": "Creating complications - White sacrifices material to create complex tactical possibilities.",
+    "source": "generated"
+  }
+]

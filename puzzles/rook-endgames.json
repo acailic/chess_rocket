@@ -1,0 +1,216 @@
+[
+  {
+    "fen": "1K6/1P1r4/8/8/8/8/2k5/1R6 w - - 0 1",
+    "solution_moves": [
+      "a8b7",
+      "c8a8",
+      "b7a7",
+      "a8b8",
+      "a1a8",
+      "b8a8"
+    ],
+    "solution_san": [
+      "Kb7",
+      "Ra8",
+      "Ka7",
+      "Rb8",
+      "Rxa8+",
+      "Kxa8"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1200,
+    "explanation": "Building a bridge - White's king moves to escape checks, then brings the rook to shield. This is the classic Lucena position winning technique.",
+    "source": "generated"
+  },
+  {
+    "fen": "1K6/1P2r3/8/8/8/8/2k5/1R6 w - - 0 1",
+    "solution_moves": [
+      "b7b8q",
+      "e8e1",
+      "a1e1"
+    ],
+    "solution_san": [
+      "b8=Q+",
+      "Rxe1+",
+      "Kxe1"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1100,
+    "explanation": "When the rook is behind the pawn, promoting with check is winning.",
+    "source": "generated"
+  },
+  {
+    "fen": "8/1K6/1P1r4/8/8/8/2k5/1R6 w - - 0 1",
+    "solution_moves": [
+      "b6b7",
+      "e8b8",
+      "a1b1",
+      "d1e2",
+      "b1a1",
+      "e2d2",
+      "a1b1",
+      "d2c2"
+    ],
+    "solution_san": [
+      "Kb7",
+      "Rb8+",
+      "Kb1",
+      "Ke2",
+      "Ka1",
+      "Kd2",
+      "Kb1",
+      "Kc2"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1150,
+    "explanation": "Active king defense - White's king approaches to support the pawn while the rook blocks checks.",
+    "source": "generated"
+  },
+  {
+    "fen": "1K6/1P2r3/8/8/8/8/2k5/1R6 b - - 0 1",
+    "solution_moves": [
+      "e8e3",
+      "a1a2",
+      "c1d1",
+      "a2b2",
+      "d1c1",
+      "b2a2",
+      "c1b1",
+      "a2b2"
+    ],
+    "solution_san": [
+      "Re3+",
+      "Ka2",
+      "Kd1",
+      "Kb2",
+      "Kc1",
+      "Ka2",
+      "Kb1",
+      "Kb2"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1150,
+    "explanation": "Philidor position - Black's rook on the 3rd rank checking from the side creates a perpetual defense.",
+    "source": "generated"
+  },
+  {
+    "fen": "8/1K6/1P1r4/8/8/8/2k5/1R6 b - - 0 1",
+    "solution_moves": [
+      "e8b8",
+      "b6a7",
+      "b8a8",
+      "a7b7",
+      "a8b8",
+      "b7a7"
+    ],
+    "solution_san": [
+      "Rb8+",
+      "Ka7",
+      "Ra8+",
+      "Kb7",
+      "Rb8+",
+      "Ka7"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1180,
+    "explanation": "Checking from behind - Black's rook creates perpetual checks by approaching from behind.",
+    "source": "generated"
+  },
+  {
+    "fen": "8/8/1K6/1P1r4/8/8/2k5/1R6 w - - 0 1",
+    "solution_moves": [
+      "b6b7",
+      "e8b8",
+      "a1b1",
+      "d1e2",
+      "b1a1",
+      "e2d2",
+      "a1b1",
+      "d2c2"
+    ],
+    "solution_san": [
+      "Kb7",
+      "Rb8+",
+      "Kb1",
+      "Ke2",
+      "Ka1",
+      "Kd2",
+      "Kb1",
+      "Kc2"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1200,
+    "explanation": "Cutting off the king - White's rook prevents Black's king from approaching while White's king supports the pawn.",
+    "source": "generated"
+  },
+  {
+    "fen": "8/1K6/1P2k3/8/8/8/2r5/1R6 w - - 0 1",
+    "solution_moves": [
+      "a1c1",
+      "d8d1",
+      "b6b7",
+      "d1d2",
+      "b7b8q",
+      "d2b2"
+    ],
+    "solution_san": [
+      "Rc1",
+      "Rd1+",
+      "Kb7",
+      "Rd2",
+      "b8=Q",
+      "Rb2"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1280,
+    "explanation": "Cutting off the king while advancing - White's rook prevents Black's king from approaching as the pawn advances.",
+    "source": "generated"
+  },
+  {
+    "fen": "1K6/1P2k3/8/8/8/8/2r5/1R6 w - - 0 1",
+    "solution_moves": [
+      "b7b8q",
+      "d8b8",
+      "a1b1"
+    ],
+    "solution_san": [
+      "b8=Q+",
+      "Rxb8+",
+      "Kxb8"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1050,
+    "explanation": "Promoting with check when the king is close enough allows winning the rook.",
+    "source": "generated"
+  },
+  {
+    "fen": "8/1K6/1P6/8/8/8/2k5/1R6 w - - 0 1",
+    "solution_moves": [
+      "a1a8",
+      "d8c8",
+      "b6b7",
+      "c8b8",
+      "a8b8"
+    ],
+    "solution_san": [
+      "Ra8",
+      "Rc8",
+      "Kb7",
+      "Rb8+",
+      "Rxb8"
+    ],
+    "motif": "rook_endgame",
+    "difficulty": "intermediate",
+    "difficulty_rating": 1250,
+    "explanation": "Rook sacrifice to hold the draw - Black sacrifices the rook to prevent promotion.",
+    "source": "generated"
+  }
+]
