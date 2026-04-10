@@ -292,10 +292,10 @@ def process_move(move_san: str, game_state: dict) -> tuple[dict | None, str | No
                         legal = list(board.legal_moves)
                         board.push(random.choice(legal))
                     else:
-                        result = engine.play(
+                        eng_result = engine.play(
                             board, chess.engine.Limit(depth=depth)
                         )
-                        board.push(result.move)
+                        board.push(eng_result.move)
             finally:
                 engine.quit()
         except FileNotFoundError:
@@ -366,8 +366,8 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             # Process the move
             new_state, error = process_move(move_san, game_state)
 
-            if error:
-                self._json_response({"error": error}, 400)
+            if error or new_state is None:
+                self._json_response({"error": error or "move failed"}, 400)
                 return
 
             # Write updated state atomically
