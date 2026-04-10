@@ -459,6 +459,30 @@
     grid-template-columns: minmax(260px, clamp(360px, 70vw, 720px));
     justify-content: center;
   }
+
+  /* History navigation indicator */
+  .history-indicator {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--surface2);
+    border-radius: var(--radius-md);
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    color: var(--yellow);
+    animation: fadeSlideIn 0.2s ease;
+  }
+  .history-indicator button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .history-indicator button:hover { opacity: 0.85; }
   .puzzle-controls { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
   .puzzle-controls select {
     flex: 1; padding: 6px 10px; background: var(--bg); border: 1px solid var(--surface2);
@@ -521,6 +545,10 @@
     <div class="board-info">
       <span id="player-info">Playing as: White</span>
       <span id="engine-info">Engine: 800 Elo</span>
+    </div>
+    <div class="history-indicator" id="history-indicator">
+      Viewing historical position
+      <button onclick="returnToLive()">Back to live</button>
     </div>
     <div class="panel" style="border-left-color: var(--accent);">
       <h2>Your Move</h2>
@@ -1422,8 +1450,8 @@
         badgeHtml = '<span class="badge ' + b.cls + '">' + b.text + '</span>';
       }
     }
-    // Make moves clickable with onclick handler for visual highlighting
-    return '<span class="move-cell"><span class="move-san clickable" onclick="onMoveClick(this)">' +
+    // Make moves clickable — navigates to that position via fen_history
+    return '<span class="move-cell"><span class="move-san clickable" onclick="onMoveClick(this,' + plyIndex + ')">' +
       esc(san) + '</span>' + badgeHtml + '</span>';
   }
 
@@ -1544,13 +1572,51 @@
     $('.legal-move-dot, .legal-move-capture').removeClass('legal-move-dot legal-move-capture');
   }
 
+  // Store fen_history and move_annotations from latest state for navigation
+  let latestFenHistory = [];
+  let latestAnnotations = [];
+  let viewingHistoricalPly = -1; // -1 means viewing live position
+
   // Expose onMoveClick globally so inline onclick handlers can call it
-  window.onMoveClick = function(el) {
+  window.onMoveClick = function(el, plyIndex) {
     if (activeMoveEl) {
       activeMoveEl.classList.remove('active-move');
     }
     el.classList.add('active-move');
     activeMoveEl = el;
+
+    // Navigate to that position if fen_history is available
+    var fenArr = latestFenHistory;
+    if (fenArr && fenArr.length > plyIndex) {
+      var targetFen = fenArr[plyIndex];
+      board.position(targetFen, false);
+      viewingHistoricalPly = plyIndex;
+
+      // Show arrow for best move if this move was a mistake/blunder
+      var annot = latestAnnotations[plyIndex];
+      if (annot && annot.best_arrow) {
+        drawArrow(annot.best_arrow.from, annot.best_arrow.to, '#4caf50');
+      } else {
+        clearArrows();
+      }
+
+      // Show indicator that we're viewing history
+      var indicator = document.getElementById('history-indicator');
+      if (indicator) indicator.style.display = 'flex';
+    }
+  };
+
+  // Return to live position from historical view
+  window.returnToLive = function() {
+    viewingHistoricalPly = -1;
+    if (lastFen) board.position(lastFen, false);
+    clearArrows();
+    if (activeMoveEl) {
+      activeMoveEl.classList.remove('active-move');
+      activeMoveEl = null;
+    }
+    var indicator = document.getElementById('history-indicator');
+    if (indicator) indicator.style.display = 'none';
   };
 
   // --- Utility ---
@@ -1624,12 +1690,32 @@
         applyHighlights(state);
         // Clear arrows when position changes
         clearArrows();
+
+        // Show best-move arrow for the last move if it was a mistake/blunder
+        var lastAnnots = state.move_annotations || [];
+        var lastAnnot = lastAnnots[lastAnnots.length - 1];
+        if (lastAnnot && lastAnnot.best_arrow &&
+            (lastAnnot.classification === 'mistake' ||
+             lastAnnot.classification === 'blunder' ||
+             lastAnnot.classification === 'inaccuracy')) {
+          setTimeout(function() {
+            drawArrow(lastAnnot.best_arrow.from, lastAnnot.best_arrow.to, '#4caf50');
+          }, 300);
+        }
+
+        // Return from historical view on new move
+        if (viewingHistoricalPly >= 0) returnToLive();
+
         // Clear move status once engine has responded
         if (moveSubmitting) {
           setMoveStatus('', '');
           moveSubmitting = false;
         }
       }
+
+      // Store fen_history and annotations for move navigation
+      if (state.fen_history) latestFenHistory = state.fen_history;
+      if (state.move_annotations) latestAnnotations = state.move_annotations;
 
       // Check orientation
       const expectedOrientation = state.player_color === 'black' ? 'black' : 'white';
