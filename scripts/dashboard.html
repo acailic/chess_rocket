@@ -658,7 +658,33 @@
           promotion: 'q'
         });
         if (move === null) return 'snapback';
-        submitMove(move.san);
+
+        // Check if in puzzle mode
+        if (puzzleMode) {
+          checkPuzzleAnswer(move.san);
+          // Undo the move to stay in puzzle position
+          chessGame.undo();
+          board.position(chessGame.fen());
+          return 'snapback';
+        }
+
+        // Check for blunders before submitting (only in normal game mode)
+        checkMoveSafety(move.san).then(data => {
+          if (data.classification === 'blunder' && data.cp_loss >= 300) {
+            // Show blunder warning dialog
+            pendingBlunderMove = move.san;
+            const warningEl = document.getElementById('blunder-warning');
+            const warningText = document.getElementById('blunder-warning-text');
+            warningText.textContent = 'This move loses ' + data.cp_loss + ' centipawns. Are you sure?';
+            warningEl.style.display = 'block';
+            // Undo the move for now
+            chessGame.undo();
+            board.position(chessGame.fen());
+          } else {
+            // Proceed with normal submission
+            submitMove(move.san);
+          }
+        });
       },
       onSnapEnd: function() {
         clearLegalMoveDots();
@@ -676,6 +702,31 @@
     const btn = document.getElementById('move-submit');
     btn.addEventListener('click', () => submitTextInput());
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitTextInput(); });
+
+    // Wire up puzzle mode buttons
+    const puzzleBtn = document.getElementById('puzzle-mode-btn');
+    if (puzzleBtn) puzzleBtn.addEventListener('click', togglePuzzleMode);
+    const puzzleLoadBtn = document.getElementById('puzzle-load-btn');
+    if (puzzleLoadBtn) puzzleLoadBtn.addEventListener('click', loadPuzzles);
+    const puzzleHintBtn = document.getElementById('puzzle-hint-btn');
+    if (puzzleHintBtn) puzzleHintBtn.addEventListener('click', showHint);
+    const puzzleSkipBtn = document.getElementById('puzzle-skip-btn');
+    if (puzzleSkipBtn) puzzleSkipBtn.addEventListener('click', function() { puzzleTotal++; updatePuzzleScore(); loadNextPuzzle(); });
+
+    // Wire up blunder warning dialog buttons
+    const blunderConfirm = document.getElementById('blunder-confirm');
+    const blunderCancel = document.getElementById('blunder-cancel');
+    if (blunderConfirm) blunderConfirm.addEventListener('click', function() {
+      document.getElementById('blunder-warning').style.display = 'none';
+      // Re-submit the pending move
+      if (pendingBlunderMove) { submitMove(pendingBlunderMove); pendingBlunderMove = null; }
+    });
+    if (blunderCancel) blunderCancel.addEventListener('click', function() {
+      document.getElementById('blunder-warning').style.display = 'none';
+      chessGame.undo();
+      board.position(chessGame.fen());
+      pendingBlunderMove = null;
+    });
   }
 
   function submitTextInput() {
@@ -688,8 +739,34 @@
       setMoveStatus('Invalid move: ' + san, 'error');
       return;
     }
-    submitMove(move.san);
     input.value = '';
+
+    // Check if in puzzle mode
+    if (puzzleMode) {
+      checkPuzzleAnswer(move.san);
+      // Undo the move to stay in puzzle position
+      chessGame.undo();
+      board.position(chessGame.fen());
+      return;
+    }
+
+    // Check for blunders before submitting (only in normal game mode)
+    checkMoveSafety(move.san).then(data => {
+      if (data.classification === 'blunder' && data.cp_loss >= 300) {
+        // Show blunder warning dialog
+        pendingBlunderMove = move.san;
+        const warningEl = document.getElementById('blunder-warning');
+        const warningText = document.getElementById('blunder-warning-text');
+        warningText.textContent = 'This move loses ' + data.cp_loss + ' centipawns. Are you sure?';
+        warningEl.style.display = 'block';
+        // Undo the move for now
+        chessGame.undo();
+        board.position(chessGame.fen());
+      } else {
+        // Proceed with normal submission
+        submitMove(move.san);
+      }
+    });
   }
 
   async function submitMove(san) {
@@ -855,6 +932,158 @@
     updateLearningProgressPanel(progress, srsData, curriculumData);
   }
 
+  // === PUZZLE MODE ===
+  let puzzleMode = false;
+  let currentPuzzle = null;
+  let puzzleQueue = [];
+  let puzzleIndex = 0;
+  let puzzleCorrect = 0;
+  let puzzleTotal = 0;
+  let hintLevel = 0;
+  let pendingBlunderMove = null;
+
+  function togglePuzzleMode() {
+    puzzleMode = !puzzleMode;
+    const panel = document.getElementById('puzzle-panel');
+    const btn = document.getElementById('puzzle-mode-btn');
+    if (puzzleMode) {
+      panel.style.display = 'block';
+      btn.style.background = 'var(--accent)';
+      btn.style.color = '#fff';
+      loadPuzzles();
+    } else {
+      panel.style.display = 'none';
+      btn.style.background = 'var(--surface2)';
+      btn.style.color = 'var(--text)';
+    }
+  }
+
+  async function loadPuzzles() {
+    const motif = document.getElementById('puzzle-motif').value;
+    const mode = motif ? 'sorted' : 'interleaved';
+    try {
+      const resp = await fetch('/api/puzzles?mode=' + mode + '&motif=' + encodeURIComponent(motif) + '&count=10');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      puzzleQueue = data.puzzles;
+      puzzleIndex = 0;
+      puzzleCorrect = 0;
+      puzzleTotal = puzzleQueue.length;
+      updatePuzzleScore();
+      if (puzzleQueue.length > 0) loadNextPuzzle();
+    } catch (e) { /* ignore */ }
+  }
+
+  function loadNextPuzzle() {
+    if (puzzleIndex >= puzzleQueue.length) {
+      showPuzzleFeedback('All puzzles complete! Score: ' + puzzleCorrect + '/' + puzzleTotal, 'correct');
+      return;
+    }
+    currentPuzzle = puzzleQueue[puzzleIndex];
+    hintLevel = 0;
+    // Set up the board with puzzle position
+    board.position(currentPuzzle.fen);
+    chessGame.load(currentPuzzle.fen);
+    lastFen = currentPuzzle.fen;
+    // Update UI
+    document.getElementById('puzzle-motif-display').textContent = currentPuzzle.motif || 'Mixed';
+    document.getElementById('puzzle-difficulty').textContent = currentPuzzle.difficulty || '--';
+    document.getElementById('puzzle-hint-btn').disabled = false;
+    document.getElementById('puzzle-skip-btn').disabled = false;
+    hidePuzzleFeedback();
+    // Clear arrows
+    clearArrows();
+  }
+
+  function checkPuzzleAnswer(san) {
+    if (!currentPuzzle) return;
+    const solutions = currentPuzzle.solution_moves || [];
+    const isCorrect = solutions.some(s => s.toLowerCase() === san.toLowerCase());
+    puzzleTotal++;
+    if (isCorrect) {
+      puzzleCorrect++;
+      showPuzzleFeedback('Correct! ' + (currentPuzzle.explanation || ''), 'correct');
+      document.getElementById('puzzle-hint-btn').disabled = true;
+      document.getElementById('puzzle-skip-btn').disabled = true;
+    } else {
+      showPuzzleFeedback('Not quite. Try again!', 'incorrect');
+    }
+    updatePuzzleScore();
+  }
+
+  function showHint() {
+    if (!currentPuzzle || hintLevel >= 3) return;
+    hintLevel++;
+    const hints = [];
+    if (hintLevel >= 1) hints.push('Look for a tactical pattern involving ' + (currentPuzzle.motif || 'a combination') + '.');
+    if (hintLevel >= 2) hints.push('The solution involves ' + currentPuzzle.solution_moves[0].charAt(0) + '-file or ' + currentPuzzle.solution_moves[0].charAt(0) + '-rank.');
+    if (hintLevel >= 3) hints.push('The answer is: ' + currentPuzzle.solution_moves[0]);
+    showPuzzleFeedback(hints[hintLevel - 1], 'hint');
+  }
+
+  function showPuzzleFeedback(text, cls) {
+    const el = document.getElementById('puzzle-feedback');
+    el.textContent = text;
+    el.className = 'puzzle-feedback ' + cls;
+  }
+
+  function hidePuzzleFeedback() {
+    const el = document.getElementById('puzzle-feedback');
+    el.className = 'puzzle-feedback';
+    el.textContent = '';
+  }
+
+  function updatePuzzleScore() {
+    document.getElementById('puzzle-score').textContent = puzzleCorrect + '/' + puzzleTotal;
+  }
+
+  // === BEST-MOVE ARROW RENDERING ===
+
+  function drawArrow(fromSq, toSq, color) {
+    // Remove existing arrows
+    clearArrows();
+    const boardEl = document.getElementById('board');
+    if (!boardEl) return;
+    // Calculate pixel positions from square names
+    const boardWidth = boardEl.offsetWidth;
+    const sqSize = boardWidth / 8;
+    const fileMap = {a:0,b:1,c:2,d:3,e:4,f:5,g:6,h:7};
+    const fromFile = fileMap[fromSq[0]], fromRank = 8 - parseInt(fromSq[1]);
+    const toFile = fileMap[toSq[0]], toRank = 8 - parseInt(toSq[1]);
+    const fromX = fromFile * sqSize + sqSize / 2;
+    const fromY = fromRank * sqSize + sqSize / 2;
+    const toX = toFile * sqSize + sqSize / 2;
+    const toY = toRank * sqSize + sqSize / 2;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'arrow-overlay');
+    svg.innerHTML = '<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="' + color + '"/></marker></defs>' +
+      '<line class="best-arrow-bg" x1="' + fromX + '" y1="' + fromY + '" x2="' + toX + '" y2="' + toY + '"/>' +
+      '<line class="best-arrow" x1="' + fromX + '" y1="' + fromY + '" x2="' + toX + '" y2="' + toY + '"/>';
+    boardEl.style.position = 'relative';
+    boardEl.appendChild(svg);
+  }
+
+  function clearArrows() {
+    document.querySelectorAll('.arrow-overlay').forEach(function(el) { el.remove(); });
+  }
+
+  // === PRE-MOVE BLUNDER WARNING ===
+
+  async function checkMoveSafety(san) {
+    try {
+      const resp = await fetch('/api/evaluate-move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fen: chessGame.fen(), move: san })
+      });
+      const data = await resp.json();
+      return data;
+    } catch (e) {
+      return { classification: 'good', cp_loss: 0, warning: null };
+    }
+  }
+
   // --- Panel Updates ---
 
   function updatePanels(state) {
@@ -964,6 +1193,15 @@
     }
     historyEl.innerHTML = html;
     historyEl.scrollTop = historyEl.scrollHeight;
+
+    // Draw best-move arrow for suboptimal moves
+    if (annotations.length > 0) {
+      const lastAnnot = annotations[annotations.length - 1];
+      if (lastAnnot && lastAnnot.best_arrow && lastAnnot.classification &&
+          lastAnnot.classification !== 'best' && lastAnnot.classification !== 'great') {
+        drawArrow(lastAnnot.best_arrow.from, lastAnnot.best_arrow.to, '#4caf50');
+      }
+    }
 
     // Game over banner
     const banner = document.getElementById('game-over');
@@ -1245,6 +1483,8 @@
         lastFen = state.fen;
         // Apply visual highlights (last move, check) after position update
         applyHighlights(state);
+        // Clear arrows when position changes
+        clearArrows();
         // Clear move status once engine has responded
         if (moveSubmitting) {
           setMoveStatus('', '');
