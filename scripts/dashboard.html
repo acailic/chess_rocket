@@ -941,9 +941,23 @@
       }
       const data = await resp.json();
       currentGameId = data.game_id;
-      renderGameTabs();
-      // Clear board state to force refresh
+      // Reset local state for new game
+      if (data.state) {
+        try { chessGame.load(data.state.fen); } catch(e) {}
+        playerColor = data.state.player_color || 'white';
+      }
+      activeMoveEl = null;
+      viewingHistoricalPly = -1;
       lastFen = null;
+      // Clear thinking coach output
+      var tcOutput = document.getElementById('thinking-coach-output');
+      if (tcOutput) tcOutput.style.display = 'none';
+      // Clear game over banner
+      var banner = document.getElementById('game-over');
+      if (banner) banner.classList.remove('visible');
+      // Clear move status
+      setMoveStatus('', '');
+      renderGameTabs();
       // Trigger immediate poll
       poll();
     } catch (e) {
@@ -1965,16 +1979,9 @@
       }
     }
 
-    // Coaching tip — generate from annotations if server doesn't provide one
+    // Coaching tip from server annotations
     var coachEl = document.getElementById('coach-message');
     var tip = state.coaching_tip;
-    if (!tip || !tip.message) {
-      var annots = state.move_annotations || [];
-      var lastAnnot = annots.length > 0 ? annots[annots.length - 1] : null;
-      if (lastAnnot) {
-        tip = generateCoachTip(lastAnnot, state.player_color);
-      }
-    }
     if (tip && tip.message) {
       var icons = { teach: '\uD83D\uDCD6', praise: '\u2B50', warn: '\u26A0\uFE0F', correct: '\u2705', info: '\u2139\uFE0F' };
       var icon = icons[tip.type] || icons.teach;

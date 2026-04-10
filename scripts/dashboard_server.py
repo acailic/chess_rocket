@@ -117,6 +117,9 @@ def _generate_coaching_tip(
     Returns a dict with 'type' and 'message', or None for good moves.
     """
     # Insights about how stronger players think
+    if best_san is None:
+        best_san = "a different move"
+
     thinking_tips = {
         "best": [
             "Strong players always check: 'What does my opponent want?' before moving.",
@@ -1085,19 +1088,8 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
                     else:
                         cp_loss = 0
 
-                # Classify the move (using exact thresholds from spec)
-                if cp_loss == 0:
-                    classification = "best"
-                elif cp_loss <= 30:
-                    classification = "great"
-                elif cp_loss <= 80:
-                    classification = "good"
-                elif cp_loss <= 150:
-                    classification = "inaccuracy"
-                elif cp_loss <= 300:
-                    classification = "mistake"
-                else:
-                    classification = "blunder"
+                # Classify the move
+                classification = _classify_move(cp_loss)
 
                 # Generate warning for significant mistakes
                 warning = None
