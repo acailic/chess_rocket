@@ -1234,6 +1234,41 @@
     }
   }
 
+  // --- Coach Tip Generator ---
+
+  function generateCoachTip(annot, playerColor) {
+    if (!annot || !annot.classification) return null;
+    var c = annot.classification;
+    var move = annot.move || '';
+    var best = annot.best_move || '';
+    var cpLoss = annot.cp_loss || 0;
+
+    // Phase 1 tips: simple, concrete language for beginners
+    var tips = {
+      best:   { type: 'correct', message: move + ' is the best move! Well played.' },
+      great:  { type: 'praise',  message: move + ' is a strong move. Keep it up!' },
+      good:   { type: 'info',    message: move + ' is fine. ' + (best && best !== move ? best + ' was slightly better.' : '') },
+      inaccuracy: {
+        type: 'warn',
+        message: move + ' is okay, but ' + best + ' was stronger. Look for moves that develop your pieces toward the center.'
+      },
+      mistake: {
+        type: 'teach',
+        message: move + ' loses about ' + Math.round(cpLoss/100) + ' pawns of advantage. ' +
+          (best ? 'Consider ' + best + ' instead.' : 'Try to keep your pieces safe and active.') +
+          ' Tip: before every move, check if any of your pieces are under attack.'
+      },
+      blunder: {
+        type: 'teach',
+        message: move + ' is a big mistake (loses ~' + Math.round(cpLoss/100) + ' pawns)! ' +
+          (best ? 'The best move was ' + best + '.' : 'Look carefully at what your opponent threatens.') +
+          ' Tip: always check what your opponent\'s last move attacked before making your move.'
+      }
+    };
+
+    return tips[c] || null;
+  }
+
   // --- Panel Updates ---
 
   function updatePanels(state) {
@@ -1353,9 +1388,16 @@
       }
     }
 
-    // Coaching tip
+    // Coaching tip — generate from annotations if server doesn't provide one
     var coachEl = document.getElementById('coach-message');
     var tip = state.coaching_tip;
+    if (!tip || !tip.message) {
+      var annots = state.move_annotations || [];
+      var lastAnnot = annots.length > 0 ? annots[annots.length - 1] : null;
+      if (lastAnnot) {
+        tip = generateCoachTip(lastAnnot, state.player_color);
+      }
+    }
     if (tip && tip.message) {
       var icons = { teach: '\uD83D\uDCD6', praise: '\u2B50', warn: '\u26A0\uFE0F', correct: '\u2705', info: '\u2139\uFE0F' };
       var icon = icons[tip.type] || icons.teach;
