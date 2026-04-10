@@ -64,7 +64,7 @@
   }
   header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px; }
   header h1 span { color: var(--accent); }
-  .header-stats { display: flex; gap: var(--space-lg); font-size: 0.875rem; color: var(--text-dim); }
+  .header-stats { display: flex; gap: var(--space-lg); font-size: 0.875rem; color: var(--text-dim); align-items: center; }
   .header-stats span { transition: color 0.2s ease; }
   .header-stats span:hover { color: var(--text); }
   .main {
@@ -109,7 +109,23 @@
     letter-spacing: 1px;
     color: var(--text-dim);
     margin-bottom: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
   }
+  .panel h2:hover { color: var(--text); }
+  .panel h2::after {
+    content: '▲';
+    font-size: 0.6rem;
+    transition: transform 0.2s ease;
+  }
+  .panel.collapsed h2::after { transform: rotate(180deg); }
+  .panel.collapsed > *:not(h2) {
+    display: none;
+  }
+  .panel.collapsed h2 { margin-bottom: 0; }
   /* Opening panel */
   .opening-name { font-size: 1.1rem; font-weight: 600; }
   .opening-eco { color: var(--accent); font-weight: 500; margin-left: 8px; }
@@ -332,6 +348,22 @@
   }
   .badge { animation: badgePop 0.25s ease; }
 
+  /* Coach panel */
+  .coach-panel { border-left-color: var(--accent) !important; }
+  .coach-empty { color: var(--text-dim); font-style: italic; font-size: 0.85rem; }
+  .coach-tip {
+    font-size: 0.9rem; line-height: 1.5;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    animation: fadeSlideIn 0.3s ease;
+  }
+  .coach-tip.type-teach { background: rgba(240, 85, 114, 0.1); border-left: 3px solid var(--accent); }
+  .coach-tip.type-praise { background: rgba(76, 175, 80, 0.1); border-left: 3px solid var(--green); }
+  .coach-tip.type-warn { background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--orange); }
+  .coach-tip.type-correct { background: rgba(76, 175, 80, 0.1); border-left: 3px solid var(--green); }
+  .coach-tip.type-info { background: rgba(33, 150, 243, 0.1); border-left: 3px solid var(--blue); }
+  .coach-tip-icon { margin-right: 6px; font-weight: 700; }
+
   /* Responsive — fluid first, then breakpoints for layout shifts */
 
   /* Tablet / narrow desktop: tighten panels */
@@ -402,7 +434,31 @@
   .best-arrow { stroke: #4caf50; stroke-width: 4; fill: none; opacity: 0.8; marker-end: url(#arrowhead); }
   .best-arrow-bg { stroke: #4caf50; stroke-width: 8; fill: none; opacity: 0.3; }
 
-  /* Puzzle panel */
+  /* Sidebar toggle button */
+  .sidebar-toggle {
+    background: var(--surface2);
+    color: var(--text-dim);
+    border: 1px solid var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sidebar-toggle:hover { background: var(--surface3); color: var(--text); }
+  .sidebar-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* When sidebar is hidden, expand board to full width */
+  .panels.hidden {
+    display: none;
+  }
+  .main.sidebar-collapsed {
+    grid-template-columns: minmax(260px, clamp(360px, 70vw, 720px));
+    justify-content: center;
+  }
   .puzzle-controls { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
   .puzzle-controls select {
     flex: 1; padding: 6px 10px; background: var(--bg); border: 1px solid var(--surface2);
@@ -446,6 +502,7 @@
   <div class="header-stats">
     <span id="session-info">Session #--</span>
     <span id="streak-info">Streak: --</span>
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle panels">▶ Panels</button>
     <button id="puzzle-mode-btn" style="background: var(--surface2); color: var(--text); border: 1px solid var(--surface2); border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 0.85rem;">Puzzles</button>
   </div>
 </header>
@@ -478,6 +535,10 @@
     <div class="panel" style="border-left-color: var(--accent);">
       <h2>Opening</h2>
       <div id="opening-display"><span class="out-of-book">Starting position</span></div>
+    </div>
+    <div class="panel coach-panel" id="coach-panel">
+      <h2>Coach</h2>
+      <div id="coach-message"><span class="coach-empty">Tips will appear here during the game</span></div>
     </div>
     <div class="panel" style="border-left-color: var(--blue);">
       <h2>Material Balance</h2>
@@ -628,6 +689,66 @@
   // Track the currently active (clicked) move in the move list
   let activeMoveEl = null;
 
+  // --- Panel collapse / sidebar toggle ---
+  function initPanelToggles() {
+    // Individual panel collapse on h2 click
+    document.querySelectorAll('.panel h2').forEach(function(h2) {
+      h2.addEventListener('click', function() {
+        h2.parentElement.classList.toggle('collapsed');
+        savePanelState();
+      });
+    });
+
+    // Master sidebar toggle
+    var toggleBtn = document.getElementById('sidebar-toggle');
+    var panelsEl = document.querySelector('.panels');
+    var mainEl = document.querySelector('.main');
+    if (toggleBtn && panelsEl && mainEl) {
+      // Remove old listener by cloning
+      var newBtn = toggleBtn.cloneNode(true);
+      toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
+      newBtn.addEventListener('click', function() {
+        var hidden = panelsEl.classList.toggle('hidden');
+        mainEl.classList.toggle('sidebar-collapsed', hidden);
+        newBtn.textContent = hidden ? '◀ Panels' : '▶ Panels';
+        localStorage.setItem('sidebar-hidden', hidden ? '1' : '0');
+        setTimeout(function() { if (board) board.resize(); }, 50);
+      });
+      // Restore state
+      if (localStorage.getItem('sidebar-hidden') === '1') {
+        panelsEl.classList.add('hidden');
+        mainEl.classList.add('sidebar-collapsed');
+        newBtn.textContent = '◀ Panels';
+      } else {
+        newBtn.textContent = '▶ Panels';
+      }
+    }
+
+    // Restore individual panel states
+    restorePanelState();
+  }
+
+  function savePanelState() {
+    var states = {};
+    document.querySelectorAll('.panel').forEach(function(p) {
+      var h2 = p.querySelector('h2');
+      if (h2) states[h2.textContent.trim()] = p.classList.contains('collapsed') ? '1' : '0';
+    });
+    localStorage.setItem('panel-states', JSON.stringify(states));
+  }
+
+  function restorePanelState() {
+    try {
+      var states = JSON.parse(localStorage.getItem('panel-states') || '{}');
+      document.querySelectorAll('.panel').forEach(function(p) {
+        var h2 = p.querySelector('h2');
+        if (h2 && states[h2.textContent.trim()] === '1') {
+          p.classList.add('collapsed');
+        }
+      });
+    } catch(e) {}
+  }
+
   function isPlayerTurn() {
     return !gameActive ? false : chessGame.turn() === playerColor[0];
   }
@@ -638,6 +759,7 @@
     const tmpl = document.getElementById('game-template');
     main.innerHTML = '';
     main.appendChild(tmpl.content.cloneNode(true));
+    initPanelToggles();
     board = Chessboard('board', {
       position: 'start',
       orientation: orientation || 'white',
@@ -1201,6 +1323,23 @@
           lastAnnot.classification !== 'best' && lastAnnot.classification !== 'great') {
         drawArrow(lastAnnot.best_arrow.from, lastAnnot.best_arrow.to, '#4caf50');
       }
+    }
+
+    // Coaching tip
+    var coachEl = document.getElementById('coach-message');
+    var tip = state.coaching_tip;
+    if (tip && tip.message) {
+      var icons = { teach: '\uD83D\uDCD6', praise: '\u2B50', warn: '\u26A0\uFE0F', correct: '\u2705', info: '\u2139\uFE0F' };
+      var icon = icons[tip.type] || icons.teach;
+      var tipKey = tip.type + ':' + tip.message;
+      if (coachEl.dataset.lastTip !== tipKey) {
+        coachEl.dataset.lastTip = tipKey;
+        coachEl.innerHTML = '<div class="coach-tip type-' + esc(tip.type) + '">' +
+          '<span class="coach-tip-icon">' + icon + '</span>' + esc(tip.message) + '</div>';
+      }
+    } else if (!tip && coachEl.dataset.lastTip !== 'empty') {
+      coachEl.dataset.lastTip = 'empty';
+      coachEl.innerHTML = '<span class="coach-empty">Tips will appear here during the game</span>';
     }
 
     // Game over banner
