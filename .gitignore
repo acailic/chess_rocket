@@ -45,3 +45,6 @@ Thumbs.db
 # Build artifacts
 .sidecar/
 archive/
+
+# Playwright test artifacts
+.playwright-mcp/

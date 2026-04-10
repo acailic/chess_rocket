@@ -459,11 +459,12 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
                 # Get evaluation of best move
                 eval_cp = None
                 evaluation = best_result.get("score", {})
-                if evaluation.relative:
-                    if hasattr(evaluation.relative, "mate"):
-                        eval_cp = 10000 if evaluation.relative.mate > 0 else -10000
-                    elif hasattr(evaluation.relative, "score"):
-                        eval_cp = evaluation.relative.score()
+                if evaluation and evaluation.relative is not None:
+                    rel = evaluation.relative
+                    if rel.score() is not None:
+                        eval_cp = rel.score()
+                    elif rel.mate() is not None:
+                        eval_cp = 10000 if rel.mate() > 0 else -10000
 
                 # Check if submitted move is in top 3
                 submitted_move_uci = move.uci()
@@ -477,17 +478,18 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
                     board_after_move = board.copy()
                     board_after_move.push(move)
 
-                    # Evaluate after player's move
+                    # Evaluate after player's move (no multipv = returns dict)
                     result_after = engine.analyse(
-                        board_after_move, chess.engine.Limit(depth=15), multipv=1
+                        board_after_move, chess.engine.Limit(depth=15)
                     )
                     eval_after = result_after.get("score", {})
 
-                    if eval_after.relative:
-                        if hasattr(eval_after.relative, "mate"):
-                            eval_after_cp = 10000 if eval_after.relative.mate > 0 else -10000
-                        elif hasattr(eval_after.relative, "score"):
-                            eval_after_cp = eval_after.relative.score()
+                    if eval_after and eval_after.relative is not None:
+                        rel_after = eval_after.relative
+                        if rel_after.score() is not None:
+                            eval_after_cp = rel_after.score()
+                        elif rel_after.mate() is not None:
+                            eval_after_cp = 10000 if rel_after.mate() > 0 else -10000
                         else:
                             eval_after_cp = 0
                     else:
