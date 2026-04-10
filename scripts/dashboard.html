@@ -67,6 +67,24 @@
   .header-stats { display: flex; gap: var(--space-lg); font-size: 0.875rem; color: var(--text-dim); align-items: center; }
   .header-stats span { transition: color 0.2s ease; }
   .header-stats span:hover { color: var(--text); }
+
+  /* Game tabs */
+  .game-tabs { display: flex; gap: 4px; padding: 8px 16px; background: var(--surface); border-bottom: 1px solid var(--surface2); overflow-x: auto; }
+  .game-tab { padding: 6px 16px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; background: var(--bg); color: var(--text-dim); transition: all 0.15s; white-space: nowrap; }
+  .game-tab.active { background: var(--accent); color: #fff; }
+  .game-tab:hover:not(.active) { background: var(--surface2); color: var(--text); }
+  .game-tab .close { font-size: 0.75rem; opacity: 0.6; padding: 2px 4px; border-radius: 3px; }
+  .game-tab .close:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+  .game-tab-new { padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 1.1rem; background: var(--surface2); color: var(--text-dim); transition: all 0.15s; }
+  .game-tab-new:hover { background: var(--accent); color: #fff; }
+
+  /* Focus mode */
+  .main.focus-mode { grid-template-columns: 1fr; justify-content: center; max-width: 700px; }
+  .main.focus-mode .board-wrapper { max-width: min(90vw, 560px); margin: 0 auto; }
+  .main.focus-mode .panels { display: flex; flex-direction: column; gap: 8px; }
+  .main.focus-mode .panel:not(.coach-panel) { display: none; }
+  .main.focus-mode .coach-panel { display: block !important; }
+  .focus-toggle.active { background: var(--accent) !important; color: #fff !important; }
   .main {
     display: grid;
     grid-template-columns: minmax(260px, clamp(320px, 42vw, 560px)) 1fr;
@@ -527,9 +545,14 @@
     <span id="session-info">Session #--</span>
     <span id="streak-info">Streak: --</span>
     <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle panels">▶ Panels</button>
+    <button class="sidebar-toggle" id="focus-toggle" title="Focus mode: board + coach only">🎯 Focus</button>
     <button id="puzzle-mode-btn" style="background: var(--surface2); color: var(--text); border: 1px solid var(--surface2); border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 0.85rem;">Puzzles</button>
   </div>
 </header>
+
+<div class="game-tabs" id="game-tabs" style="display: none;">
+  <!-- Game tabs will be dynamically inserted here -->
+</div>
 
 <div class="main" id="main-content">
   <div class="waiting" id="waiting">
@@ -717,6 +740,155 @@
   // Track the currently active (clicked) move in the move list
   let activeMoveEl = null;
 
+  // Multi-game support
+  let currentGames = [];
+  let currentGameId = null;
+  let focusMode = false;
+
+  // === MULTI-GAME FUNCTIONS ===
+
+  async function loadGameTabs() {
+    try {
+      const resp = await fetch('/api/games');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      currentGames = data.games || [];
+      currentGameId = data.current_game_id;
+      renderGameTabs();
+    } catch (e) {
+      console.error('Failed to load game tabs:', e);
+    }
+  }
+
+  function renderGameTabs() {
+    const tabsContainer = document.getElementById('game-tabs');
+    if (!tabsContainer) return;
+
+    if (currentGames.length === 0) {
+      tabsContainer.style.display = 'none';
+      return;
+    }
+
+    tabsContainer.style.display = 'flex';
+    let html = '';
+
+    currentGames.forEach(game => {
+      const isActive = game.id === currentGameId;
+      const moveCount = game.move_count || 0;
+      const colorLabel = game.player_color === 'white' ? 'W' : 'B';
+      html += '<div class="game-tab' + (isActive ? ' active' : '') + '" data-game-id="' + esc(game.id) + '">';
+      html += 'Game ' + game.game_number + ' (' + colorLabel + ') - ' + moveCount + ' moves';
+      html += '<span class="close" onclick="event.stopPropagation(); closeGame(\'' + esc(game.id) + '\')">×</span>';
+      html += '</div>';
+    });
+
+    html += '<div class="game-tab-new" onclick="newGame()" title="Start a new game">+</div>';
+    tabsContainer.innerHTML = html;
+
+    // Add click handlers to tabs
+    tabsContainer.querySelectorAll('.game-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const gameId = this.getAttribute('data-game-id');
+        if (gameId !== currentGameId) {
+          switchGame(gameId);
+        }
+      });
+    });
+  }
+
+  async function switchGame(gameId) {
+    try {
+      const resp = await fetch('/api/switch-game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game_id: gameId })
+      });
+      if (!resp.ok) {
+        console.error('Failed to switch game');
+        return;
+      }
+      const data = await resp.json();
+      currentGameId = data.game_id;
+      renderGameTabs();
+      // Clear board state to force refresh
+      lastFen = null;
+      // Trigger immediate poll
+      poll();
+    } catch (e) {
+      console.error('Failed to switch game:', e);
+    }
+  }
+
+  async function newGame() {
+    try {
+      const resp = await fetch('/api/new-game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      if (!resp.ok) {
+        console.error('Failed to create new game');
+        return;
+      }
+      const data = await resp.json();
+      currentGameId = data.game_id;
+      await loadGameTabs();
+      // Clear board state to force refresh
+      lastFen = null;
+      gameActive = false;
+      // Trigger immediate poll
+      poll();
+    } catch (e) {
+      console.error('Failed to create new game:', e);
+    }
+  }
+
+  async function closeGame(gameId) {
+    if (currentGames.length <= 1) {
+      alert('Cannot close the only active game');
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/game/' + gameId, {
+        method: 'DELETE'
+      });
+      if (!resp.ok) {
+        console.error('Failed to close game');
+        return;
+      }
+      await loadGameTabs();
+      // If we closed the current game, switch to another
+      if (gameId === currentGameId && currentGames.length > 0) {
+        const newGame = currentGames.find(g => g.id !== gameId) || currentGames[0];
+        if (newGame) {
+          await switchGame(newGame.id);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to close game:', e);
+    }
+  }
+
+  function toggleFocusMode() {
+    focusMode = !focusMode;
+    const main = document.getElementById('main-content');
+    const btn = document.getElementById('focus-toggle');
+
+    if (focusMode) {
+      main.classList.add('focus-mode');
+      btn.classList.add('active');
+      btn.textContent = '◀ Focus';
+    } else {
+      main.classList.remove('focus-mode');
+      btn.classList.remove('active');
+      btn.textContent = '🎯 Focus';
+    }
+
+    // Resize board after layout change
+    setTimeout(function() { if (board) board.resize(); }, 50);
+  }
+
   // --- Panel collapse / sidebar toggle ---
   function initPanelToggles() {
     // Individual panel collapse on h2 click
@@ -863,6 +1035,13 @@
     const puzzleSkipBtn = document.getElementById('puzzle-skip-btn');
     if (puzzleSkipBtn) puzzleSkipBtn.addEventListener('click', function() { puzzleTotal++; updatePuzzleScore(); loadNextPuzzle(); });
 
+    // Wire up focus toggle button
+    const focusToggle = document.getElementById('focus-toggle');
+    if (focusToggle) focusToggle.addEventListener('click', toggleFocusMode);
+
+    // Load game tabs on initialization
+    loadGameTabs();
+
     // Wire up blunder warning dialog buttons
     const blunderConfirm = document.getElementById('blunder-confirm');
     const blunderCancel = document.getElementById('blunder-cancel');
@@ -935,6 +1114,8 @@
       const data = await resp.json();
       if (data.ok) {
         setMoveStatus('Move sent: ' + san + ' (waiting for engine...)', 'ok');
+        // Refresh game tabs after move
+        loadGameTabs();
       } else {
         setMoveStatus('Error: ' + (data.error || 'unknown'), 'error');
         // Undo the chess.js move since it wasn't accepted
@@ -1278,7 +1459,7 @@
     document.getElementById('streak-info').textContent = 'Streak: ' + streak + (streak >= 3 ? ' \uD83D\uDD25' : '');
 
     // Board info
-    document.getElementById('player-info').textContent = 'Playing as: ' + capitalize(state.player_color || 'white');
+    document.getElementById('player-info').textContent = 'Game ' + (state.game_number || 1) + ' · Playing as: ' + capitalize(state.player_color || 'white');
     document.getElementById('engine-info').textContent = 'Engine: ' + (state.target_elo || 800) + ' Elo';
 
     // Opening
@@ -1796,6 +1977,7 @@
   }
 
   setInterval(poll, 500);
+  setInterval(loadGameTabs, 5000); // Refresh game tabs every 5 seconds
   poll();
 })();
 </script>

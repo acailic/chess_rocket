@@ -16,6 +16,7 @@ import shutil
 import tempfile
 import threading
 import time
+import uuid
 from pathlib import Path
 
 import chess
@@ -28,6 +29,8 @@ _DASHBOARD_HTML = Path(__file__).resolve().parent / "dashboard.html"
 
 _PENDING_MOVE_FILE = _DATA_DIR / "pending_move.json"
 _GAME_FILE = _DATA_DIR / "current_game.json"
+_GAMES_DIR = _DATA_DIR / "games"
+_ACTIVE_GAME_ID_FILE = _DATA_DIR / "active_game_id.txt"
 
 # Threading lock for game state writes
 _game_lock = threading.Lock()
@@ -237,6 +240,77 @@ def build_updated_state(
     return new_state
 
 
+def _ensure_games_dir() -> None:
+    """Ensure the games directory exists."""
+    _GAMES_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _get_active_game_id() -> str | None:
+    """Get the active game ID from active_game_id.txt."""
+    if _ACTIVE_GAME_ID_FILE.exists():
+        try:
+            return _ACTIVE_GAME_ID_FILE.read_text().strip()
+        except OSError:
+            pass
+    return None
+
+
+def _set_active_game_id(game_id: str) -> None:
+    """Set the active game ID in active_game_id.txt."""
+    _ensure_games_dir()
+    _ACTIVE_GAME_ID_FILE.write_text(game_id)
+
+
+def _get_game_file(game_id: str) -> Path:
+    """Get the path to a game file."""
+    return _GAMES_DIR / f"{game_id}.json"
+
+
+def _create_initial_game_state(target_elo: int, player_color: str) -> dict:
+    """Create an initial game state for a new game."""
+    game_id = str(uuid.uuid4())
+    board = chess.Board()
+
+    return {
+        "game_id": game_id,
+        "fen": board.fen(),
+        "board_display": _build_board_display(board),
+        "move_list": [],
+        "last_move": None,
+        "last_move_san": None,
+        "eval_score": None,
+        "player_color": player_color,
+        "target_elo": target_elo,
+        "is_game_over": False,
+        "result": None,
+        "legal_moves": [board.san(m) for m in board.legal_moves],
+        "accuracy": {"white": 0.0, "black": 0.0},
+        "session_number": 1,
+        "streak": 0,
+        "lesson_name": "",
+        "current_opening": None,
+        "material": _compute_material(board),
+        "captured_pieces": _compute_captured_pieces(board),
+        "is_check": False,
+        "is_checkmate": False,
+        "is_stalemate": False,
+        "move_annotations": [],
+    }
+
+
+def _sync_active_game() -> None:
+    """Sync the active game from games directory to current_game.json."""
+    active_game_id = _get_active_game_id()
+    if active_game_id:
+        game_file = _get_game_file(active_game_id)
+        if game_file.exists():
+            try:
+                game_state = json.loads(game_file.read_text())
+                _atomic_write_json(_GAME_FILE, game_state)
+            except (json.JSONDecodeError, OSError):
+                pass
+
+
 def process_move(move_san: str, game_state: dict) -> tuple[dict | None, str | None]:
     """Process a player move and optionally get engine response.
 
@@ -331,6 +405,8 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._serve_curriculum()
         elif path == "/api/puzzles":
             self._serve_puzzles()
+        elif path == "/api/games":
+            self._serve_games()
         else:
             self.send_error(404)
 
@@ -339,6 +415,10 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._handle_move()
         elif self.path == "/api/evaluate-move":
             self._handle_evaluate_move()
+        elif self.path == "/api/new-game":
+            self._handle_new_game()
+        elif self.path == "/api/switch-game":
+            self._handle_switch_game()
         else:
             self.send_error(404)
 
@@ -377,6 +457,12 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
 
             # Write updated state atomically
             _atomic_write_json(_GAME_FILE, new_state)
+
+            # Also write to the per-game file for multi-game support
+            game_id = new_state.get("game_id")
+            if game_id:
+                game_file = _get_game_file(game_id)
+                _atomic_write_json(game_file, new_state)
 
             # Also write to pending_move.json for backward compat
             try:
@@ -548,6 +634,134 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
 
         except Exception as exc:
             self._json_response({"error": str(exc)}, 500)
+
+    def _handle_new_game(self) -> None:
+        """Create a new game and set it as active."""
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
+        try:
+            data = json.loads(body)
+            target_elo = int(data.get("elo", 800))
+            player_color = data.get("color", "white")
+        except (json.JSONDecodeError, KeyError, ValueError) as exc:
+            self._json_response({"error": str(exc)}, 400)
+            return
+
+        with _game_lock:
+            # Create initial game state
+            game_state = _create_initial_game_state(target_elo, player_color)
+            game_id = game_state["game_id"]
+
+            # Ensure games directory exists
+            _ensure_games_dir()
+
+            # Write game to its own file
+            game_file = _get_game_file(game_id)
+            _atomic_write_json(game_file, game_state)
+
+            # Set as active game
+            _set_active_game_id(game_id)
+
+            # Also write to current_game.json for backward compat
+            _atomic_write_json(_GAME_FILE, game_state)
+
+        self._json_response({"ok": True, "game_id": game_id, "state": game_state})
+
+    def _handle_switch_game(self) -> None:
+        """Switch to a different active game."""
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
+        try:
+            data = json.loads(body)
+            game_id = data.get("game_id", "").strip()
+            if not game_id:
+                self._json_response({"error": "missing game_id"}, 400)
+                return
+        except (json.JSONDecodeError, KeyError) as exc:
+            self._json_response({"error": str(exc)}, 400)
+            return
+
+        with _game_lock:
+            # Check if game file exists
+            game_file = _get_game_file(game_id)
+            if not game_file.exists():
+                self._json_response({"error": "game not found"}, 404)
+                return
+
+            try:
+                # Load game state
+                game_state = json.loads(game_file.read_text())
+
+                # Set as active game
+                _set_active_game_id(game_id)
+
+                # Also write to current_game.json for backward compat
+                _atomic_write_json(_GAME_FILE, game_state)
+
+            except (json.JSONDecodeError, OSError) as exc:
+                self._json_response({"error": str(exc)}, 500)
+                return
+
+        self._json_response({"ok": True, "game_id": game_id, "state": game_state})
+
+    def _handle_delete_game(self, game_id: str) -> None:
+        """Delete a game from the games directory."""
+        with _game_lock:
+            game_file = _get_game_file(game_id)
+            if not game_file.exists():
+                self._json_response({"error": "game not found"}, 404)
+                return
+
+            try:
+                # Delete the game file
+                game_file.unlink()
+
+                # If this was the active game, clear the active game ID
+                active_game_id = _get_active_game_id()
+                if active_game_id == game_id:
+                    try:
+                        _ACTIVE_GAME_ID_FILE.unlink()
+                    except OSError:
+                        pass
+
+            except OSError as exc:
+                self._json_response({"error": str(exc)}, 500)
+                return
+
+        self._json_response({"ok": True, "deleted_game_id": game_id})
+
+    def _serve_games(self) -> None:
+        """Serve list of all active games."""
+        _ensure_games_dir()
+
+        games = []
+        active_game_id = _get_active_game_id()
+
+        try:
+            for game_file in _GAMES_DIR.glob("*.json"):
+                try:
+                    game_state = json.loads(game_file.read_text())
+                    game_info = {
+                        "game_id": game_state.get("game_id", game_file.stem),
+                        "fen": game_state.get("fen", ""),
+                        "moves": len(game_state.get("move_list", [])),
+                        "player_color": game_state.get("player_color", "white"),
+                        "result": game_state.get("result"),
+                        "is_game_over": game_state.get("is_game_over", False),
+                        "target_elo": game_state.get("target_elo", 800),
+                    }
+                    games.append(game_info)
+                except (json.JSONDecodeError, OSError):
+                    continue
+        except OSError:
+            pass
+
+        response = {
+            "games": games,
+            "active_game_id": active_game_id,
+        }
+
+        self._json_response(response)
 
     def _serve_sse(self) -> None:
         """Server-Sent Events endpoint for real-time game updates.
@@ -798,10 +1012,18 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
 
         self._json_response(response)
 
+    def do_DELETE(self) -> None:
+        # Extract game_id from path like /api/game/{game_id}
+        if self.path.startswith("/api/game/"):
+            game_id = self.path.split("/")[-1]
+            self._handle_delete_game(game_id)
+        else:
+            self.send_error(404)
+
     def do_OPTIONS(self) -> None:
         self.send_response(204)
         self._cors_headers()
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
