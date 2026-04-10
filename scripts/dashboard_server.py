@@ -23,6 +23,7 @@ import chess.engine
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DATA_DIR = _PROJECT_ROOT / "data"
+_PUZZLES_DIR = _PROJECT_ROOT / "puzzles"
 _DASHBOARD_HTML = Path(__file__).resolve().parent / "dashboard.html"
 
 _PENDING_MOVE_FILE = _DATA_DIR / "pending_move.json"
@@ -328,12 +329,16 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._serve_srs_cards()
         elif path == "/api/curriculum":
             self._serve_curriculum()
+        elif path == "/api/puzzles":
+            self._serve_puzzles()
         else:
             self.send_error(404)
 
     def do_POST(self) -> None:
         if self.path == "/api/move":
             self._handle_move()
+        elif self.path == "/api/evaluate-move":
+            self._handle_evaluate_move()
         else:
             self.send_error(404)
 
@@ -383,6 +388,164 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
 
         # Return the updated state along with ok flag
         self._json_response({"ok": True, "move": move_san, "state": new_state})
+
+    def _handle_evaluate_move(self) -> None:
+        """Evaluate a chess move using Stockfish engine for blunder checking.
+
+        Expects JSON body with:
+        - fen: Current board position (FEN string)
+        - move: Move to evaluate in SAN notation
+
+        Returns:
+        - submitted_move: The move that was evaluated
+        - best_move: Best move in SAN notation
+        - best_move_san: Best move in SAN notation (duplicate for compatibility)
+        - cp_loss: Centipawn loss
+        - classification: Move quality category
+        - is_top_move: Whether the move is in top 3
+        - eval_after: Evaluation after the move (in pawns)
+        - warning: Human-readable warning if cp_loss >= 200
+        """
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
+        try:
+            data = json.loads(body)
+            fen = data.get("fen", "").strip()
+            move_san = data.get("move", "").strip()
+
+            if not fen:
+                self._json_response({"error": "missing fen"}, 400)
+                return
+            if not move_san:
+                self._json_response({"error": "missing move"}, 400)
+                return
+        except (json.JSONDecodeError, KeyError) as exc:
+            self._json_response({"error": str(exc)}, 400)
+            return
+
+        try:
+            # Parse the position
+            board = chess.Board(fen)
+
+            # Parse and validate the move
+            try:
+                move = board.parse_san(move_san)
+            except (ValueError, chess.InvalidMoveError) as exc:
+                self._json_response({"error": f"invalid move: {exc}"}, 400)
+                return
+
+            if move not in board.legal_moves:
+                self._json_response({"error": f"illegal move: {move_san}"}, 400)
+                return
+
+            # Find Stockfish
+            try:
+                stockfish_path = find_stockfish()
+            except FileNotFoundError as exc:
+                self._json_response({"error": str(exc)}, 500)
+                return
+
+            # Analyze the position to find top 3 moves (depth 15 as specified)
+            engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+            try:
+                # Get top 3 moves
+                results = engine.analyse(board, chess.engine.Limit(depth=15), multipv=3)
+
+                # Extract best move info
+                best_result = results[0]
+                best_move_uci = best_result["pv"][0].uci() if best_result.get("pv") else None
+                best_move_san = board.san(best_result["pv"][0]) if best_result.get("pv") else None
+
+                # Get evaluation of best move
+                eval_cp = None
+                evaluation = best_result.get("score", {})
+                if evaluation.relative:
+                    if hasattr(evaluation.relative, "mate"):
+                        eval_cp = 10000 if evaluation.relative.mate > 0 else -10000
+                    elif hasattr(evaluation.relative, "score"):
+                        eval_cp = evaluation.relative.score()
+
+                # Check if submitted move is in top 3
+                submitted_move_uci = move.uci()
+                top_moves = [r["pv"][0].uci() for r in results if r.get("pv")]
+                is_top_move = submitted_move_uci in top_moves
+
+                # Calculate cp_loss
+                cp_loss = 0
+                if not is_top_move:
+                    # Make the player's move and evaluate
+                    board_after_move = board.copy()
+                    board_after_move.push(move)
+
+                    # Evaluate after player's move
+                    result_after = engine.analyse(
+                        board_after_move, chess.engine.Limit(depth=15), multipv=1
+                    )
+                    eval_after = result_after.get("score", {})
+
+                    if eval_after.relative:
+                        if hasattr(eval_after.relative, "mate"):
+                            eval_after_cp = 10000 if eval_after.relative.mate > 0 else -10000
+                        elif hasattr(eval_after.relative, "score"):
+                            eval_after_cp = eval_after.relative.score()
+                        else:
+                            eval_after_cp = 0
+                    else:
+                        eval_after_cp = 0
+
+                    # For the opponent, flip the sign
+                    if board_after_move.turn == chess.BLACK:
+                        eval_after_cp = -eval_after_cp
+
+                    # Calculate cp_loss (difference from best move)
+                    if eval_cp is not None:
+                        cp_loss = eval_cp - eval_after_cp
+                    else:
+                        cp_loss = 0
+
+                # Classify the move (using exact thresholds from spec)
+                if cp_loss == 0:
+                    classification = "best"
+                elif cp_loss <= 30:
+                    classification = "great"
+                elif cp_loss <= 80:
+                    classification = "good"
+                elif cp_loss <= 150:
+                    classification = "inaccuracy"
+                elif cp_loss <= 300:
+                    classification = "mistake"
+                else:
+                    classification = "blunder"
+
+                # Generate warning for significant mistakes
+                warning = None
+                if cp_loss >= 200:
+                    if classification == "blunder":
+                        warning = "This move is a blunder! You're losing significant material or getting checkmated. Look again for tactical threats."
+                    else:
+                        warning = "This move loses significant material. Consider looking for tactical threats first."
+
+                # Convert eval_after to pawns (divide by 100)
+                eval_after_pawns = abs(cp_loss / 100.0) if cp_loss > 0 else 0.0
+
+                response_data = {
+                    "submitted_move": move_san,
+                    "best_move": best_move_san,
+                    "best_move_san": best_move_san,  # Duplicate for compatibility
+                    "cp_loss": cp_loss,
+                    "classification": classification,
+                    "is_top_move": is_top_move,
+                    "eval_after": eval_after_pawns,
+                    "warning": warning,
+                }
+
+                self._json_response(response_data)
+
+            finally:
+                engine.quit()
+
+        except Exception as exc:
+            self._json_response({"error": str(exc)}, 500)
 
     def _serve_sse(self) -> None:
         """Server-Sent Events endpoint for real-time game updates.
@@ -543,6 +706,95 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._json_response(enriched_data)
         except (json.JSONDecodeError, KeyError) as exc:
             self._json_response({"error": str(exc)}, 500)
+
+    def _serve_puzzles(self) -> None:
+        """Serve puzzles from the puzzles directory with optional filtering.
+
+        Query parameters:
+        - motif: Filter by motif (e.g., "forks", "pins", "back-rank", etc.)
+        - mode: "sorted" (default, by difficulty ascending) or "interleaved" (random mix)
+        - count: Number of puzzles to return (default: 10, max: 50)
+        - min_difficulty: Minimum difficulty rating filter
+        - max_difficulty: Maximum difficulty rating filter
+        """
+        # Parse query parameters
+        query = self.path.split("?", 1)[1] if "?" in self.path else ""
+        params = {}
+        for pair in query.split("&"):
+            if "=" in pair:
+                key, value = pair.split("=", 1)
+                params[key] = value
+
+        motif = params.get("motif", "")
+        mode = params.get("mode", "sorted")
+        count = min(int(params.get("count", 10)), 50)  # Max 50
+        min_difficulty = int(params.get("min_difficulty", 0))
+        max_difficulty = int(params.get("max_difficulty", 3000))
+
+        # Load puzzle files
+        all_puzzles = []
+        if not _PUZZLES_DIR.exists():
+            self._json_response({"puzzles": [], "total": 0, "mode": mode})
+            return
+
+        # If motif specified, load only that file
+        if motif:
+            motif_file = _PUZZLES_DIR / f"{motif}.json"
+            if motif_file.exists():
+                try:
+                    puzzles = json.loads(motif_file.read_text())
+                    if isinstance(puzzles, list):
+                        all_puzzles = puzzles
+                except (json.JSONDecodeError, OSError):
+                    pass
+        else:
+            # Load all puzzle files for interleaved mode
+            for puzzle_file in _PUZZLES_DIR.glob("*.json"):
+                try:
+                    puzzles = json.loads(puzzle_file.read_text())
+                    if isinstance(puzzles, list):
+                        all_puzzles.extend(puzzles)
+                except (json.JSONDecodeError, OSError):
+                    continue
+
+        # Filter by difficulty range
+        filtered_puzzles = []
+        for puzzle in all_puzzles:
+            rating = puzzle.get("difficulty_rating", 0)
+            if min_difficulty <= rating <= max_difficulty:
+                filtered_puzzles.append(puzzle)
+
+        # Apply mode logic
+        if mode == "interleaved":
+            # Random mix from all motifs
+            random.shuffle(filtered_puzzles)
+            selected_puzzles = filtered_puzzles[:count]
+        else:  # mode == "sorted"
+            # Sort by difficulty_rating ascending
+            filtered_puzzles.sort(key=lambda p: p.get("difficulty_rating", 0))
+            selected_puzzles = filtered_puzzles[:count]
+
+        # Build response puzzles (exclude solution_san)
+        response_puzzles = []
+        for puzzle in selected_puzzles:
+            response_puzzle = {
+                "fen": puzzle.get("fen"),
+                "solution_moves": puzzle.get("solution_moves", []),
+                "motif": puzzle.get("motif"),
+                "difficulty": puzzle.get("difficulty"),
+                "difficulty_rating": puzzle.get("difficulty_rating"),
+                "explanation": puzzle.get("explanation"),
+            }
+            response_puzzles.append(response_puzzle)
+
+        # Build response
+        response = {
+            "puzzles": response_puzzles,
+            "total": len(all_puzzles),
+            "mode": mode,
+        }
+
+        self._json_response(response)
 
     def do_OPTIONS(self) -> None:
         self.send_response(204)
