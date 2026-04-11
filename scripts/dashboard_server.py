@@ -118,83 +118,43 @@ def _generate_coaching_tip(
     """
     # Insights about how stronger players think
     if best_san is None:
-        best_san = "a different move"
-
-    thinking_tips = {
-        "best": [
-            "Strong players always check: 'What does my opponent want?' before moving.",
-            "A key habit of masters: before every move, verify your pieces are safe.",
-            "Good players think in plans, not just individual moves.",
-        ],
-        "great": [
-            "Strong players look at the whole board, not just where the action is.",
-            "Masters count attackers and defenders before every trade.",
-            "Good players ask: 'What is my worst-placed piece?' and improve it.",
-        ],
-        "good": [
-            "Before moving, stronger players always check: 'What is my opponent threatening?'",
-            "A master habit: look at your opponent's last move and ask 'Why did they play that?'",
-            "Better players consider at least 2-3 candidate moves before deciding.",
-        ],
-    }
+        best_san = "something else"
 
     import random as _rng
+    _tips = {
+        "best": [
+            "Quick: what's your opponent planning next?",
+            "Nice. Now check — are all your pieces safe?",
+            "Think ahead: what's your plan for the next 2-3 moves?",
+        ],
+        "great": [
+            "Always scan the whole board, not just where the action is.",
+            "Before trading, count attackers vs defenders.",
+            "Which of your pieces is doing the least? Improve it.",
+        ],
+        "good": [
+            "What's your opponent threatening right now?",
+            "Why did they play their last move?",
+            "Did you consider at least 2 options before choosing?",
+        ],
+    }
 
     if classification == "best":
-        tip = _rng.choice(thinking_tips["best"])
-        return {
-            "type": "correct",
-            "message": f"{move_san} is the best move! {tip}",
-        }
+        return {"type": "correct", "message": f"{move_san} — best move! {_rng.choice(_tips['best'])}"}
     if classification == "great":
-        tip = _rng.choice(thinking_tips["great"])
-        return {
-            "type": "praise",
-            "message": f"{move_san} is a strong move. {tip}",
-        }
+        return {"type": "praise", "message": f"{move_san} — solid. {_rng.choice(_tips['great'])}"}
     if classification == "good":
-        tip = _rng.choice(thinking_tips["good"])
         if best_san and best_san != move_san:
-            return {
-                "type": "info",
-                "message": f"{move_san} is fine, but {best_san} was slightly stronger. {tip}",
-            }
-        return {
-            "type": "info",
-            "message": f"{move_san} is okay. {tip}",
-        }
+            return {"type": "info", "message": f"{move_san} is fine. {best_san} was slightly better. {_rng.choice(_tips['good'])}"}
+        return {"type": "info", "message": f"{move_san} — ok. {_rng.choice(_tips['good'])}"}
     if classification == "inaccuracy":
-        return {
-            "type": "warn",
-            "message": (
-                f"{move_san} is okay, but {best_san} was stronger. "
-                f"Stronger players look for moves that improve piece activity or control the center. "
-                f"Tip: ask yourself 'What is my opponent planning?' before every move."
-            ),
-        }
+        return {"type": "warn", "message": f"{move_san} works, but {best_san} is stronger. What's your opponent planning?"}
     if classification == "mistake":
-        pawns = max(1, round(cp_loss / 100))
-        return {
-            "type": "teach",
-            "message": (
-                f"{move_san} loses about {pawns} pawn{'s' if pawns > 1 else ''} of advantage. "
-                f"The best move was {best_san}. "
-                f"How stronger players think: before moving, check (1) are my pieces safe? "
-                f"(2) what is my opponent threatening? (3) is there a stronger move?"
-            ),
-        }
+        p = max(1, round(cp_loss / 100))
+        return {"type": "teach", "message": f"{move_san} gives away ~{p} pawn{'s' if p > 1 else ''}. {best_san} was the move. Check: is anything hanging? What are they threatening?"}
     # blunder
-    pawns = max(1, round(cp_loss / 100))
-    return {
-        "type": "teach",
-        "message": (
-            f"{move_san} is a big mistake (loses ~{pawns} pawn{'s' if pawns > 1 else ''})! "
-            f"The best move was {best_san}. "
-            f"Master habit: before every move, do a 'blunder check' — "
-            f"look at what your opponent can take or threaten. "
-            f"Most blunders come from ignoring the opponent's last move."
-        ),
-    }
+    p = max(1, round(cp_loss / 100))
+    return {"type": "teach", "message": f"{move_san} blunders ~{p} pawn{'s' if p > 1 else ''}. {best_san} was best. Do a blunder check: look at what they can take before you move."}
 
 
 def _generate_thinking_guidance(board: chess.Board) -> dict:
@@ -227,19 +187,11 @@ def _generate_thinking_guidance(board: chess.Board) -> dict:
     )
     diff = w_mat - b_mat
     if diff > 0:
-        step_by_step.append(
-            f"1. Material: White is ahead by {diff} point{'s' if diff > 1 else ''}. "
-            f"Look to trade pieces and simplify into a winning endgame."
-        )
+        step_by_step.append(f"1. Material: +{diff} for White. Trade pieces to simplify into a winning endgame.")
     elif diff < 0:
-        step_by_step.append(
-            f"1. Material: Black is ahead by {abs(diff)} point{'s' if abs(diff) > 1 else ''}. "
-            f"You need to create complications — avoid trades."
-        )
+        step_by_step.append(f"1. Material: +{abs(diff)} for Black. Avoid trades — create complications.")
     else:
-        step_by_step.append(
-            "1. Material: Equal. The position is about strategy and tactics, not material."
-        )
+        step_by_step.append("1. Material: Even. It's about tactics and piece placement now.")
 
     # 2. King safety
     turn_king_sq = board.king(board.turn)
@@ -268,16 +220,9 @@ def _generate_thinking_guidance(board: chess.Board) -> dict:
                 opp_pawn_shield += 1
 
     if turn_pawn_shield < 2 and _count_pieces(board) > 10:
-        step_by_step.append(
-            "2. King Safety: Your king has little pawn protection! "
-            "Consider castling or building a pawn shield. "
-            "Exposed kings get checkmated."
-        )
+        step_by_step.append("2. King: Low pawn shield — castle or build cover. Exposed kings get mated.")
     else:
-        step_by_step.append(
-            "2. King Safety: Your king looks reasonably safe. "
-            "Still check for potential sacrifices or forcing sequences."
-        )
+        step_by_step.append("2. King: Reasonably safe. Still watch for sacrifices.")
 
     # 3. Piece activity — find best and worst pieces
     turn_pieces: list[tuple[str, int]] = []
@@ -299,11 +244,9 @@ def _generate_thinking_guidance(board: chess.Board) -> dict:
         best_piece = turn_pieces[0]
         worst_piece = turn_pieces[-1]
         step_by_step.append(
-            f"3. Piece Activity: Your most active piece is the "
-            f"{best_piece[0]} (controls {best_piece[1]} squares). "
-            f"Your least active is the {worst_piece[0]} "
-            f"(only {worst_piece[1]} squares). "
-            f"Stronger players ask: 'What is my worst piece and how can I improve it?'"
+            f"3. Pieces: Best — {best_piece[0]} ({best_piece[1]} sq). "
+            f"Worst — {worst_piece[0]} ({worst_piece[1]} sq). "
+            f"Try to improve your worst piece."
         )
 
     # 4. Center control
@@ -319,15 +262,9 @@ def _generate_thinking_guidance(board: chess.Board) -> dict:
     turn_center = w_center if board.turn == chess.WHITE else b_center
     opp_center = b_center if board.turn == chess.WHITE else w_center
     if turn_center > opp_center:
-        step_by_step.append(
-            f"4. Center: You control {turn_center}/4 center squares. "
-            f"Use your central advantage to launch an attack."
-        )
+        step_by_step.append(f"4. Center: You control {turn_center}/4 — use it to attack.")
     else:
-        step_by_step.append(
-            f"4. Center: Opponent controls {opp_center}/4 center squares vs your "
-            f"{turn_center}. Try to challenge the center with pawn breaks or pieces."
-        )
+        step_by_step.append(f"4. Center: They control {opp_center}/4 vs your {turn_center}. Challenge with pawn breaks.")
 
     # 5. Tactical threats
     checks = []
@@ -342,23 +279,18 @@ def _generate_thinking_guidance(board: chess.Board) -> dict:
 
     threat_text = ""
     if checks:
-        threat_text += f"Checks available: {', '.join(checks[:3])}. "
+        threat_text += f"Checks: {', '.join(checks[:3])}. "
     if captures:
-        threat_text += f"Captures available: {', '.join(captures[:3])}. "
+        threat_text += f"Captures: {', '.join(captures[:3])}. "
 
     if threat_text:
-        step_by_step.append(
-            f"5. Tactics: {threat_text}"
-            "Stronger players always look at forcing moves (checks, captures, threats) FIRST."
-        )
+        step_by_step.append(f"5. Tactics: {threat_text}Always check forcing moves first.")
     else:
-        step_by_step.append(
-            "5. Tactics: No immediate forcing moves. "
-            "Focus on improving piece positions and planning."
-        )
+        step_by_step.append("5. Tactics: Nothing forcing. Improve your worst piece.")
 
     # 6. Engine top moves with explanation
     engine_insight = ""
+    top_move_arrows = []
     try:
         stockfish_path = find_stockfish()
         engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
@@ -381,13 +313,16 @@ def _generate_thinking_guidance(board: chess.Board) -> dict:
                             score_str = f"+{pawns:.1f}" if pawns >= 0 else f"{pawns:.1f}"
                         elif rel.mate() is not None:
                             m = rel.mate()
-                            score_str = f"Mate in {abs(m)}"
+                            score_str = f"M{abs(m)}"
                     top_moves.append(f"{san} ({score_str})")
+                    top_move_arrows.append({
+                        "san": san,
+                        "from": chess.square_name(mv.from_square),
+                        "to": chess.square_name(mv.to_square),
+                        "score": score_str,
+                    })
 
-            engine_insight = (
-                f"How stronger players evaluate this position: "
-                f"Top moves are {', '.join(top_moves)}. "
-            )
+            engine_insight = f"Top moves: {', '.join(top_moves)}. "
 
             # Add positional eval
             eval_info = results[0].get("score", {})
@@ -398,43 +333,43 @@ def _generate_thinking_guidance(board: chess.Board) -> dict:
                     if board.turn == chess.BLACK:
                         cp = -cp
                     if cp > 200:
-                        engine_insight += f"{turn} has a winning advantage."
+                        engine_insight += f"{turn} winning."
                     elif cp > 80:
-                        engine_insight += f"{turn} has a clear advantage."
+                        engine_insight += f"{turn} clear advantage."
                     elif cp > 30:
-                        engine_insight += f"{turn} is slightly better."
+                        engine_insight += f"{turn} slightly better."
                     elif cp > -30:
-                        engine_insight += "The position is roughly equal."
+                        engine_insight += "Roughly equal."
                     elif cp > -80:
-                        engine_insight += f"{opp} is slightly better."
+                        engine_insight += f"{opp} slightly better."
                     else:
-                        engine_insight += f"{opp} has a significant advantage."
+                        engine_insight += f"{opp} big advantage."
                 elif rel.mate() is not None:
                     m = rel.mate()
                     if m > 0:
-                        engine_insight += f"There is a forced mate in {m}!"
+                        engine_insight += f"Forced mate in {m}!"
                     else:
-                        engine_insight += f"{turn} is getting mated in {abs(m)}!"
+                        engine_insight += f"{turn} gets mated in {abs(m)}!"
 
         finally:
             engine.quit()
     except (FileNotFoundError, Exception):
-        engine_insight = "Engine analysis unavailable."
+        engine_insight = "Engine unavailable."
 
-    # Master thinking process summary
     master_process = (
-        "How a master thinks step-by-step:\n"
-        "1. What is my opponent threatening? (Check their last move)\n"
-        "2. Are any of my pieces hanging? (Blunder check)\n"
-        "3. What are the forcing moves? (Checks, captures, threats)\n"
-        "4. What is my worst piece? (Improve it)\n"
-        "5. What is my plan? (Attack king, control center, create passed pawn)"
+        "Think like this every move:\n"
+        "1. What are they threatening?\n"
+        "2. Is anything hanging?\n"
+        "3. Any checks, captures, threats?\n"
+        "4. What's my worst piece?\n"
+        "5. What's my plan?"
     )
 
     return {
         "turn": turn,
         "step_by_step": step_by_step,
         "engine_insight": engine_insight,
+        "top_move_arrows": top_move_arrows,
         "master_process": master_process,
         "material": {"white": w_mat, "black": b_mat},
         "center_control": {"white": w_center, "black": b_center},
@@ -638,10 +573,93 @@ def _build_board_display(board: chess.Board) -> str:
     return "\n".join(lines)
 
 
+def _compute_eval(board: chess.Board, player_color: str) -> float | None:
+    """Compute position eval from player's perspective using Stockfish."""
+    try:
+        stockfish_path = find_stockfish()
+    except FileNotFoundError:
+        return None
+    try:
+        engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
+        try:
+            result = engine.analyse(board, chess.engine.Limit(depth=15))
+            score = result.get("score", {})
+            if score and score.relative is not None:
+                rel = score.relative
+                if rel.score() is not None:
+                    cp = rel.score()
+                    # Convert to white's perspective
+                    if board.turn == chess.BLACK:
+                        cp = -cp
+                    # Convert to player's perspective
+                    if player_color == "black":
+                        cp = -cp
+                    return round(cp / 100, 1)
+                elif rel.mate() is not None:
+                    m = rel.mate()
+                    # Positive mate = side to move is winning
+                    val = 10.0 if m > 0 else -10.0
+                    if board.turn == chess.BLACK:
+                        val = -val
+                    if player_color == "black":
+                        val = -val
+                    return val
+        finally:
+            engine.quit()
+    except Exception:
+        pass
+    return None
+
+
+def _compute_accuracy(annotations: list) -> dict:
+    """Compute accuracy percentages from move annotations for both sides."""
+    weights = {"best": 1.0, "great": 0.95, "good": 0.8, "inaccuracy": 0.6, "mistake": 0.35, "blunder": 0.0}
+    white_scores, black_scores = [], []
+    for a in annotations:
+        cls = a.get("classification", "good")
+        w = weights.get(cls, 0.7)
+        ply = a.get("ply", 0)
+        if ply % 2 == 0:
+            white_scores.append(w)
+        else:
+            black_scores.append(w)
+    acc_w = round(sum(white_scores) / len(white_scores) * 100, 1) if white_scores else 0.0
+    acc_b = round(sum(black_scores) / len(black_scores) * 100, 1) if black_scores else 0.0
+    return {"white": acc_w, "black": acc_b}
+
+
+def _identify_opening(board: chess.Board, openings_trie: dict | None = None) -> dict | None:
+    """Try to identify the opening from the current move sequence."""
+    trie_path = _DATA_DIR / "openings_trie.json"
+    db_path = _DATA_DIR / "openings.db"
+    if not trie_path.exists() or not db_path.exists():
+        return None
+    try:
+        import sqlite3
+        trie = json.loads(trie_path.read_text()) if openings_trie is None else openings_trie
+        # Walk trie using move stack UCI
+        node = trie
+        last_match = None
+        for mv in board.move_stack:
+            uci = mv.uci()
+            if uci in node:
+                node = node[uci]
+                if "_name" in node:
+                    last_match = {"name": node["_name"], "eco": node.get("_eco", "")}
+            else:
+                break
+        return last_match
+    except Exception:
+        return None
+
+
 def build_updated_state(
     board: chess.Board,
     old_state: dict,
     player_move: chess.Move,
+    eval_score: float | None = None,
+    accuracy: dict | None = None,
+    current_opening: dict | None = None,
 ) -> dict:
     """Build an updated game state dict from the current board position.
 
@@ -697,23 +715,25 @@ def build_updated_state(
         "move_list": move_list,
         "last_move": last_move_uci,
         "last_move_san": last_move_san,
-        "eval_score": None,
+        "eval_score": eval_score if eval_score is not None else old_state.get("eval_score"),
         "player_color": old_state.get("player_color", "white"),
         "target_elo": old_state.get("target_elo", 800),
         "is_game_over": is_game_over,
         "result": result,
         "legal_moves": legal_moves,
-        "accuracy": old_state.get("accuracy", {"white": 0.0, "black": 0.0}),
+        "accuracy": accuracy if accuracy else old_state.get("accuracy", {"white": 0.0, "black": 0.0}),
         "session_number": old_state.get("session_number", 1),
         "streak": old_state.get("streak", 0),
         "lesson_name": old_state.get("lesson_name", ""),
-        "current_opening": old_state.get("current_opening"),
+        "current_opening": current_opening if current_opening is not None else old_state.get("current_opening"),
         "material": material,
         "captured_pieces": captured_pieces,
         "is_check": is_check,
         "is_checkmate": is_checkmate,
         "is_stalemate": is_stalemate,
         "move_annotations": old_state.get("move_annotations", []),
+        "fen_history": old_state.get("fen_history", []) + [board.fen()],
+        "game_number": old_state.get("game_number", 1),
     }
     return new_state
 
@@ -773,6 +793,8 @@ def _create_initial_game_state(target_elo: int, player_color: str) -> dict:
         "is_checkmate": False,
         "is_stalemate": False,
         "move_annotations": [],
+        "fen_history": [board.fen()],
+        "game_number": 1,
     }
 
 
@@ -829,9 +851,16 @@ def process_move(move_san: str, game_state: dict) -> tuple[dict | None, str | No
 
     board.push(move)
 
+    # Compute accuracy from annotations
+    accuracy = _compute_accuracy(annotations)
+
     # Check if game is over after player move
     if board.is_game_over():
-        new_state = build_updated_state(board, game_state, move)
+        eval_score = _compute_eval(board, player_color)
+        opening = _identify_opening(board)
+        new_state = build_updated_state(board, game_state, move,
+                                        eval_score=eval_score, accuracy=accuracy,
+                                        current_opening=opening)
         new_state["move_annotations"] = annotations
         new_state["coaching_tip"] = coaching_tip
         return new_state, None
@@ -871,7 +900,12 @@ def process_move(move_san: str, game_state: dict) -> tuple[dict | None, str | No
             # Engine error - apply only player move, no engine response
             pass
 
-    new_state = build_updated_state(board, game_state, move)
+    # Compute eval, accuracy, opening for the final position
+    eval_score = _compute_eval(board, player_color)
+    opening = _identify_opening(board)
+    new_state = build_updated_state(board, game_state, move,
+                                    eval_score=eval_score, accuracy=accuracy,
+                                    current_opening=opening)
     new_state["move_annotations"] = annotations
     new_state["coaching_tip"] = coaching_tip
     return new_state, None
@@ -1095,9 +1129,9 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
                 warning = None
                 if cp_loss >= 200:
                     if classification == "blunder":
-                        warning = "This move is a blunder! You're losing significant material or getting checkmated. Look again for tactical threats."
+                        warning = "That's a blunder — you're losing big. Look for tactical threats."
                     else:
-                        warning = "This move loses significant material. Consider looking for tactical threats first."
+                        warning = "This loses material. Check for threats first."
 
                 # Convert eval_after to pawns (divide by 100)
                 eval_after_pawns = abs(cp_loss / 100.0) if cp_loss > 0 else 0.0
@@ -1129,13 +1163,26 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             data = json.loads(body)
             target_elo = int(data.get("elo", 800))
             player_color = data.get("color", "white")
+            previous_game_id = data.get("previous_game_id")
         except (json.JSONDecodeError, KeyError, ValueError) as exc:
             self._json_response({"error": str(exc)}, 400)
             return
 
         with _game_lock:
+            # Determine next game number from previous game
+            next_game_number = 1
+            if previous_game_id:
+                prev_file = _get_game_file(previous_game_id)
+                if prev_file.exists():
+                    try:
+                        prev_state = json.loads(prev_file.read_text())
+                        next_game_number = prev_state.get("game_number", 1) + 1
+                    except (json.JSONDecodeError, OSError):
+                        pass
+
             # Create initial game state
             game_state = _create_initial_game_state(target_elo, player_color)
+            game_state["game_number"] = next_game_number
             game_id = game_state["game_id"]
 
             # Ensure games directory exists
@@ -1252,8 +1299,23 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
         """Serve list of all active games."""
         _ensure_games_dir()
 
-        games = []
+        # Import current_game.json into games dir if not already tracked
         active_game_id = _get_active_game_id()
+        if _GAME_FILE.exists():
+            try:
+                cg_state = json.loads(_GAME_FILE.read_text())
+                cg_id = cg_state.get("game_id")
+                if cg_id:
+                    if not _get_game_file(cg_id).exists():
+                        cg_state.setdefault("game_number", 1)
+                        _atomic_write_json(_get_game_file(cg_id), cg_state)
+                    if not active_game_id:
+                        _set_active_game_id(cg_id)
+                        active_game_id = cg_id
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        games = []
 
         try:
             for idx, game_file in enumerate(
@@ -1263,7 +1325,7 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
                     game_state = json.loads(game_file.read_text())
                     game_info = {
                         "game_id": game_state.get("game_id", game_file.stem),
-                        "game_number": idx + 1,
+                        "game_number": game_state.get("game_number", idx + 1),
                         "fen": game_state.get("fen", ""),
                         "move_count": len(game_state.get("move_list", [])),
                         "player_color": game_state.get("player_color", "white"),
@@ -1537,12 +1599,31 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             filtered_puzzles.sort(key=lambda p: p.get("difficulty_rating", 0))
             selected_puzzles = filtered_puzzles[:count]
 
-        # Build response puzzles (exclude solution_san)
+        # Build response puzzles with SAN-converted solution moves
         response_puzzles = []
         for puzzle in selected_puzzles:
+            # Convert UCI solution moves to SAN for frontend matching
+            san_solutions = []
+            fen = puzzle.get("fen", "")
+            uci_moves = puzzle.get("solution_moves", [])
+            if fen and uci_moves:
+                try:
+                    pboard = chess.Board(fen)
+                    for uci_str in uci_moves:
+                        try:
+                            mv = chess.Move.from_uci(uci_str)
+                            san_solutions.append(pboard.san(mv))
+                            pboard.push(mv)
+                        except (ValueError, chess.InvalidMoveError):
+                            san_solutions.append(uci_str)
+                except (ValueError, chess.InvalidBoardError):
+                    san_solutions = uci_moves
+            else:
+                san_solutions = uci_moves
+
             response_puzzle = {
-                "fen": puzzle.get("fen"),
-                "solution_moves": puzzle.get("solution_moves", []),
+                "fen": fen,
+                "solution_moves": san_solutions,
                 "motif": puzzle.get("motif"),
                 "difficulty": puzzle.get("difficulty"),
                 "difficulty_rating": puzzle.get("difficulty_rating"),
