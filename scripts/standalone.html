@@ -333,6 +333,10 @@
   }
   .game-over-result { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
   .game-over-details { font-size: 0.85rem; color: var(--text-dim); margin-top: var(--space-sm); line-height: 1.6; }
+  .game-over-stars { display: flex; gap: 6px; justify-content: center; margin: 8px 0; }
+  .game-over-star { font-size: 1.5rem; color: rgba(255,215,0,0.3); transition: color 0.3s ease, transform 0.3s ease; }
+  .game-over-star.on { color: #FFD700; text-shadow: 0 0 8px rgba(255,215,0,0.4); animation: starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes starPop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
   .game-over-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; justify-content: center; }
   .go-chip { padding: 2px var(--space-sm); border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
   .go-chip-best { background: rgba(76,175,80,0.2); color: var(--green); }
@@ -756,6 +760,7 @@
 
     <div class="game-over-banner" id="game-over">
       <div class="game-over-result" id="game-over-result"></div>
+      <div class="game-over-stars" id="game-over-stars"></div>
       <div class="game-over-details" id="game-over-details"></div>
       <div class="game-over-chips" id="game-over-chips"></div>
       <div class="game-over-actions">
@@ -816,21 +821,20 @@
 
     async initEngine() {
       try {
-        const wasmSupported = typeof WebAssembly === 'object' &&
-          WebAssembly.validate(Uint8Array.of(0x0,0x61,0x73,0x6d,0x01,0x00,0x00,0x00));
-
-        const url = wasmSupported
-          ? 'https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish-18-lite-single.js'
-          : 'https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish-18-asm.js';
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch Stockfish');
-
-        const workerCode = await response.text();
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(blob);
-
-        this.stockfish = new Worker(workerUrl);
+        // Fetch stockfish.js, wrap with CDN redirect for WASM, blob it
+        const CDN = 'https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/';
+        const resp = await fetch(CDN + 'stockfish.js');
+        if (!resp.ok) throw new Error('Failed to fetch stockfish.js');
+        const src = await resp.text();
+        // Prefix: intercept fetch to redirect relative WASM paths to CDN
+        const wrapped = 'const _origFetch = self.fetch || fetch;\n' +
+          'self.fetch = function(url, opts) {\n' +
+          '  if (typeof url === "string" && url.includes("stockfish"))\n' +
+          '    url = "' + CDN + '" + url.split("/").pop();\n' +
+          '  return _origFetch(url, opts);\n' +
+          '};\n' + src;
+        const blob = new Blob([wrapped], { type: 'application/javascript' });
+        this.stockfish = new Worker(URL.createObjectURL(blob));
 
         this.stockfish.addEventListener('message', (e) => {
           const line = e.data;
@@ -842,10 +846,12 @@
         this.stockfish.postMessage('uci');
         await this.waitForReady();
 
-        console.log('Stockfish engine loaded:', wasmSupported ? 'WASM' : 'ASM');
+        console.log('Stockfish engine loaded');
       } catch (e) {
         console.error('Failed to initialize Stockfish:', e);
         this.stockfish = null;
+        const statusEl = document.getElementById('engine-info');
+        if (statusEl) statusEl.textContent = 'Engine unavailable — serve via HTTP (python -m http.server)';
       }
     }
 
@@ -893,9 +899,13 @@
       const skill = skillMap[elo] || 10;
       this.engineSkill = skill;
 
-      await this.sendCommand('setoption name Skill Level value ' + skill);
-      await this.sendCommand('setoption name UCI_LimitStrength value true');
-      await this.sendCommand('setoption name UCI_Elo value ' + elo);
+      // setoption commands don't get responses — post without awaiting
+      if (this.stockfishReady) {
+        this.stockfish.postMessage('setoption name Skill Level value ' + skill);
+        this.stockfish.postMessage('setoption name UCI_LimitStrength value true');
+        this.stockfish.postMessage('setoption name UCI_Elo value ' + elo);
+      }
+      // Only await isready — Stockfish responds with 'readyok'
       await this.sendCommand('isready');
     }
 
@@ -1023,7 +1033,11 @@
 
     async newGame(color, elo) {
       this.playerColor = color || 'white';
-      await this.setEngineLevel(elo || 1200);
+      try {
+        await this.setEngineLevel(elo || 1200);
+      } catch(e) {
+        console.error('setEngineLevel failed:', e);
+      }
 
       this.chess.reset();
       this.board.position('start', false);
@@ -1190,10 +1204,43 @@
     showGameOver(result, details) {
       const banner = document.getElementById('game-over');
       const resultEl = document.getElementById('game-over-result');
+      const starsEl = document.getElementById('game-over-stars');
       const detailsEl = document.getElementById('game-over-details');
+      const chipsEl = document.getElementById('game-over-chips');
 
       resultEl.textContent = result;
-      detailsEl.textContent = details;
+
+      // Calculate star rating based on accuracy
+      let accuracy = 0;
+      if (this.moveEvaluations.length > 0) {
+        const goodMoves = this.moveEvaluations.filter(m =>
+          ['best', 'great', 'good'].includes(m.classification)
+        ).length;
+        accuracy = Math.round((goodMoves / this.moveEvaluations.length) * 100);
+      }
+      const hasBlunder = this.moveEvaluations.some(m => m.classification === 'blunder');
+      let starCount = 1;
+      if (accuracy >= 85 && !hasBlunder) starCount = 3;
+      else if (accuracy >= 70) starCount = 2;
+
+      // Render stars
+      let starsHtml = '';
+      for (let i = 1; i <= 3; i++) {
+        starsHtml += '<span class="game-over-star ' + (i <= starCount ? 'on' : 'off') + '" style="animation-delay:' + (i * 0.15) + 's">★</span>';
+      }
+      starsEl.innerHTML = starsHtml;
+
+      // Render classification chips
+      const counts = {};
+      this.moveEvaluations.forEach(m => { counts[m.classification] = (counts[m.classification] || 0) + 1; });
+      const labels = { best: 'Best', great: 'Great', good: 'Good', inaccuracy: 'Inaccuracies', mistake: 'Mistakes', blunder: 'Blunders' };
+      let chipsHtml = '';
+      for (const cls of ['best', 'great', 'good', 'inaccuracy', 'mistake', 'blunder']) {
+        if (counts[cls]) chipsHtml += '<span class="go-chip go-chip-' + cls + '">' + counts[cls] + ' ' + labels[cls] + '</span>';
+      }
+      chipsEl.innerHTML = chipsHtml;
+
+      detailsEl.textContent = details + ' · Accuracy: ' + accuracy + '%';
 
       banner.classList.add('visible');
     }
@@ -1487,6 +1534,7 @@
   let game;
 
   function init() {
+    try {
     game = new ChessGame();
 
     // Wire up event handlers
@@ -1554,6 +1602,9 @@
       document.getElementById('focus-toggle').classList.toggle('active');
       game.board.resize();
     });
+    // Auto-start a game
+    game.newGame('white', 1200);
+    } catch(e) { console.error('init() error:', e); }
   }
 
   // Start when DOM is ready
