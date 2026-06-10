@@ -1513,6 +1513,338 @@
   .star.on { color: #ffc107; text-shadow: 0 0 8px rgba(255,193,7,0.35); animation: starPop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
   .star.off { color: var(--surface3); opacity: 0.4; }
   @keyframes starPop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     MODULE CSS — Visual Feedback, Gamification, Learning Viz, Engagement,
+                   Progress Tracking (injected before existing styles so
+                   existing rules take precedence; module selectors use unique
+                   prefixes to avoid collisions)
+     ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* ── Visual Feedback Module CSS ── */
+  .vf-glow-green { animation: vfGlowGreen 0.7s ease-out forwards !important; }
+  @keyframes vfGlowGreen {
+    0%   { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+    30%  { box-shadow: 0 0 14px 6px rgba(76,175,80,0.7), inset 0 0 10px rgba(76,175,80,0.3); }
+    100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); }
+  }
+  .vf-border-green { animation: vfBorderGreen 0.5s ease-out forwards !important; }
+  @keyframes vfBorderGreen {
+    0%   { outline: 3px solid rgba(76,175,80,0); outline-offset: -3px; }
+    40%  { outline: 3px solid rgba(76,175,80,0.8); outline-offset: -3px; }
+    100% { outline: 3px solid rgba(76,175,80,0); outline-offset: -3px; }
+  }
+  .vf-pulse-orange { animation: vfPulseOrange 0.8s ease-out forwards !important; }
+  @keyframes vfPulseOrange {
+    0%   { box-shadow: 0 0 0 0 rgba(255,152,0,0); }
+    30%  { box-shadow: 0 0 16px 6px rgba(255,152,0,0.65), inset 0 0 10px rgba(255,152,0,0.3); }
+    100% { box-shadow: 0 0 0 0 rgba(255,152,0,0); }
+  }
+  .vf-shake-red { animation: vfShakeRed 0.45s ease forwards !important; }
+  @keyframes vfShakeRed {
+    0%, 100% { transform: translate(0,0); }
+    15% { transform: translate(-3px, 0); }
+    30% { transform: translate(3px, 0); }
+    45% { transform: translate(-3px, 0); }
+    60% { transform: translate(2px, 0); }
+    75% { transform: translate(-2px, 0); }
+  }
+  .vf-border-orange-red { animation: vfBorderOrangeRed 0.6s ease-out forwards !important; }
+  @keyframes vfBorderOrangeRed {
+    0%   { outline: 4px solid rgba(255,87,114,0); outline-offset: -4px; }
+    30%  { outline: 4px solid rgba(255,152,0,0.9); outline-offset: -4px; }
+    60%  { outline: 4px solid rgba(255,87,114,0.7); outline-offset: -4px; }
+    100% { outline: 4px solid rgba(255,87,114,0); outline-offset: -4px; }
+  }
+  .vf-vignette-flash { pointer-events: none; z-index: 20; position: absolute; inset: 0; border-radius: 4px; animation: vfVignetteFlash 0.7s ease-out forwards; }
+  @keyframes vfVignetteFlash {
+    0%   { box-shadow: inset 0 0 0 0 rgba(255,0,54,0); background: transparent; }
+    25%  { box-shadow: inset 0 0 60px 10px rgba(255,0,54,0.35); background: rgba(255,0,54,0.06); }
+    100% { box-shadow: inset 0 0 0 0 rgba(255,0,54,0); background: transparent; }
+  }
+  .vf-board-shake-check { animation: vfBoardShakeCheck 0.35s ease; }
+  @keyframes vfBoardShakeCheck {
+    0%, 100% { transform: translate(0,0); }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(2px, -1px); }
+    60% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 1px); }
+  }
+  .vf-confetti { position: fixed; width: 8px; height: 8px; z-index: 9999; pointer-events: none; animation: vfConfettiFall var(--dur) cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+  @keyframes vfConfettiFall {
+    0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
+  }
+  .vf-eval-bar { transition: width 0.8s ease-in-out, background 0.5s ease !important; }
+  .vf-eval-flash-red { animation: vfEvalFlashRed 0.5s ease; }
+  @keyframes vfEvalFlashRed {
+    0%   { filter: brightness(1); }
+    30%  { filter: brightness(1) saturate(2) hue-rotate(-30deg); }
+    100% { filter: brightness(1); }
+  }
+  .vf-captured-piece-pop { animation: vfPiecePop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  @keyframes vfPiecePop {
+    0%   { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .vf-threat-svg { position: absolute; inset: 0; pointer-events: none; z-index: 12; overflow: visible; }
+  .vf-threat-arrow-line { stroke-dasharray: 300; stroke-dashoffset: 300; animation: vfArrowDraw 0.5s ease forwards; }
+  @keyframes vfArrowDraw { to { stroke-dashoffset: 0; } }
+  .vf-check-king-pulse { animation: vfCheckKingPulse 0.6s ease-in-out 3 !important; }
+  @keyframes vfCheckKingPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(255,0,54,0.5), inset 0 0 8px rgba(255,0,54,0.3); }
+    50% { box-shadow: 0 0 22px 8px rgba(255,0,54,0.8), inset 0 0 14px rgba(255,0,54,0.5); }
+  }
+
+  /* ── Gamification Module CSS ── */
+  .xp-ring-wrap {
+    position: relative;
+    width: 38px; height: 38px;
+    flex-shrink: 0;
+  }
+  .xp-ring-wrap svg { transform: rotate(-90deg); }
+  .xp-ring-bg   { fill: none; stroke: var(--surface2); stroke-width: 3.5; }
+  .xp-ring-fill {
+    fill: none; stroke: var(--accent); stroke-width: 3.5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s ease;
+  }
+  .xp-ring-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.55rem; font-weight: 700; color: var(--text);
+  }
+  .level-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 6px;
+    font-size: 0.75rem; font-weight: 700;
+    background: var(--surface2); color: var(--accent);
+    border: 1px solid var(--surface3);
+    margin-left: 6px; vertical-align: middle;
+  }
+  .level-badge .lb-piece { font-size: 0.85rem; }
+  .xp-float {
+    position: absolute;
+    pointer-events: none;
+    font-size: 0.85rem; font-weight: 800;
+    color: var(--green);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    animation: xpFloatUp 1.4s ease-out forwards;
+    z-index: 60;
+  }
+  .xp-float.zero { color: var(--red); }
+  @keyframes xpFloatUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    60%  { opacity: 1; transform: translateY(-28px) scale(1.1); }
+    100% { opacity: 0; transform: translateY(-48px) scale(0.8); }
+  }
+  .levelup-overlay {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.75);
+    z-index: 9999;
+    animation: levelupFlash 1.6s ease forwards;
+    pointer-events: none;
+  }
+  .levelup-overlay .lu-rank {
+    font-size: 3.5rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), #ffd700);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: luScale 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .levelup-overlay .lu-sub {
+    font-size: 1.1rem; color: var(--text); margin-top: 8px; opacity: 0.85;
+  }
+  @keyframes levelupFlash { 0%{opacity:0} 15%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
+  @keyframes luScale { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+  .ach-toast {
+    position: fixed; right: 16px;
+    min-width: 260px; max-width: 320px;
+    padding: 12px 16px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--surface3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: flex; align-items: center; gap: 10px;
+    z-index: 9998;
+    animation: achSlideIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .ach-toast.dismissing { animation: achSlideOut 0.35s ease forwards; }
+  .ach-toast .ach-icon  { font-size: 1.6rem; flex-shrink: 0; }
+  .ach-toast .ach-body  { display: flex; flex-direction: column; }
+  .ach-toast .ach-title { font-weight: 700; font-size: 0.85rem; color: var(--text); }
+  .ach-toast .ach-desc  { font-size: 0.72rem; color: var(--text-dim); margin-top: 1px; }
+  @keyframes achSlideIn  { 0%{transform:translateX(120%);opacity:0} 100%{transform:translateX(0);opacity:1} }
+  @keyframes achSlideOut { 0%{transform:translateX(0);opacity:1} 100%{transform:translateX(120%);opacity:0} }
+  .ach-shelf {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+  }
+  .ach-shelf-item {
+    position: relative;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 1.1rem;
+    border: 2px solid var(--surface3);
+    background: var(--surface2);
+    cursor: default; transition: border-color 0.2s;
+  }
+  .ach-shelf-item.unlocked {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(240,85,114,0.25);
+  }
+  .ach-shelf-item.locked { opacity: 0.35; filter: grayscale(1); }
+  .ach-shelf-item .ach-tip {
+    display: none;
+    position: absolute; bottom: 110%; left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--surface3);
+    border-radius: 6px; padding: 6px 10px;
+    white-space: nowrap; font-size: 0.72rem; color: var(--text);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 100;
+  }
+  .ach-shelf-item:hover .ach-tip { display: block; }
+  .puzzle-streak {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.9rem; font-weight: 800; margin-left: 8px;
+  }
+  .puzzle-streak .flame { font-size: 1.1rem; }
+  .puzzle-streak .mult {
+    font-size: 0.7rem; color: var(--accent);
+    background: var(--surface2); padding: 1px 5px;
+    border-radius: 4px; margin-left: 2px;
+  }
+  @keyframes streakShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px) rotate(-2deg); }
+    40% { transform: translateX(4px) rotate(2deg); }
+    60% { transform: translateX(-3px) rotate(-1deg); }
+    80% { transform: translateX(3px) rotate(1deg); }
+  }
+  .streak-reset { animation: streakShake 0.4s ease; }
+  .daily-challenge {
+    margin-top: 10px; padding: 8px 10px;
+    background: var(--surface2); border-radius: 8px;
+    font-size: 0.78rem;
+  }
+  .daily-challenge .dc-title {
+    font-weight: 700; font-size: 0.82rem; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .daily-challenge .dc-progress { color: var(--text-dim); }
+  .daily-challenge .dc-done { color: var(--green); font-weight: 600; }
+
+  /* ── Learning Viz Module CSS ── */
+  @keyframes lv-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .lv-srs-card { transition: background 0.2s; }
+  .lv-srs-card:hover { background: var(--surface3) !important; }
+  .lv-phase-header:hover { opacity: 0.85; }
+  .lv-section-title { font-size: 0.78rem; color: var(--text-dim); margin: 8px 0 4px; padding-bottom: 2px; border-bottom: 1px solid var(--surface3); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .lv-section-title::after { content: "\25BC"; font-size: 0.65rem; transition: transform 0.2s; }
+  .lv-section-title.collapsed::after { transform: rotate(-90deg); }
+
+  /* ── Engagement Module CSS ── */
+  .focus-widget {
+    position: relative;
+    background: linear-gradient(135deg, rgba(240,85,114,0.10) 0%, rgba(240,85,114,0.03) 100%);
+    border: 1px solid rgba(240,85,114,0.22);
+    border-radius: var(--radius-md, 8px);
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    animation: focusFadeIn 0.5s ease;
+    cursor: default;
+  }
+  .focus-widget.dismissed {
+    animation: focusFadeOut 0.3s ease forwards;
+    pointer-events: none;
+  }
+  .focus-widget-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+  .focus-widget-body { flex: 1; min-width: 0; }
+  .focus-widget-title { font-weight: 700; font-size: 0.82rem; color: var(--accent, #f05572); margin-bottom: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
+  .focus-widget-items { display: flex; flex-direction: column; gap: 4px; }
+  .focus-item { font-size: 0.8rem; color: var(--text, #e0e0e0); display: flex; align-items: center; gap: 6px; line-height: 1.4; }
+  .focus-item::before { content: '\2022'; color: var(--accent, #f05572); flex-shrink: 0; }
+  .focus-widget-dismiss { position: absolute; top: 6px; right: 8px; background: none; border: none; color: var(--text-dim, #888); font-size: 1rem; cursor: pointer; padding: 2px 4px; line-height: 1; opacity: 0.5; transition: opacity 0.15s; }
+  .focus-widget-dismiss:hover { opacity: 1; }
+  @keyframes focusFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes focusFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-8px); height: 0; padding: 0; margin: 0; overflow: hidden; } }
+  .insight-card {
+    background: linear-gradient(135deg, var(--surface2, #1e1e2e) 0%, var(--surface1, #16161e) 100%);
+    border: 1px solid var(--surface3, #2a2a3a);
+    border-radius: var(--radius-md, 8px);
+    padding: 14px 16px;
+    margin: 10px 0;
+    animation: insightSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .insight-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .insight-card-icon { font-size: 1.4rem; flex-shrink: 0; }
+  .insight-card-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim, #888); font-weight: 600; }
+  .insight-card-text { font-size: 0.88rem; color: var(--text, #e0e0e0); line-height: 1.5; margin-bottom: 10px; }
+  .insight-accuracy-bar { width: 100%; height: 6px; background: var(--surface3, #2a2a3a); border-radius: 3px; overflow: hidden; position: relative; }
+  .insight-accuracy-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .insight-accuracy-fill.win { background: linear-gradient(90deg, #22c55e, #4ade80); }
+  .insight-accuracy-fill.loss { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .insight-accuracy-fill.draw { background: linear-gradient(90deg, #eab308, #facc15); }
+  .insight-accuracy-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-dim, #888); margin-top: 4px; }
+  .insight-phases { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+  .insight-phase { font-size: 0.72rem; color: var(--text-dim, #888); display: flex; align-items: center; gap: 4px; }
+  .insight-phase-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .insight-phase-dot.opening { background: #3b82f6; }
+  .insight-phase-dot.middlegame { background: #8b5cf6; }
+  .insight-phase-dot.endgame { background: #f59e0b; }
+  @keyframes insightSlideIn { from { opacity: 0; transform: translateY(12px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .sound-toggle {
+    background: var(--surface2, #1e1e2e); color: var(--text, #e0e0e0);
+    border: 1px solid var(--surface2, #1e1e2e); border-radius: 4px;
+    padding: 4px 10px; cursor: pointer; font-size: 0.85rem;
+    transition: all 0.15s; display: flex; align-items: center; gap: 4px;
+  }
+  .sound-toggle:hover { background: var(--surface3, #2a2a3a); }
+  .sound-toggle.active { background: var(--accent, #f05572); color: #fff; border-color: var(--accent, #f05572); }
+  .settings-theme-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--surface3, #2a2a3a); }
+  .settings-theme-section h3 { font-size: 0.85rem; color: var(--text, #e0e0e0); margin-bottom: 10px; font-weight: 600; }
+  .theme-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .theme-option { flex: 1; min-width: 80px; padding: 10px 8px; border: 2px solid var(--surface3, #2a2a3a); border-radius: var(--radius-sm, 6px); background: var(--surface1, #16161e); cursor: pointer; text-align: center; transition: all 0.15s; }
+  .theme-option:hover { border-color: var(--text-dim, #888); }
+  .theme-option.active { border-color: var(--accent, #f05572); background: rgba(240,85,114,0.08); }
+  .theme-option-preview { display: flex; gap: 2px; justify-content: center; margin-bottom: 6px; }
+  .theme-swatch { width: 14px; height: 14px; border-radius: 2px; }
+  .theme-option-name { font-size: 0.72rem; color: var(--text, #e0e0e0); font-weight: 600; }
+  .board-theme-classic #board .board-b1,
+  .board-theme-classic #board .square-light { background-color: #f0d9b5 !important; }
+  .board-theme-classic #board .board-b2,
+  .board-theme-classic #board .square-dark { background-color: #b58863 !important; }
+  .board-theme-midnight #board .board-b1,
+  .board-theme-midnight #board .square-light { background-color: #2c3e6b !important; }
+  .board-theme-midnight #board .board-b2,
+  .board-theme-midnight #board .square-dark { background-color: #1a2540 !important; }
+  .board-theme-midnight .board-wrapper { box-shadow: 0 8px 12px rgba(0,0,0,0.3), 0 20px 48px rgba(0,0,0,0.5), 0 0 40px rgba(44,62,107,0.2); }
+  .board-theme-neon #board .board-b1,
+  .board-theme-neon #board .square-light { background-color: #1a1a2e !important; }
+  .board-theme-neon #board .board-b2,
+  .board-theme-neon #board .square-dark { background-color: #0f0f1a !important; }
+  .board-theme-neon .board-wrapper { box-shadow: 0 8px 12px rgba(0,0,0,0.4), 0 20px 48px rgba(0,0,0,0.6), 0 0 30px rgba(138,43,226,0.15), 0 0 60px rgba(0,255,255,0.08); }
+  .board-theme-neon #board { filter: drop-shadow(0 0 2px rgba(0,255,255,0.1)); }
+  .focus-banner { text-align: center; padding: 6px 12px; background: linear-gradient(90deg, transparent, rgba(240,85,114,0.15), transparent); border-bottom: 1px solid rgba(240,85,114,0.15); font-size: 0.78rem; color: var(--accent, #f05572); font-weight: 600; letter-spacing: 0.04em; animation: focusBannerPulse 3s ease-in-out infinite; display: none; }
+  .focus-banner.visible { display: block; }
+  @keyframes focusBannerPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+  .pomodoro-timer { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; background: rgba(240,85,114,0.15); padding: 2px 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.82rem; font-weight: 700; }
+  .pomodoro-controls { display: flex; gap: 6px; justify-content: center; margin-top: 4px; }
+  .pomodoro-btn { background: var(--surface2, #1e1e2e); color: var(--text, #e0e0e0); border: 1px solid var(--surface3, #2a2a3a); border-radius: 4px; padding: 3px 10px; font-size: 0.72rem; cursor: pointer; }
+  .pomodoro-btn:hover { background: var(--surface3, #2a2a3a); }
+  .pomodoro-btn.active { background: var(--accent, #f05572); color: #fff; border-color: var(--accent, #f05572); }
+  .focus-mode-active .panels .panel:not(.coach-panel):not([data-panel-id="eval"]) { opacity: 0.15; pointer-events: none; transition: opacity 0.4s ease; }
+  .focus-mode-active .panels .coach-panel,
+  .focus-mode-active .panels [data-panel-id="eval"] { opacity: 1; }
+  .focus-mode-active .board-col .panel:not(.move-input-bar) { opacity: 0.15; pointer-events: none; transition: opacity 0.4s ease; }
+  .focus-mode-active .board-col .move-input-bar,
+  .focus-mode-active .board-col .board-info { opacity: 1; }
+  .focus-mode-active .board-col .board-wrapper { box-shadow: 0 8px 12px rgba(0,0,0,0.1), 0 20px 48px rgba(0,0,0,0.25), 0 0 50px rgba(240,85,114,0.06); }
+
+  /* ── Progress Tracking Module CSS ── */
+  /* (Progress Tracking uses only inline styles on injected elements; no extra CSS needed) */
 </style>
 </head>
 <body>
@@ -1571,8 +1903,23 @@
     <div class="panel coach-panel" data-panel-id="coach" id="coach-panel">
       <h2>Coach</h2>
       <div id="coach-message"><span class="coach-empty">Tips will appear here during the game</span></div>
-      <button class="thinking-btn" id="thinking-coach-btn">&#9889; How should I think here?</button>
+            <button class="thinking-btn" id="thinking-coach-btn">&#9889; How should I think here?</button>
       <div class="thinking-output" id="thinking-coach-output" style="display:none;"></div>
+      
+      <!-- Engine Analysis Panel -->
+      <div class="engine-analysis" id="engine-analysis" style="margin-top: 12px; padding: 10px; background: rgba(76,175,80,0.06); border-radius: var(--radius-sm); border-left: 3px solid var(--green);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--green);">Engine Analysis</span>
+          <span id="engine-depth" style="font-size: 0.75rem; color: var(--text-dim);"></span>
+        </div>
+        <div id="engine-bestmove" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;"></div>
+        <div id="engine-pv" style="font-size: 0.8rem; color: var(--text-dim); font-family: 'SF Mono', 'Consolas', monospace;"></div>
+        <div style="margin-top: 8px;">
+          <button id="analyze-btn" style="padding: 4px 12px; font-size: 0.75rem; background: var(--surface2); color: var(--text); border: 1px solid var(--surface3); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
+            &#128270; Analyze Position
+          </button>
+        </div>
+      </div>
       <div class="threat-radar" id="threat-radar" style="display:none;">
         <h3>Threat Detection</h3>
         <div id="threat-indicators"></div>
@@ -1828,6 +2175,226 @@
   let learningProgress = null;
   let curriculumData = null;
   let srsData = null;
+
+
+  // === STOCKFISH WASM ENGINE ===
+  let stockfish = null;
+  let stockfishReady = false;
+  let stockfishInit = null;
+  let stockfishQueue = [];
+  let stockfishAnalyzing = false;
+
+  // Lazy-load Stockfish WASM engine
+  async function initStockfish() {
+    if (stockfishInit) return stockfishInit;
+    if (stockfish) return Promise.resolve(stockfish);
+
+    stockfishInit = (async function() {
+      try {
+        // Detect WASM support
+        const wasmSupported = typeof WebAssembly === 'object' && 
+          WebAssembly.validate(Uint8Array.of(0x0,0x61,0x73,0x6d,0x01,0x00,0x00,0x00));
+
+        // Fetch stockfish worker code from CDN
+        const url = wasmSupported 
+          ? 'https://cdn.jsdelivr.net/npm/stockfish.js@10.0.0/stockfish-18-lite-single.js'
+          : 'https://cdn.jsdelivr.net/npm/stockfish.js@10.0.0/stockfish-18-asm.js';
+        
+        const workerCode = await fetch(url).then(r => {
+          if (!r.ok) throw new Error('Failed to fetch Stockfish: ' + r.status);
+          return r.text();
+        });
+
+        // Create blob URL for inline worker
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blob);
+
+        // Initialize worker
+        stockfish = new Worker(workerUrl);
+
+        // Set up message handler
+        stockfish.addEventListener('message', handleStockfishMessage);
+
+        // Initialize UCI
+        await sendStockfishCommand('uci');
+
+        console.log('Stockfish engine loaded:', wasmSupported ? 'WASM' : 'ASM');
+        return stockfish;
+      } catch (e) {
+        console.error('Failed to initialize Stockfish:', e);
+        stockfish = null;
+        stockfishInit = null;
+        throw e;
+      }
+    })();
+
+    return stockfishInit;
+  }
+
+  // Send command to Stockfish with promise
+  function sendStockfishCommand(cmd, waitForResponse = true) {
+    return new Promise((resolve, reject) => {
+      if (!stockfish) {
+        reject(new Error('Stockfish not initialized'));
+        return;
+      }
+
+      if (!waitForResponse) {
+        stockfish.postMessage(cmd);
+        resolve();
+        return;
+      }
+
+      // One-time listener for this command's response
+      const handler = (e) => {
+        const line = e.data;
+        if (line === 'uciok' || line === 'readyok' || line.startsWith('bestmove')) {
+          stockfish.removeEventListener('message', handler);
+          resolve(line);
+        }
+      };
+      stockfish.addEventListener('message', handler);
+      stockfish.postMessage(cmd);
+    });
+  }
+
+  // Handle Stockfish responses (streaming info, bestmove)
+  function handleStockfishMessage(e) {
+    const line = e.data;
+    
+    // Stream info updates during analysis
+    if (line.startsWith('info')) {
+      // Parse depth, score, nodes, etc.
+      const depthMatch = line.match(/depth (\d+)/);
+      const scoreMatch = line.match(/score (cp|mate) (-?\d+)/);
+      
+      if (depthMatch && scoreMatch) {
+        const depth = parseInt(depthMatch[1]);
+        const scoreType = scoreMatch[1];
+        const score = parseInt(scoreMatch[2]);
+        
+        // Update UI with current analysis
+        updateEngineAnalysis(depth, scoreType, score, line);
+      }
+    }
+
+    // Analysis complete
+    if (line.startsWith('bestmove')) {
+      stockfishAnalyzing = false;
+      const move = line.split(' ')[1];
+      onEngineAnalysisComplete(move, line);
+    }
+  }
+
+  // Set engine skill level (0-20) or Elo
+  async function setEngineLevel(levelOrElo) {
+    if (!stockfishReady) await initStockfish();
+    
+    if (typeof levelOrElo === 'number' && levelOrElo <= 20) {
+      // Skill Level (0-20)
+      await sendStockfishCommand('setoption name Skill Level value ' + levelOrElo);
+      await sendStockfishCommand('setoption name UCI_LimitStrength value false');
+    } else {
+      // Specific Elo (400-3500)
+      await sendStockfishCommand('setoption name UCI_LimitStrength value true');
+      await sendStockfishCommand('setoption name UCI_Elo value ' + levelOrElo);
+    }
+    
+    await sendStockfishCommand('isready');
+  }
+
+  // Analyze current position
+  async function analyzePosition(fen, depth = 15) {
+    if (!stockfish) await initStockfish();
+    if (!stockfishReady) await sendStockfishCommand('isready');
+    
+    stockfishAnalyzing = true;
+    
+    // Send position
+    await sendStockfishCommand('position fen ' + fen, false);
+    
+    // Start analysis
+    await sendStockfishCommand('go depth ' + depth, false);
+  }
+
+  // Get best move (non-streaming, returns single result)
+  async function getBestMove(fen, depth = 15) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!stockfish) await initStockfish();
+        if (!stockfishReady) await sendStockfishCommand('isready');
+        
+        const handler = (e) => {
+          if (e.data.startsWith('bestmove')) {
+            stockfish.removeEventListener('message', handler);
+            const move = e.data.split(' ')[1];
+            resolve(move);
+          }
+        };
+        
+        stockfish.addEventListener('message', handler);
+        await sendStockfishCommand('position fen ' + fen, false);
+        await sendStockfishCommand('go depth ' + depth, false);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  // Update UI with streaming analysis
+  function updateEngineAnalysis(depth, scoreType, score, fullLine) {
+    // Parse PV (principal variation)
+    const pvMatch = fullLine.match(/pv (.+)/);
+    const pv = pvMatch ? pvMatch[1].split(' ').slice(0, 5).join(' ') : '';
+    
+    // Convert score to centipawns
+    let cp = scoreType === 'mate' ? (score > 0 ? 10000 : -10000) : score;
+    
+    // Update eval bar
+    const evalBar = document.querySelector('#eval-bar-inner');
+    if (evalBar) {
+      const percent = Math.min(100, Math.max(0, 50 + (cp / 200)));
+      evalBar.style.width = percent + '%';
+    }
+
+    // Update depth display
+    const depthEl = document.querySelector('#engine-depth');
+    if (depthEl) depthEl.textContent = 'Depth: ' + depth;
+  }
+
+  // Analysis complete callback
+  function onEngineAnalysisComplete(bestmove, fullLine) {
+    console.log('Analysis complete:', bestmove);
+    
+    // Extract ponder move if available
+    const ponder = fullLine.split(' ')[3] || '';
+    
+    // Update UI with final result
+    const bestmoveEl = document.querySelector('#engine-bestmove');
+    if (bestmoveEl) {
+      bestmoveEl.textContent = 'Best: ' + bestmove + (ponder ? ' (ponder: ' + ponder + ')' : '');
+    }
+  }
+
+  // Check if engine supports specific UCI option
+  async function hasOption(optionName) {
+    if (!stockfish) await initStockfish();
+    // Check if option exists in UCI response
+    return true; // Stockfish supports all standard options
+  }
+
+  // Quit engine
+  function quitStockfish() {
+    if (stockfish) {
+      stockfish.postMessage('quit');
+      stockfish.terminate();
+      stockfish = null;
+      stockfishReady = false;
+      stockfishInit = null;
+    }
+  }
+
+
 
   // Track the currently active (clicked) move in the move list
   let activeMoveEl = null;
@@ -2673,6 +3240,36 @@
     // Wire up thinking coach button
     const thinkingBtn = document.getElementById('thinking-coach-btn');
     if (thinkingBtn) thinkingBtn.addEventListener('click', showThinkingCoach);
+    // Wire up engine analyze button
+    const analyzeBtn = document.getElementById('analyze-btn');
+    if (analyzeBtn) {
+      analyzeBtn.addEventListener('click', async function() {
+        if (!currentGameId) return;
+        
+        try {
+          // Initialize engine if needed
+          await initStockfish();
+          
+          // Get current position
+          const fen = chessGame.fen();
+          
+          // Show loading state
+          analyzeBtn.disabled = true;
+          analyzeBtn.textContent = 'Analyzing...';
+          
+          // Analyze position
+          await analyzePosition(fen, 15);
+          
+        } catch (e) {
+          console.error('Analysis failed:', e);
+          document.getElementById('engine-bestmove').textContent = 'Analysis failed';
+        } finally {
+          analyzeBtn.disabled = false;
+          analyzeBtn.textContent = '🔍 Analyze Position';
+        }
+      });
+    }
+
 
     // Load game tabs on initialization
     loadGameTabs();
@@ -2834,12 +3431,12 @@
         board.position(chessGame.fen());
       } else {
         // Proceed with normal submission
-        submitMove(move.san);
+        submitMove(move.san, true);
       }
     });
   }
 
-  async function submitMove(san) {
+  async function submitMove(san, fromInput) {
     if (moveSubmitting) return;
     moveSubmitting = true;
     setMoveStatus('Sending move...', 'waiting');
@@ -2857,6 +3454,11 @@
         setMoveStatus('Move sent: ' + san + ' (waiting for engine...)', 'ok');
         // Refresh game tabs after move
         loadGameTabs();
+        // Only re-focus input if the move was typed (not dragged on board)
+        if (fromInput) {
+          var inp = document.getElementById('move-input');
+          if (inp) inp.focus();
+        }
       } else {
         setMoveStatus('Error: ' + (data.error || 'unknown'), 'error');
         // Undo the chess.js move since it wasn't accepted
@@ -4123,11 +4725,12 @@
           moveSubmitting = false;
         }
 
-        // Auto-focus move input when it's the player's turn
+        // Auto-focus move input only if it was already focused (user was typing)
         if (!puzzleMode && viewingHistoricalPly < 0) {
           var turnPart = state.fen.split(' ')[1];
           var isPlayerTurnNow = (turnPart === playerColor[0]);
-          if (isPlayerTurnNow) {
+          if (isPlayerTurnNow && document.activeElement &&
+              document.activeElement.id === 'move-input') {
             var moveInput = document.getElementById('move-input');
             if (moveInput) moveInput.focus();
           }
@@ -4143,6 +4746,10 @@
       if (board.orientation() !== expectedOrientation) {
         board.orientation(expectedOrientation);
       }
+
+      // Save focus before DOM updates so we can restore it after
+      var savedFocus = document.activeElement;
+      var savedFocusId = savedFocus ? savedFocus.id : null;
 
       updatePanels(state);
 
@@ -4169,6 +4776,14 @@
         // Gracefully handle API errors - show defaults
         updateLearningProgressPanel(null, null, null);
       }
+
+      // Restore focus if it was on the move input (e.g. during engine thinking)
+      if (savedFocusId === 'move-input') {
+        var moveInput = document.getElementById('move-input');
+        if (moveInput && document.activeElement !== moveInput) {
+          moveInput.focus();
+        }
+      }
     } catch (e) {
       // Server might be down, just retry
     }
@@ -4177,6 +4792,1389 @@
   setInterval(poll, 500);
   setInterval(loadGameTabs, 5000); // Refresh game tabs every 5 seconds
   poll();
+})();
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DASHBOARD MODULES
+   Each module is a self-contained IIFE that registers on window.DashboardModules.
+   CSS is inlined in <style> above. HTML elements are injected by each init().
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Visual Feedback Module ── */
+(function () {
+  'use strict';
+
+  var _styleEl = null;
+  var _observers = [];
+  var _timers = [];
+  var _lastMoveTo = null;
+  var _lastCheckStatus = '';
+  var _capturedWhiteCount = 0;
+  var _capturedBlackCount = 0;
+  var _lastCoachText = '';
+  var _lastEvalWidth = '';
+
+  function $(sel) { return document.querySelector(sel); }
+  function $$(sel) { return document.querySelectorAll(sel); }
+
+  function safeTimeout(fn, ms) {
+    var id = setTimeout(fn, ms);
+    _timers.push(id);
+    return id;
+  }
+
+  function classifyFromCoach(text) {
+    if (!text) return null;
+    var t = text.toLowerCase();
+    if (/\bexcellent\b/.test(t) || /\bperfect\b/.test(t) || /\bbest move\b/.test(t)) return 'best';
+    if (/\bgreat\b/.test(t) || /\bgood move\b/.test(t) || /\bkeeps the advantage\b/.test(t)) return 'great';
+    if (/\bdecent\b/.test(t) || /\bslightly better\b/.test(t)) return 'good';
+    if (/\binaccuracy\b/.test(t)) return 'inaccuracy';
+    if (/\bblunder\b/.test(t)) return 'blunder';
+    if (/\bmistake\b/.test(t) && !/\bblunder\b/.test(t)) return 'mistake';
+    return null;
+  }
+
+  function getLastMoveDestinationSquare() {
+    var highlighted = $$('.highlight-last-move');
+    if (highlighted.length >= 2) {
+      var toEl = highlighted[highlighted.length - 1];
+      var cls = toEl.className || '';
+      var m = cls.match(/square-([a-h][1-8])/);
+      if (m) return m[1];
+    }
+    return null;
+  }
+
+  function evalToCp(evalStr) {
+    if (!evalStr) return 0;
+    evalStr = evalStr.trim();
+    if (/^M/i.test(evalStr)) return 10000;
+    var num = parseFloat(evalStr);
+    return isNaN(num) ? 0 : Math.round(num * 100);
+  }
+
+  function applyMoveFlash(classification) {
+    var sq = getLastMoveDestinationSquare();
+    if (!sq) return;
+    var $sq = $('.square-' + sq);
+    if (!$sq) return;
+    $sq.className = $sq.className.replace(/vf-glow-green|vf-border-green|vf-pulse-orange|vf-shake-red|vf-border-orange-red/g, '').trim();
+    switch (classification) {
+      case 'best':
+        $sq.classList.add('vf-glow-green');
+        safeTimeout(function () { $sq.classList.remove('vf-glow-green'); }, 750);
+        break;
+      case 'great':
+        $sq.classList.add('vf-border-green');
+        safeTimeout(function () { $sq.classList.remove('vf-border-green'); }, 550);
+        break;
+      case 'good':
+        break;
+      case 'inaccuracy':
+        $sq.classList.add('vf-pulse-orange');
+        safeTimeout(function () { $sq.classList.remove('vf-pulse-orange'); }, 850);
+        break;
+      case 'mistake':
+        $sq.classList.add('vf-shake-red');
+        $sq.classList.add('vf-border-orange-red');
+        safeTimeout(function () { $sq.classList.remove('vf-shake-red', 'vf-border-orange-red'); }, 650);
+        break;
+      case 'blunder':
+        var boardEl = $('#board');
+        if (boardEl) {
+          var vignette = document.createElement('div');
+          vignette.className = 'vf-vignette-flash';
+          boardEl.appendChild(vignette);
+          safeTimeout(function () { vignette.remove(); }, 750);
+        }
+        $sq.classList.add('vf-shake-red');
+        safeTimeout(function () { $sq.classList.remove('vf-shake-red'); }, 500);
+        break;
+    }
+  }
+
+  function colorEvalBar() {
+    var evalBar = $('#eval-bar');
+    if (!evalBar) return;
+    evalBar.classList.add('vf-eval-bar');
+    var evalScoreEl = $('#eval-score');
+    var score = evalScoreEl ? evalScoreEl.textContent.trim() : '0.0';
+    var cp = evalToCp(score);
+    var pct = 50;
+    if (cp > 0) pct = Math.min(50 + cp / 20, 95);
+    else if (cp < 0) pct = Math.max(50 + cp / 20, 5);
+    evalBar.style.width = pct + '%';
+    if (cp > 150) evalBar.style.background = 'linear-gradient(90deg, #1565C0, #42A5F5)';
+    else if (cp > 50) evalBar.style.background = 'linear-gradient(90deg, #78909C, #90CAF9)';
+    else if (cp < -150) evalBar.style.background = 'linear-gradient(90deg, #37474F, #263238)';
+    else if (cp < -50) evalBar.style.background = 'linear-gradient(90deg, #90A4AE, #546E7A)';
+    else evalBar.style.background = 'linear-gradient(90deg, #9E9E9E, #BDBDBD)';
+  }
+
+  function flashEvalBarOnBlunder() {
+    var evalBar = $('#eval-bar');
+    if (!evalBar) return;
+    evalBar.classList.add('vf-eval-flash-red');
+    safeTimeout(function () { evalBar.classList.remove('vf-eval-flash-red'); }, 550);
+  }
+
+  function handleCheckStatus() {
+    var statusEl = $('#check-status');
+    if (!statusEl) return;
+    var status = statusEl.textContent.trim();
+    if (status === _lastCheckStatus) return;
+    _lastCheckStatus = status;
+    if (status === 'Check') {
+      var kingSq = findKingSquare();
+      if (kingSq) {
+        var $sq = $('.square-' + kingSq);
+        if ($sq) {
+          $sq.classList.add('vf-check-king-pulse');
+          safeTimeout(function () { $sq.classList.remove('vf-check-king-pulse'); }, 1900);
+        }
+      }
+      var wrapper = document.querySelector('.board-wrapper');
+      if (wrapper) {
+        wrapper.classList.remove('vf-board-shake-check');
+        void wrapper.offsetWidth;
+        wrapper.classList.add('vf-board-shake-check');
+        safeTimeout(function () { wrapper.classList.remove('vf-board-shake-check'); }, 400);
+      }
+    }
+    if (status === 'Checkmate' || status === 'Stalemate') {
+      if (status === 'Checkmate') spawnConfettiBurst();
+    }
+  }
+
+  function findKingSquare() {
+    if (typeof chessGame !== 'undefined' && chessGame && typeof chessGame.fen === 'function') {
+      return _parseKingFromFen(chessGame.fen());
+    }
+    return null;
+  }
+
+  function _parseKingFromFen(fen) {
+    if (!fen) return null;
+    var parts = fen.split(' ');
+    var turn = parts[1];
+    var rows = parts[0].split('/');
+    var king = turn === 'w' ? 'K' : 'k';
+    for (var r = 0; r < 8; r++) {
+      var rank = 8 - r;
+      var fileIdx = 0;
+      for (var c = 0; c < rows[r].length; c++) {
+        var ch = rows[r][c];
+        if (ch >= '1' && ch <= '8') fileIdx += parseInt(ch);
+        else {
+          if (ch === king) return String.fromCharCode(97 + fileIdx) + rank;
+          fileIdx++;
+        }
+      }
+    }
+    return null;
+  }
+
+  function spawnConfettiBurst() {
+    var boardEl = $('#board');
+    if (!boardEl) return;
+    var rect = boardEl.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var colors = ['#f05572', '#4caf50', '#2196f3', '#ffc107', '#ff9800', '#8bc34a', '#e040fb', '#00e5ff'];
+    for (var i = 0; i < 50; i++) {
+      (function (idx) {
+        safeTimeout(function () {
+          var el = document.createElement('div');
+          el.className = 'vf-confetti';
+          el.style.left = cx + 'px';
+          el.style.top = cy + 'px';
+          el.style.background = colors[idx % colors.length];
+          el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+          el.style.width = (5 + Math.random() * 7) + 'px';
+          el.style.height = (5 + Math.random() * 7) + 'px';
+          var angle = Math.random() * Math.PI * 2;
+          var dist = 80 + Math.random() * 200;
+          el.style.setProperty('--dx', (Math.cos(angle) * dist) + 'px');
+          el.style.setProperty('--dy', (Math.sin(angle) * dist + 60) + 'px');
+          el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+          el.style.setProperty('--dur', (0.8 + Math.random() * 1.0) + 's');
+          document.body.appendChild(el);
+          safeTimeout(function () { el.remove(); }, 2500);
+        }, idx * 15);
+      })(i);
+    }
+  }
+
+  function handleCapturedPieces() {
+    var whiteCaptured = $('#captured-white');
+    var blackCaptured = $('#captured-black');
+    if (!whiteCaptured || !blackCaptured) return;
+    var whitePieces = whiteCaptured.children.length;
+    var blackPieces = blackCaptured.children.length;
+    if (whitePieces > _capturedWhiteCount) { applyPopIn(whiteCaptured, _capturedWhiteCount); _capturedWhiteCount = whitePieces; }
+    if (blackPieces > _capturedBlackCount) { applyPopIn(blackCaptured, _capturedBlackCount); _capturedBlackCount = blackPieces; }
+  }
+
+  function applyPopIn(container, fromIdx) {
+    var children = container.children;
+    for (var i = fromIdx; i < children.length; i++) {
+      var el = children[i];
+      el.classList.remove('vf-captured-piece-pop');
+      void el.offsetWidth;
+      el.classList.add('vf-captured-piece-pop');
+      safeTimeout(function (target) { return function () { target.classList.remove('vf-captured-piece-pop'); }; }(el), 400);
+    }
+  }
+
+  function drawThreatArrows() {
+    var radarEl = $('#threat-radar');
+    if (!radarEl) return;
+    if (radarEl.style.display === 'none') { removeThreatArrows(); return; }
+    var indicators = radarEl.querySelectorAll('.board-square-threat');
+    if (!indicators.length) { removeThreatArrows(); return; }
+    var boardEl = $('#board');
+    if (!boardEl) return;
+    removeThreatArrows();
+    var boardWidth = boardEl.offsetWidth;
+    var sqSize = boardWidth / 8;
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'vf-threat-svg');
+    svg.setAttribute('viewBox', '0 0 ' + boardWidth + ' ' + boardWidth);
+    svg.style.width = boardWidth + 'px';
+    svg.style.height = boardWidth + 'px';
+    indicators.forEach(function (indicator) {
+      var sq = indicator.getAttribute('data-square');
+      var threatFrom = indicator.getAttribute('data-threat-from');
+      if (!sq || !threatFrom) return;
+      var fromFile = threatFrom.charCodeAt(0) - 97;
+      var fromRank = 8 - parseInt(threatFrom[1]);
+      var toFile = sq.charCodeAt(0) - 97;
+      var toRank = 8 - parseInt(sq[1]);
+      var orientation = (typeof board !== 'undefined' && board && board.orientation) ? board.orientation() : 'white';
+      if (orientation === 'black') { fromFile = 7 - fromFile; fromRank = 7 - fromRank; toFile = 7 - toFile; toRank = 7 - toRank; }
+      var x1 = fromFile * sqSize + sqSize / 2;
+      var y1 = fromRank * sqSize + sqSize / 2;
+      var x2 = toFile * sqSize + sqSize / 2;
+      var y2 = toRank * sqSize + sqSize / 2;
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1); line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('stroke', 'rgba(255, 87, 114, 0.7)'); line.setAttribute('stroke-width', '3'); line.setAttribute('stroke-linecap', 'round');
+      line.setAttribute('class', 'vf-threat-arrow-line');
+      svg.appendChild(line);
+      var angle = Math.atan2(y2 - y1, x2 - x1);
+      var headLen = 10;
+      var p1x = x2 - headLen * Math.cos(angle - 0.4); var p1y = y2 - headLen * Math.sin(angle - 0.4);
+      var p2x = x2 - headLen * Math.cos(angle + 0.4); var p2y = y2 - headLen * Math.sin(angle + 0.4);
+      var head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      head.setAttribute('points', x2 + ',' + y2 + ' ' + p1x + ',' + p1y + ' ' + p2x + ',' + p2y);
+      head.setAttribute('fill', 'rgba(255, 87, 114, 0.8)'); head.setAttribute('class', 'vf-threat-arrow-line');
+      svg.appendChild(head);
+    });
+    boardEl.appendChild(svg);
+  }
+
+  function removeThreatArrows() { $$('.vf-threat-svg').forEach(function (el) { el.remove(); }); }
+
+  function setupObservers() {
+    var coachEl = $('#coach-message');
+    if (coachEl) {
+      var coachObs = new MutationObserver(function () {
+        var text = coachEl.textContent || '';
+        if (text === _lastCoachText) return;
+        _lastCoachText = text;
+        var classification = classifyFromCoach(text);
+        if (classification) {
+          safeTimeout(function () { applyMoveFlash(classification); if (classification === 'blunder') flashEvalBarOnBlunder(); }, 50);
+        }
+      });
+      coachObs.observe(coachEl, { childList: true, subtree: true, characterData: true });
+      _observers.push(coachObs);
+    }
+    var checkEl = $('#check-status');
+    if (checkEl) {
+      var checkObs = new MutationObserver(function () { safeTimeout(handleCheckStatus, 50); });
+      checkObs.observe(checkEl, { childList: true, subtree: true, characterData: true });
+      _observers.push(checkObs);
+    }
+    var capturedWhiteEl = $('#captured-white');
+    if (capturedWhiteEl) {
+      var cwObs = new MutationObserver(function () { safeTimeout(handleCapturedPieces, 30); });
+      cwObs.observe(capturedWhiteEl, { childList: true });
+      _observers.push(cwObs);
+    }
+    var capturedBlackEl = $('#captured-black');
+    if (capturedBlackEl) {
+      var cbObs = new MutationObserver(function () { safeTimeout(handleCapturedPieces, 30); });
+      cbObs.observe(capturedBlackEl, { childList: true });
+      _observers.push(cbObs);
+    }
+    var evalBarEl = $('#eval-bar');
+    if (evalBarEl) {
+      var evalObs = new MutationObserver(function () {
+        var currentWidth = evalBarEl.getAttribute('style') || '';
+        if (currentWidth !== _lastEvalWidth) { _lastEvalWidth = currentWidth; safeTimeout(colorEvalBar, 30); }
+      });
+      evalObs.observe(evalBarEl, { attributes: true, attributeFilter: ['style'] });
+      _observers.push(evalObs);
+    }
+    var evalScoreEl = $('#eval-score');
+    if (evalScoreEl) {
+      var evalScoreObs = new MutationObserver(function () { safeTimeout(colorEvalBar, 30); });
+      evalScoreObs.observe(evalScoreEl, { childList: true, subtree: true, characterData: true });
+      _observers.push(evalScoreObs);
+    }
+    var threatRadar = $('#threat-radar');
+    if (threatRadar) {
+      var threatObs = new MutationObserver(function () { safeTimeout(drawThreatArrows, 100); });
+      threatObs.observe(threatRadar, { attributes: true, attributeFilter: ['style'] });
+      var threatIndicators = threatRadar.querySelector('#threat-indicators');
+      if (threatIndicators) {
+        var threatChildObs = new MutationObserver(function () { safeTimeout(drawThreatArrows, 100); });
+        threatChildObs.observe(threatIndicators, { childList: true, subtree: true });
+        _observers.push(threatChildObs);
+      }
+      _observers.push(threatObs);
+    }
+  }
+
+  var _evalPollId = null;
+  function startEvalPoll() {
+    _evalPollId = setInterval(function () { colorEvalBar(); drawThreatArrows(); }, 2000);
+  }
+
+  var VisualFeedback = {
+    init: function () {
+      _lastCoachText = '';
+      _lastCheckStatus = '';
+      _capturedWhiteCount = 0;
+      _capturedBlackCount = 0;
+      _lastEvalWidth = '';
+      _lastMoveTo = null;
+      var cw = $('#captured-white'); var cb = $('#captured-black');
+      if (cw) _capturedWhiteCount = cw.children.length;
+      if (cb) _capturedBlackCount = cb.children.length;
+      var cs = $('#check-status'); if (cs) _lastCheckStatus = cs.textContent.trim();
+      var cm = $('#coach-message'); if (cm) _lastCoachText = cm.textContent || '';
+      var eb = $('#eval-bar'); if (eb) _lastEvalWidth = eb.getAttribute('style') || '';
+      setupObservers();
+      safeTimeout(colorEvalBar, 100);
+      startEvalPoll();
+    },
+    destroy: function () {
+      _observers.forEach(function (obs) { if (obs && typeof obs.disconnect === 'function') obs.disconnect(); });
+      _observers = [];
+      _timers.forEach(function (id) { clearTimeout(id); clearInterval(id); });
+      _timers = [];
+      if (_evalPollId) { clearInterval(_evalPollId); _evalPollId = null; }
+      removeThreatArrows();
+      $$('.vf-glow-green,.vf-border-green,.vf-pulse-orange,.vf-shake-red,.vf-border-orange-red,.vf-check-king-pulse,.vf-vignette-flash,.vf-eval-flash-red,.vf-captured-piece-pop,.vf-confetti').forEach(function (el) {
+        el.classList.remove('vf-glow-green','vf-border-green','vf-pulse-orange','vf-shake-red','vf-border-orange-red','vf-check-king-pulse','vf-eval-flash-red','vf-captured-piece-pop');
+        if (el.classList.contains('vf-vignette-flash') || el.classList.contains('vf-confetti')) el.remove();
+      });
+    }
+  };
+
+  window.DashboardModules = window.DashboardModules || {};
+  window.DashboardModules.VisualFeedback = VisualFeedback;
+})();
+
+/* ── 2. Gamification Module ── */
+(function () {
+  'use strict';
+
+  var LS_XP = 'chess_xp_data';
+  var LS_ACHIEVE = 'chess_achievements';
+  var LS_PUZZLE_STR = 'chess_puzzle_streak';
+  var LS_DAILY = 'chess_daily_challenge';
+  var DAILY_XP_GOAL = 200;
+  var XP_MAP = { 'Best': 10, 'Great': 7, 'Good': 5, 'Inaccuracy': 3, 'Mistake': 1, 'Blunder': 0 };
+  var LEVELS = [
+    { rank: 'Pawn', xp: 0 }, { rank: 'Knight', xp: 100 }, { rank: 'Bishop', xp: 250 },
+    { rank: 'Rook', xp: 500 }, { rank: 'Queen', xp: 1000 }, { rank: 'King', xp: 2000 }
+  ];
+  var ACHIEVEMENTS = [
+    { id: 'first_blood', icon: '\u{1F3C6}', title: 'First Blood', desc: 'Win your first game' },
+    { id: 'tactician', icon: '\u{1F3AF}', title: 'Tactician', desc: 'Solve 10 puzzles correctly' },
+    { id: 'bookworm', icon: '\u{1F4D6}', title: 'Bookworm', desc: 'Play 20 moves in book openings' },
+    { id: 'iron_defense', icon: '\u{1F6E1}️', title: 'Iron Defense', desc: 'Complete a game with 0 blunders' },
+    { id: 'streak_master', icon: '\u{1F525}', title: 'Streak Master', desc: 'Reach a 7-day streak' },
+    { id: 'opening_expert', icon: '\u{1F4DA}', title: 'Opening Expert', desc: 'Quiz 5 opening moves correctly' },
+    { id: 'comeback_kid', icon: '\u{1F3C6}', title: 'Comeback Kid', desc: 'Win after being down 2+ pawns' },
+    { id: 'century', icon: '\u{1F4AF}', title: 'Century', desc: 'Reach 1000 Elo' }
+  ];
+
+  var xpData = null;
+  var achievements = {};
+  var puzzleStreak = 0;
+  var dailyChallenge = {};
+  var _moveObserver = null;
+  var _achStackTop = 0;
+
+  function $(sel) { return document.querySelector(sel); }
+  function $$(sel) { return document.querySelectorAll(sel); }
+  function findEvalBar() { return $('#eval-bar') || $('.eval-bar-outer'); }
+
+  function formatTime(ms) { var s = Math.floor(ms/1000); var m = Math.floor(s/60); return m + ':' + String(s%60).padStart(2,'0'); }
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function lsGet(key, fallback) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; } }
+  function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+  function currentLevel(totalXP) { var lvl = LEVELS[0]; for (var i = 0; i < LEVELS.length; i++) { if (totalXP >= LEVELS[i].xp) lvl = LEVELS[i]; } return lvl; }
+  function rankPiece(rank) { var map = { Pawn: '♙', Knight: '♘', Bishop: '♗', Rook: '♖', Queen: '♕', King: '♔' }; return map[rank] || '♙'; }
+
+  function xpRingHTML(pct, label) {
+    var r = 15; var c = 2 * Math.PI * r; var offset = c * (1 - pct);
+    return '<div class="xp-ring-wrap" id="xp-ring-wrap" title="Daily XP: ' + label + '">' +
+      '<svg width="38" height="38" viewBox="0 0 38 38">' +
+      '<circle class="xp-ring-bg" cx="19" cy="19" r="' + r + '"/>' +
+      '<circle class="xp-ring-fill" cx="19" cy="19" r="' + r + '" stroke-dasharray="' + c + '" stroke-dashoffset="' + offset + '"/>' +
+      '</svg><div class="xp-ring-label">' + label + '</div></div>';
+  }
+
+  function achievementShelfHTML(unlocked) {
+    return ACHIEVEMENTS.map(function(a) {
+      var cls = unlocked.indexOf(a.id) >= 0 ? 'unlocked' : 'locked';
+      return '<div class="ach-shelf-item ' + cls + '" data-ach="' + a.id + '">' + a.icon +
+        '<div class="ach-tip">' + a.title + ': ' + a.desc + '</div></div>';
+    }).join('');
+  }
+
+  function puzzleStreakHTML(count) {
+    if (count < 1) return '';
+    var mult = ''; if (count >= 10) mult = '5x'; else if (count >= 5) mult = '3x'; else if (count >= 3) mult = '2x';
+    return '<span class="puzzle-streak" id="puzzle-streak-display"><span class="flame">\u{1F525}</span>' + count +
+      (mult ? '<span class="mult">' + mult + '</span>' : '') + '</span>';
+  }
+
+  function dailyChallengeHTML(completed, bestTime) {
+    var best = bestTime ? formatTime(bestTime) : '--:--';
+    var statusClass = completed ? 'dc-done' : 'dc-progress';
+    var statusText = completed ? 'Done! Best: ' + best : '0/5 · Best: ' + best;
+    return '<div class="daily-challenge" id="daily-challenge-box"><div class="dc-title">\u{1F31F} Daily Puzzle Rush</div>' +
+      '<div class="' + statusClass + '" id="dc-status">' + statusText + '</div></div>';
+  }
+
+  function renderXPRing() {
+    var wrap = $('#xp-ring-wrap'); if (!wrap) return;
+    var dayXP = xpData.dailyXP || 0; var pct = Math.min(dayXP / DAILY_XP_GOAL, 1);
+    var label = Math.round(pct * 100) + '%'; var r = 15; var c = 2 * Math.PI * r; var offset = c * (1 - pct);
+    wrap.title = 'Daily XP: ' + dayXP + '/' + DAILY_XP_GOAL;
+    wrap.querySelector('.xp-ring-fill').setAttribute('stroke-dashoffset', offset);
+    wrap.querySelector('.xp-ring-label').textContent = label;
+  }
+
+  function injectXPRing() {
+    var headerStats = $('.header-stats'); if (!headerStats || $('#xp-ring-wrap')) return;
+    var dayXP = xpData.dailyXP || 0; var pct = Math.min(dayXP / DAILY_XP_GOAL, 1);
+    headerStats.insertAdjacentHTML('afterbegin', xpRingHTML(pct, Math.round(pct * 100) + '%'));
+  }
+
+  function injectLevelBadge() {
+    var eloEl = $('#learn-elo'); if (!eloEl || eloEl.querySelector('.level-badge')) return;
+    var lvl = currentLevel(xpData.totalXP);
+    eloEl.insertAdjacentHTML('beforeend', '<span class="level-badge"><span class="lb-piece">' + rankPiece(lvl.rank) + '</span>' + lvl.rank + '</span>');
+  }
+
+  function updateLevelBadge() {
+    var badge = $('.level-badge'); if (!badge) return;
+    var lvl = currentLevel(xpData.totalXP);
+    badge.querySelector('.lb-piece').textContent = rankPiece(lvl.rank);
+    badge.lastChild.textContent = lvl.rank;
+  }
+
+  function showXPPopup(amount) {
+    var bar = findEvalBar(); if (!bar) return;
+    var rect = bar.getBoundingClientRect();
+    var el = document.createElement('div');
+    el.className = 'xp-float' + (amount === 0 ? ' zero' : '');
+    el.textContent = amount === 0 ? '+0' : '+' + amount;
+    el.style.left = (rect.left + rect.width + 6) + 'px';
+    el.style.top = (rect.top + rect.height / 2) + 'px';
+    document.body.appendChild(el);
+    setTimeout(function() { el.remove(); }, 1500);
+  }
+
+  function awardXP(classification) {
+    var amount = XP_MAP[classification] !== undefined ? XP_MAP[classification] : 0;
+    var today = todayStr();
+    if (xpData.lastDay !== today) { xpData.dailyXP = 0; xpData.lastDay = today; }
+    xpData.totalXP += amount; xpData.dailyXP += amount; xpData.sessionXP += amount;
+    var prevLevel = currentLevel(xpData.totalXP - amount);
+    var newLevel = currentLevel(xpData.totalXP);
+    if (newLevel.xp > prevLevel.xp) showLevelUp(newLevel);
+    lsSet(LS_XP, xpData); showXPPopup(amount); renderXPRing(); updateLevelBadge();
+  }
+
+  function showLevelUp(level) {
+    var overlay = document.createElement('div'); overlay.className = 'levelup-overlay';
+    overlay.innerHTML = '<div class="lu-rank">' + rankPiece(level.rank) + ' ' + level.rank + '</div><div class="lu-sub">Rank Up! Keep climbing!</div>';
+    document.body.appendChild(overlay);
+    setTimeout(function() { overlay.remove(); }, 1700);
+    setTimeout(function() { showToast('Rank Up: ' + level.rank, 'You reached the ' + level.rank + ' rank!', rankPiece(level.rank)); }, 800);
+  }
+
+  function showToast(title, desc, icon) {
+    var el = document.createElement('div'); el.className = 'ach-toast'; el.style.top = (16 + _achStackTop) + 'px';
+    el.innerHTML = '<span class="ach-icon">' + icon + '</span><div class="ach-body"><span class="ach-title">' + title + '</span><span class="ach-desc">' + desc + '</span></div>';
+    document.body.appendChild(el); _achStackTop += 80;
+    setTimeout(function() { el.classList.add('dismissing'); setTimeout(function() { el.remove(); _achStackTop = Math.max(0, _achStackTop - 80); }, 400); }, 4000);
+  }
+
+  function initAchievements() { achievements = lsGet(LS_ACHIEVE, {}); }
+  function unlockAchievement(id) {
+    if (achievements[id]) return;
+    achievements[id] = { unlockedAt: Date.now() }; lsSet(LS_ACHIEVE, achievements);
+    var ach = null; for (var i = 0; i < ACHIEVEMENTS.length; i++) { if (ACHIEVEMENTS[i].id === id) { ach = ACHIEVEMENTS[i]; break; } }
+    if (!ach) return; showToast('\u{1F31F} ' + ach.title, ach.desc, ach.icon); refreshAchievementShelf();
+  }
+
+  function refreshAchievementShelf() {
+    var panel = $('.panel[data-panel-id="learning"]'); if (!panel) return;
+    var shelf = panel.querySelector('.ach-shelf');
+    if (!shelf) { shelf = document.createElement('div'); shelf.className = 'ach-shelf'; panel.appendChild(shelf); }
+    shelf.innerHTML = achievementShelfHTML(Object.keys(achievements));
+  }
+
+  function checkAchievementFirstBlood(r) { if (r === 'win') unlockAchievement('first_blood'); }
+  function checkAchievementTactician(n) { if (n >= 10) unlockAchievement('tactician'); }
+  function checkAchievementBookworm(n) { if (n >= 20) unlockAchievement('bookworm'); }
+  function checkAchievementIronDefense(b) { if (b === 0) unlockAchievement('iron_defense'); }
+  function checkAchievementStreak(s) { if (s >= 7) unlockAchievement('streak_master'); }
+  function checkAchievementOpeningExpert(q) { if (q >= 5) unlockAchievement('opening_expert'); }
+  function checkAchievementComeback(down, r) { if (down && r === 'win') unlockAchievement('comeback_kid'); }
+  function checkAchievementCentury(e) { if (e >= 1000) unlockAchievement('century'); }
+
+  function initPuzzleStreak() { puzzleStreak = lsGet(LS_PUZZLE_STR, 0); }
+  function onPuzzleCorrect() { puzzleStreak++; lsSet(LS_PUZZLE_STR, puzzleStreak); renderPuzzleStreak(); checkAchievementTactician(puzzleStreak); }
+  function onPuzzleWrong() {
+    puzzleStreak = 0; lsSet(LS_PUZZLE_STR, puzzleStreak); renderPuzzleStreak();
+    var el = $('#puzzle-streak-display'); if (el) { el.classList.add('streak-reset'); setTimeout(function() { el.classList.remove('streak-reset'); }, 450); }
+  }
+  function renderPuzzleStreak() {
+    var old = $('#puzzle-streak-display'); if (old) old.remove();
+    if (puzzleStreak < 1) return;
+    var scoreEl = $('#puzzle-score'); if (scoreEl) scoreEl.insertAdjacentHTML('afterend', puzzleStreakHTML(puzzleStreak));
+  }
+
+  function initDailyChallenge() {
+    dailyChallenge = lsGet(LS_DAILY, {});
+    if (dailyChallenge.date !== todayStr()) {
+      dailyChallenge = { date: todayStr(), completed: false, puzzlesDone: 0, bestTime: null, startTime: null };
+      lsSet(LS_DAILY, dailyChallenge);
+    }
+  }
+  function renderDailyChallenge() {
+    var panel = $('#puzzle-panel'); if (!panel) return;
+    var box = panel.querySelector('#daily-challenge-box');
+    if (!box) { box = document.createElement('div'); panel.appendChild(box); }
+    box.outerHTML = dailyChallengeHTML(dailyChallenge.completed, dailyChallenge.bestTime);
+  }
+  function onDailyPuzzleSolve() {
+    if (dailyChallenge.completed) return;
+    dailyChallenge.puzzlesDone = (dailyChallenge.puzzlesDone || 0) + 1;
+    if (dailyChallenge.startTime) {
+      var elapsed = Date.now() - dailyChallenge.startTime;
+      if (dailyChallenge.bestTime === null || elapsed < dailyChallenge.bestTime) dailyChallenge.bestTime = elapsed;
+      dailyChallenge.startTime = null;
+    }
+    if (dailyChallenge.puzzlesDone >= 5) dailyChallenge.completed = true;
+    lsSet(LS_DAILY, dailyChallenge); renderDailyChallenge();
+  }
+
+  function startObserving() {
+    _moveObserver = new MutationObserver(function(mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        var target = mutations[i].target;
+        if (target.id === 'move-status' || (target.parentNode && target.parentNode.id === 'move-status')) {
+          var text = (target.textContent || '').trim();
+          var keys = Object.keys(XP_MAP);
+          for (var j = 0; j < keys.length; j++) {
+            if (text.indexOf(keys[j]) >= 0 || text.toLowerCase().indexOf(keys[j].toLowerCase()) >= 0) { awardXP(keys[j]); break; }
+          }
+        }
+      }
+    });
+    var moveStatus = $('#move-status');
+    if (moveStatus) _moveObserver.observe(moveStatus, { childList: true, subtree: true, characterData: true });
+    var panels = $('.panels');
+    if (panels) _moveObserver.observe(panels, { childList: true, subtree: true });
+  }
+
+  function notifyMove(cls) { if (XP_MAP[cls] !== undefined) awardXP(cls); }
+  function notifyGameEnd(result, blunders, bookMoves, wasDown2Pawns) {
+    checkAchievementFirstBlood(result);
+    if (typeof blunders === 'number') checkAchievementIronDefense(blunders);
+    if (typeof bookMoves === 'number') checkAchievementBookworm(bookMoves);
+    if (wasDown2Pawns) checkAchievementComeback(true, result === 'win' ? 'win' : 'loss');
+  }
+  function notifyPuzzleResult(correct) { if (correct) { onPuzzleCorrect(); onDailyPuzzleSolve(); } else onPuzzleWrong(); }
+  function notifyStreakUpdate(streak) { checkAchievementStreak(streak); }
+  function notifyEloUpdate(elo) { checkAchievementCentury(elo); }
+  function notifyOpeningQuizCorrect() {
+    var key = 'chess_opening_quiz_correct'; var count = lsGet(key, 0) + 1; lsSet(key, count); checkAchievementOpeningExpert(count);
+  }
+
+  function init() {
+    var today = todayStr();
+    xpData = lsGet(LS_XP, { totalXP: 0, sessionXP: 0, dailyXP: 0, lastDay: today });
+    if (xpData.lastDay !== today) { xpData.dailyXP = 0; xpData.lastDay = today; xpData.sessionXP = 0; }
+    else xpData.sessionXP = 0;
+    lsSet(LS_XP, xpData);
+    initAchievements(); initPuzzleStreak(); initDailyChallenge();
+    var tryInject = function() { injectXPRing(); injectLevelBadge(); refreshAchievementShelf(); renderPuzzleStreak(); renderDailyChallenge(); startObserving(); };
+    if (document.querySelector('.header-stats')) { tryInject(); }
+    else {
+      var waitForDOM = new MutationObserver(function(m, obs) {
+        if (document.querySelector('.header-stats')) { obs.disconnect(); tryInject(); }
+      });
+      waitForDOM.observe(document.body, { childList: true, subtree: true });
+      setTimeout(function() { waitForDOM.disconnect(); tryInject(); }, 5000);
+    }
+    window.DashboardGamification = {
+      notifyMove: notifyMove, notifyGameEnd: notifyGameEnd, notifyPuzzleResult: notifyPuzzleResult,
+      notifyStreakUpdate: notifyStreakUpdate, notifyEloUpdate: notifyEloUpdate, notifyOpeningQuizCorrect: notifyOpeningQuizCorrect,
+      getXPData: function() { return JSON.parse(JSON.stringify(xpData)); },
+      getLevel: function() { return currentLevel(xpData.totalXP); },
+      getStreak: function() { return puzzleStreak; },
+      getAchievements: function() { return JSON.parse(JSON.stringify(achievements)); }
+    };
+  }
+
+  function destroy() {
+    if (_moveObserver) { _moveObserver.disconnect(); _moveObserver = null; }
+    var ring = $('#xp-ring-wrap'); if (ring) ring.remove();
+    var badge = $('.level-badge'); if (badge) badge.remove();
+    var shelf = $('.ach-shelf'); if (shelf) shelf.remove();
+    var streak = $('#puzzle-streak-display'); if (streak) streak.remove();
+    var dc = $('#daily-challenge-box'); if (dc) dc.remove();
+    $$('.levelup-overlay,.ach-toast,.xp-float').forEach(function(el) { el.remove(); });
+    delete window.DashboardGamification;
+  }
+
+  window.DashboardModules = window.DashboardModules || {};
+  window.DashboardModules.Gamification = { init: init, destroy: destroy };
+})();
+
+/* ── 3. Learning Viz Module ── */
+(function () {
+  'use strict';
+
+  var LS_PUZZLE_STATS = 'chess_puzzle_stats';
+  var LS_MISTAKE_DATA = 'chess_mistake_data';
+  var LS_GAME_HISTORY = 'chess_game_history';
+  var LS_OPENING_STATS = 'chess_opening_stats';
+  var MOTIFS = ['Forks', 'Pins', 'Skewers', 'Back Rank', 'Checkmate', 'Endgames'];
+  var MOTIF_KEYS = ['forks', 'pins', 'skewers', 'back-rank', 'checkmate-patterns', 'beginner-endgames'];
+  var MISTAKE_TYPES = ['Hanging', 'Missed Tactics', 'Poor Dev', 'King Safety'];
+  var GAME_PHASES = ['Opening', 'Middlegame', 'Endgame'];
+
+  function lsGet(key, fallback) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; } }
+  function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+  function svgWrap(innerHTML, w, h) { return '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + innerHTML + '</svg>'; }
+
+  function renderRadarChart(container) {
+    var stats = lsGet(LS_PUZZLE_STATS, {}); var cx = 100, cy = 100, r = 70; var n = MOTIFS.length; var angleStep = (2 * Math.PI) / n;
+    var values = MOTIF_KEYS.map(function(key) { var s = stats[key] || { attempts: 0, correct: 0 }; return s.attempts > 0 ? Math.round((s.correct / s.attempts) * 100) : 0; });
+    var parts = [];
+    [0.2, 0.4, 0.6, 0.8, 1.0].forEach(function(frac) {
+      var ring = ''; for (var i = 0; i <= n; i++) { var angle = -Math.PI / 2 + angleStep * i; ring += (cx + r * frac * Math.cos(angle)).toFixed(1) + ',' + (cy + r * frac * Math.sin(angle)).toFixed(1) + ' '; }
+      parts.push('<polygon points="' + ring.trim() + '" fill="none" stroke="var(--surface3)" stroke-width="1" opacity="0.5"/>');
+    });
+    for (var i = 0; i < n; i++) { var angle = -Math.PI / 2 + angleStep * i; parts.push('<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + r * Math.cos(angle)).toFixed(1) + '" y2="' + (cy + r * Math.sin(angle)).toFixed(1) + '" stroke="var(--surface3)" stroke-width="1" opacity="0.5"/>'); }
+    var dataPoints = '';
+    values.forEach(function(v, idx) { var angle = -Math.PI / 2 + angleStep * idx; var frac = v / 100; dataPoints += (cx + r * frac * Math.cos(angle)).toFixed(1) + ',' + (cy + r * frac * Math.sin(angle)).toFixed(1) + ' '; });
+    parts.push('<polygon points="' + dataPoints.trim() + '" fill="var(--accent)" fill-opacity="0.25" stroke="var(--accent)" stroke-width="2"/>');
+    values.forEach(function(v, idx) { var angle = -Math.PI / 2 + angleStep * idx; var frac = v / 100; parts.push('<circle cx="' + (cx + r * frac * Math.cos(angle)).toFixed(1) + '" cy="' + (cy + r * frac * Math.sin(angle)).toFixed(1) + '" r="3" fill="var(--accent)"/>'); });
+    values.forEach(function(v, idx) { var angle = -Math.PI / 2 + angleStep * idx; var lx = cx + (r + 16) * Math.cos(angle); var ly = cy + (r + 16) * Math.sin(angle); var anchor = Math.abs(Math.cos(angle)) > 0.5 ? (Math.cos(angle) > 0 ? 'start' : 'end') : 'middle'; parts.push('<text x="' + lx.toFixed(1) + '" y="' + (ly + 4).toFixed(1) + '" fill="var(--text-dim)" font-size="10" text-anchor="' + anchor + '">' + MOTIFS[idx] + '</text>'); });
+    container.innerHTML = '<div style="text-align:center;margin:8px 0;"><div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;">Tactical Proficiency</div>' + svgWrap(parts.join(''), 200, 200) + '</div>';
+  }
+  function updateRadarChart() { var el = document.getElementById('lv-radar-chart'); if (el) renderRadarChart(el); }
+
+  function renderMistakeHeatmap(container) {
+    var data = lsGet(LS_MISTAKE_DATA, {});
+    MISTAKE_TYPES.forEach(function(t) { if (!data[t]) data[t] = {}; GAME_PHASES.forEach(function(p) { if (typeof data[t][p] !== 'number') data[t][p] = 0; }); });
+    var max = 1; MISTAKE_TYPES.forEach(function(t) { GAME_PHASES.forEach(function(p) { if (data[t][p] > max) max = data[t][p]; }); });
+    function heatColor(val) { if (val === 0) return 'var(--surface2)'; var ratio = val / max; return ratio < 0.33 ? '#ffc107' : ratio < 0.66 ? '#ff9800' : '#f44336'; }
+    var cellW = 60, labelW = 80, rowH = 28, headerH = 24; var totalW = labelW + cellW * GAME_PHASES.length; var totalH = headerH + rowH * MISTAKE_TYPES.length;
+    var parts = [];
+    parts.push('<rect x="' + labelW + '" y="0" width="' + (totalW - labelW) + '" height="' + headerH + '" fill="var(--surface3)" rx="2"/>');
+    GAME_PHASES.forEach(function(phase, ci) { var x = labelW + ci * cellW + cellW / 2; parts.push('<text x="' + x + '" y="' + (headerH / 2 + 4) + '" fill="var(--text-dim)" font-size="9" text-anchor="middle">' + phase.substring(0, 4) + '</text>'); });
+    MISTAKE_TYPES.forEach(function(type, ri) {
+      var y = headerH + ri * rowH;
+      parts.push('<text x="' + (labelW - 6) + '" y="' + (y + rowH / 2 + 4) + '" fill="var(--text-dim)" font-size="9" text-anchor="end">' + type.substring(0, 12) + '</text>');
+      GAME_PHASES.forEach(function(phase, ci) {
+        var x = labelW + ci * cellW; var val = data[type][phase];
+        parts.push('<rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="' + (cellW - 4) + '" height="' + (rowH - 4) + '" rx="3" fill="' + heatColor(val) + '" opacity="' + (val === 0 ? '0.3' : '0.85') + '"/>');
+        if (val > 0) parts.push('<text x="' + (x + cellW / 2) + '" y="' + (y + rowH / 2 + 3) + '" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">' + val + '</text>');
+      });
+    });
+    container.innerHTML = '<div style="text-align:center;margin:8px 0;"><div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;">Mistake Heatmap</div>' + svgWrap(parts.join(''), totalW, totalH) + '</div>';
+  }
+
+  function classifyMistakes(moveHistory, coachMsg) {
+    var data = lsGet(LS_MISTAKE_DATA, {});
+    MISTAKE_TYPES.forEach(function(t) { if (!data[t]) data[t] = {}; });
+    var text = (coachMsg || '').toLowerCase(); var totalMoves = (moveHistory || []).length;
+    var phase = totalMoves < 12 ? 'Opening' : totalMoves < 30 ? 'Middlegame' : 'Endgame';
+    if (text.indexOf('hang') !== -1) { data['Hanging'][phase] = (data['Hanging'][phase] || 0) + 1; }
+    if (text.indexOf('fork') !== -1 || text.indexOf('pin') !== -1 || text.indexOf('tactic') !== -1) { data['Missed Tactics'][phase] = (data['Missed Tactics'][phase] || 0) + 1; }
+    if (text.indexOf('develop') !== -1 || text.indexOf('premature') !== -1) { data['Poor Dev'][phase] = (data['Poor Dev'][phase] || 0) + 1; }
+    if (text.indexOf('king') !== -1 || text.indexOf('safety') !== -1 || text.indexOf('castle') !== -1) { data['King Safety'][phase] = (data['King Safety'][phase] || 0) + 1; }
+    lsSet(LS_MISTAKE_DATA, data); updateMistakeHeatmap();
+  }
+  function updateMistakeHeatmap() { var el = document.getElementById('lv-mistake-heatmap'); if (el) renderMistakeHeatmap(el); }
+
+  function renderSparkline(container) {
+    var history = lsGet(LS_GAME_HISTORY, []); var last10 = history.slice(-10); var w = 100, h = 30, pad = 4;
+    var parts = [];
+    if (last10.length < 2) {
+      container.innerHTML = '<div style="text-align:center;margin:4px 0;"><div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:2px;">Accuracy Trend</div>' + svgWrap('<text x="' + (w/2) + '" y="' + (h/2+4) + '" fill="var(--text-dim)" font-size="10" text-anchor="middle">Play 2+ games</text>', w, h) + '</div>'; return;
+    }
+    var points = last10.map(function(acc, i) { var x = pad + (i / (last10.length - 1)) * (w - pad * 2); var y = pad + (1 - acc / 100) * (h - pad * 2); return x.toFixed(1) + ',' + y.toFixed(1); });
+    parts.push('<polyline points="' + points.join(' ') + '" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>');
+    var lastX = pad + ((last10.length - 1) / (last10.length - 1)) * (w - pad * 2);
+    parts.push('<polygon points="' + points.join(' ') + ' ' + lastX.toFixed(1) + ',' + (h - pad) + ' ' + pad + ',' + (h - pad) + '" fill="var(--green)" fill-opacity="0.1"/>');
+    var trend = last10.length >= 3 ? last10[last10.length - 1] - last10[last10.length - 3] : 0;
+    var dotColor = trend >= 0 ? 'var(--green)' : 'var(--red)';
+    parts.push('<circle cx="' + lastX.toFixed(1) + '" cy="' + (pad + (1 - last10[last10.length - 1] / 100) * (h - pad * 2)).toFixed(1) + '" r="3" fill="' + dotColor + '"/>');
+    container.innerHTML = '<div style="text-align:center;margin:4px 0;"><div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:2px;">Accuracy Trend</div>' + svgWrap(parts.join(''), w, h) + '<div style="font-size:0.7rem;color:' + dotColor + ';margin-top:2px;">' + (trend >= 0 ? '▲ +' : '▼ ') + trend.toFixed(1) + '%</div></div>';
+  }
+  function updateSparkline() { var el = document.getElementById('lv-sparkline'); if (el) renderSparkline(el); }
+
+  function renderSRSDashboard(container, cards) {
+    if (!cards || !cards.length) { container.innerHTML = '<div style="padding:8px;color:var(--text-dim);font-style:italic;font-size:0.8rem;">No SRS cards yet. Cards are created when you make mistakes in games.</div>'; return; }
+    var now = Date.now(); var overdue = [], dueToday = [], upcoming = []; var totalDue = 0, totalReviewed = 0, totalCorrect = 0;
+    cards.forEach(function(card) {
+      var nextReview = card.next_review ? new Date(card.next_review).getTime() : 0;
+      if (card.last_quality !== undefined) totalReviewed++;
+      if (card.last_quality >= 3) totalCorrect++;
+      if (nextReview <= now) { overdue.push(card); totalDue++; }
+      else if (nextReview <= now + 86400000) { dueToday.push(card); totalDue++; }
+      else upcoming.push(card);
+    });
+    var successRate = totalReviewed > 0 ? Math.round((totalCorrect / totalReviewed) * 100) : 0;
+    var donutParts = []; var donutR = 18, donutCx = 25, donutCy = 25, sw = 6; var circumference = 2 * Math.PI * donutR; var dashOffset = circumference * (1 - successRate / 100);
+    donutParts.push('<circle cx="' + donutCx + '" cy="' + donutCy + '" r="' + donutR + '" fill="none" stroke="var(--surface3)" stroke-width="' + sw + '"/>');
+    donutParts.push('<circle cx="' + donutCx + '" cy="' + donutCy + '" r="' + donutR + '" fill="none" stroke="var(--green)" stroke-width="' + sw + '" stroke-dasharray="' + circumference.toFixed(1) + '" stroke-dashoffset="' + dashOffset.toFixed(1) + '" transform="rotate(-90 ' + donutCx + ' ' + donutCy + ')"/>');
+    donutParts.push('<text x="' + donutCx + '" y="' + (donutCy + 4) + '" fill="var(--text)" font-size="11" font-weight="bold" text-anchor="middle">' + successRate + '%</text>');
+    function cardHTML(card, cls) { return '<div class="lv-srs-card ' + cls + '" style="padding:4px 6px;margin:2px 0;border-radius:4px;font-size:0.75rem;background:var(--surface2);border-left:3px solid var(--' + (cls === 'overdue' ? 'red' : cls === 'due-today' ? 'yellow' : 'green') + ');"><span style="color:var(--text);">' + (card.move || '?') + '</span> <span style="color:var(--text-dim);">interval: ' + (card.interval || '?') + '</span></div>'; }
+    var html = '<div style="padding:4px 0;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' + svgWrap(donutParts.join(''), 50, 50) + '<div><div style="font-size:0.9rem;font-weight:bold;color:var(--text);">' + totalDue + ' card' + (totalDue !== 1 ? 's' : '') + ' due</div><div style="font-size:0.75rem;color:var(--text-dim);">' + cards.length + ' total | ' + successRate + '% success</div></div></div>';
+    if (overdue.length > 0) { html += '<div style="font-size:0.75rem;color:var(--red);font-weight:bold;margin:4px 0 2px;">Overdue (' + overdue.length + ')</div>'; overdue.slice(0, 5).forEach(function(c) { html += cardHTML(c, 'overdue'); }); if (overdue.length > 5) html += '<div style="font-size:0.7rem;color:var(--text-dim);">...and ' + (overdue.length - 5) + ' more</div>'; }
+    if (dueToday.length > 0) { html += '<div style="font-size:0.75rem;color:var(--yellow);font-weight:bold;margin:4px 0 2px;">Due Today (' + dueToday.length + ')</div>'; dueToday.slice(0, 5).forEach(function(c) { html += cardHTML(c, 'due-today'); }); if (dueToday.length > 5) html += '<div style="font-size:0.7rem;color:var(--text-dim);">...and ' + (dueToday.length - 5) + ' more</div>'; }
+    if (upcoming.length > 0) { html += '<div style="font-size:0.75rem;color:var(--green);font-weight:bold;margin:4px 0 2px;">Upcoming (' + upcoming.length + ')</div>'; upcoming.slice(0, 3).forEach(function(c) { html += cardHTML(c, 'upcoming'); }); }
+    html += '</div>'; container.innerHTML = html;
+  }
+  function loadAndRenderSRS() {
+    var el = document.getElementById('lv-srs-dashboard'); if (!el) return;
+    fetch('/data/srs_cards.json').then(function(r) { return r.json(); }).then(function(cards) { renderSRSDashboard(el, cards); }).catch(function() { el.innerHTML = '<div style="padding:8px;color:var(--text-dim);font-size:0.8rem;">Could not load SRS cards.</div>'; });
+  }
+
+  var PHASES = [
+    { id: 1, name: 'Foundation', color: 'var(--green)', lessons: ['1.1 Chessboard Basics','1.2 Piece Movement','1.3 Check & Checkmate','1.4 Capturing','1.5 Special Moves','1.6 Piece Values','1.7 Opening Basics','1.8 Simple Checkmates'] },
+    { id: 2, name: 'Tactical', color: 'var(--yellow)', lessons: ['2.1 Forks','2.2 Pins','2.3 Skewers','2.4 Discovered Attacks','2.5 Back Rank Mate','2.6 Removing the Defender','2.7 Double Check','2.8 Intermediate Checkmates'] },
+    { id: 3, name: 'Intermediate', color: 'var(--accent)', lessons: ['3.1 Pawn Structures','3.2 Open Files','3.3 Outposts','3.4 Good vs Bad Bishops','3.5 Knight vs Bishop','3.6 King Safety','3.7 Endgame Fundamentals','3.8 Planning & Strategy'] }
+  ];
+  function compareLessonIds(a, b) { var pa = a.split('.').map(Number); var pb = b.split('.').map(Number); if (pa[0] !== pb[0]) return pa[0] < pb[0] ? -1 : 1; if (pa[1] !== pb[1]) return pa[1] < pb[1] ? -1 : 1; return 0; }
+  function renderCurriculumMap(container, progress) {
+    var currentPhase = (progress && progress.current_phase) || 1; var currentLesson = (progress && progress.current_lesson) || '1.1';
+    var html = '<div style="font-size:0.8rem;line-height:1.5;">';
+    PHASES.forEach(function(phase) {
+      var isActive = phase.id === currentPhase; var isCompleted = phase.id < currentPhase;
+      var phaseColor = isCompleted ? 'var(--green)' : isActive ? phase.color : 'var(--surface3)';
+      html += '<div style="margin-bottom:12px;"><div class="lv-phase-header" data-phase="' + phase.id + '" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;">';
+      html += '<div style="width:24px;height:24px;border-radius:50%;border:2px solid ' + phaseColor + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
+      html += isCompleted ? '<span style="color:var(--green);font-size:12px;">✓</span>' : '<span style="color:' + phaseColor + ';font-size:11px;font-weight:bold;">' + phase.id + '</span>';
+      html += '</div><span style="color:' + (isActive ? 'var(--text)' : 'var(--text-dim)') + ';font-weight:' + (isActive ? 'bold' : 'normal') + ';">Phase ' + phase.id + ': ' + phase.name + '</span>';
+      html += '<span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto;">' + (isCompleted ? 'Done' : isActive ? 'In Progress' : 'Locked') + '</span></div>';
+      if (isActive || isCompleted) {
+        html += '<div style="margin-left:32px;">';
+        phase.lessons.forEach(function(lesson) {
+          var lessonId = lesson.split(' ')[0]; var isLessonDone = isCompleted || (isActive && compareLessonIds(lessonId, currentLesson) < 0);
+          var isLessonCurrent = isActive && lessonId === currentLesson;
+          var dotColor = isLessonDone ? 'var(--green)' : isLessonCurrent ? phase.color : 'var(--surface3)';
+          html += '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;"><div style="width:8px;height:8px;border-radius:50%;background:' + dotColor + ';flex-shrink:0;' + (isLessonCurrent ? 'animation:lv-pulse 2s ease-in-out infinite;' : '') + '"></div>';
+          html += '<span style="color:' + (isLessonDone || isLessonCurrent ? 'var(--text)' : 'var(--text-dim)') + ';' + (isLessonDone ? 'text-decoration:line-through;opacity:0.7;' : '') + 'font-size:0.75rem;">' + lesson + '</span></div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>'; container.innerHTML = html;
+    container.querySelectorAll('.lv-phase-header').forEach(function(hdr) { hdr.addEventListener('click', function() { var next = hdr.nextElementSibling; if (next) next.style.display = next.style.display === 'none' ? '' : 'none'; }); });
+  }
+
+  function renderOpeningStats(container) {
+    var stats = lsGet(LS_OPENING_STATS, {}); var keys = Object.keys(stats);
+    if (!keys.length) { container.innerHTML = '<div style="padding:6px;color:var(--text-dim);font-style:italic;font-size:0.78rem;">No opening games played yet.</div>'; return; }
+    var favorite = null, favGames = 0; var weakest = null, weakAcc = 101;
+    keys.forEach(function(name) { var s = stats[name]; if (s.games > favGames) { favGames = s.games; favorite = name; } var acc = s.games > 0 ? (s.wins / s.games) * 100 : 0; if (s.games >= 2 && acc < weakAcc) { weakAcc = acc; weakest = name; } });
+    var html = '<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">';
+    keys.forEach(function(name) {
+      var s = stats[name]; var winPct = s.games > 0 ? Math.round((s.wins / s.games) * 100) : 0;
+      var barColor = winPct >= 60 ? 'var(--green)' : winPct >= 40 ? 'var(--yellow)' : 'var(--red)';
+      var badge = ''; if (name === favorite) badge = '<span style="font-size:0.6rem;background:var(--accent);color:#fff;padding:1px 4px;border-radius:3px;margin-left:4px;">FAV</span>';
+      if (name === weakest) badge += '<span style="font-size:0.6rem;background:var(--surface3);color:var(--text-dim);padding:1px 4px;border-radius:3px;margin-left:2px;">WEAK</span>';
+      html += '<div style="padding:4px 6px;background:var(--surface2);border-radius:4px;font-size:0.75rem;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + badge + '</span><span style="color:var(--text-dim);">' + s.wins + 'W ' + s.draws + 'D ' + s.losses + 'L</span></div><div style="margin-top:3px;height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;"><div style="height:100%;width:' + winPct + '%;background:' + barColor + ';border-radius:2px;transition:width 0.3s;"></div></div></div>';
+    });
+    html += '</div>'; container.innerHTML = html;
+  }
+  function updateOpeningStats() { var el = document.getElementById('lv-opening-stats'); if (el) renderOpeningStats(el); }
+
+  function createCollapsibleSection(parentEl, id, title) {
+    var section = document.createElement('div'); section.style.margin = '8px 0 0 0';
+    var titleEl = document.createElement('div'); titleEl.className = 'lv-section-title'; titleEl.textContent = title;
+    titleEl.addEventListener('click', function() { var body = section.querySelector('.lv-section-body'); if (body) { var collapsed = body.style.display === 'none'; body.style.display = collapsed ? '' : 'none'; titleEl.classList.toggle('collapsed', !collapsed); } });
+    var body = document.createElement('div'); body.className = 'lv-section-body';
+    section.appendChild(titleEl); section.appendChild(body); parentEl.appendChild(section); return body;
+  }
+
+  function injectLearningProgressWidgets() {
+    var panel = document.querySelector('.panel[data-panel-id="learning"]'); if (!panel) return;
+    var radarBody = createCollapsibleSection(panel, 'lv-radar-section', 'Tactical Radar');
+    var radarContainer = document.createElement('div'); radarContainer.id = 'lv-radar-chart'; radarBody.appendChild(radarContainer); renderRadarChart(radarContainer);
+    var heatmapBody = createCollapsibleSection(panel, 'lv-heatmap-section', 'Mistake Heatmap');
+    var heatmapContainer = document.createElement('div'); heatmapContainer.id = 'lv-mistake-heatmap'; heatmapBody.appendChild(heatmapContainer); renderMistakeHeatmap(heatmapContainer);
+    var sparklineBody = createCollapsibleSection(panel, 'lv-sparkline-section', 'Accuracy Trend');
+    var sparklineContainer = document.createElement('div'); sparklineContainer.id = 'lv-sparkline'; sparklineBody.appendChild(sparklineContainer); renderSparkline(sparklineContainer);
+    var srsBody = createCollapsibleSection(panel, 'lv-srs-section', 'SRS Cards');
+    var srsContainer = document.createElement('div'); srsContainer.id = 'lv-srs-dashboard'; srsBody.appendChild(srsContainer); loadAndRenderSRS();
+  }
+
+  function injectLearnPanelProgressMap() {
+    var learnPanel = document.querySelector('.panel[data-panel-id="learn"]'); if (!learnPanel) return;
+    var tabs = learnPanel.querySelector('.learn-tabs'); if (!tabs) return;
+    var progressTab = document.createElement('button'); progressTab.className = 'learn-tab'; progressTab.setAttribute('data-ref', 'progress'); progressTab.textContent = 'Progress';
+    progressTab.style.cssText = 'padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:0.8rem;background:var(--surface2);color:var(--text);';
+    tabs.appendChild(progressTab);
+    progressTab.addEventListener('click', function() {
+      var learnContent = learnPanel.querySelector('#learn-content'); if (!learnContent) return;
+      tabs.querySelectorAll('.learn-tab').forEach(function(t) { t.style.background = 'var(--surface2)'; t.style.color = 'var(--text)'; });
+      progressTab.style.background = 'var(--accent)'; progressTab.style.color = '#fff';
+      var mapContainer = document.createElement('div'); mapContainer.id = 'lv-curriculum-map'; learnContent.innerHTML = ''; learnContent.appendChild(mapContainer);
+      fetch('/data/progress.json').then(function(r) { return r.json(); }).then(function(progress) { renderCurriculumMap(mapContainer, progress); }).catch(function() { mapContainer.innerHTML = '<div style="color:var(--text-dim);font-style:italic;">Could not load progress data.</div>'; });
+    });
+  }
+
+  function injectOpeningStatsCards() {
+    var panel = document.querySelector('.panel[data-panel-id="opening"]'); if (!panel) return;
+    var container = document.createElement('div'); container.id = 'lv-opening-stats'; panel.appendChild(container); renderOpeningStats(container);
+  }
+
+  var _observer = null;
+  function startObserving() {
+    var coachEl = document.getElementById('coach-message'); var moveEl = document.getElementById('move-history'); if (!coachEl) return;
+    _observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        if (m.type === 'childList' || m.type === 'characterData') {
+          var msg = coachEl.textContent || ''; var moveCount = 0;
+          if (moveEl) { var moveNodes = moveEl.querySelectorAll('.move-number'); moveCount = moveNodes.length; }
+          var lower = msg.toLowerCase();
+          if (lower.indexOf('hang') !== -1 || lower.indexOf('fork') !== -1 || lower.indexOf('pin') !== -1 || lower.indexOf('tactic') !== -1 || lower.indexOf('develop') !== -1 || lower.indexOf('king') !== -1 || lower.indexOf('safety') !== -1 || lower.indexOf('castle') !== -1 || lower.indexOf('blunder') !== -1 || lower.indexOf('mistake') !== -1) {
+            classifyMistakes(moveCount, msg);
+          }
+        }
+      });
+    });
+    _observer.observe(coachEl, { childList: true, subtree: true, characterData: true });
+  }
+  function stopObserving() { if (_observer) { _observer.disconnect(); _observer = null; } }
+
+  var LearningViz = {
+    init: function() { injectLearningProgressWidgets(); injectLearnPanelProgressMap(); injectOpeningStatsCards(); startObserving(); },
+    destroy: function() {
+      stopObserving();
+      ['lv-radar-chart','lv-mistake-heatmap','lv-sparkline','lv-srs-dashboard','lv-opening-stats','lv-curriculum-map'].forEach(function(id) { var el = document.getElementById(id); if (el && el.parentNode) el.parentNode.removeChild(el); });
+      document.querySelectorAll('.lv-section-title').forEach(function(el) { if (el.parentNode) el.parentNode.removeChild(el); });
+      var progressTab = document.querySelector('.learn-tab[data-ref="progress"]'); if (progressTab) progressTab.parentNode.removeChild(progressTab);
+    },
+    recordPuzzleResult: function(motifKey, correct) { var stats = lsGet(LS_PUZZLE_STATS, {}); if (!stats[motifKey]) stats[motifKey] = { attempts: 0, correct: 0 }; stats[motifKey].attempts++; if (correct) stats[motifKey].correct++; lsSet(LS_PUZZLE_STATS, stats); updateRadarChart(); },
+    recordGameResult: function(accuracyPct, result) { var history = lsGet(LS_GAME_HISTORY, []); history.push({ accuracy: accuracyPct, result: result, date: new Date().toISOString() }); if (history.length > 50) history = history.slice(-50); lsSet(LS_GAME_HISTORY, history); updateSparkline(); },
+    recordOpeningResult: function(openingName, result) { var stats = lsGet(LS_OPENING_STATS, {}); if (!stats[openingName]) stats[openingName] = { games: 0, wins: 0, draws: 0, losses: 0 }; stats[openingName].games++; if (result === 'win') stats[openingName].wins++; else if (result === 'draw') stats[openingName].draws++; else stats[openingName].losses++; lsSet(LS_OPENING_STATS, stats); updateOpeningStats(); },
+    refreshSRS: function() { loadAndRenderSRS(); },
+    refreshAll: function() { updateRadarChart(); updateMistakeHeatmap(); updateSparkline(); updateOpeningStats(); loadAndRenderSRS(); }
+  };
+
+  window.DashboardModules = window.DashboardModules || {};
+  window.DashboardModules.LearningViz = LearningViz;
+})();
+
+/* ── 4. Engagement Module ── */
+(function () {
+  'use strict';
+
+  var BOARD_THEMES = {
+    classic: { name: 'Classic', light: '#f0d9b5', dark: '#b58863' },
+    midnight: { name: 'Midnight', light: '#2c3e6b', dark: '#1a2544' },
+    neon: { name: 'Neon', light: '#1a1a2e', dark: '#0f0f1a' }
+  };
+  var SOUNDS = { move: { freq: 440, duration: 0.05, type: 'sine', gain: 0.3 }, capture: { freq: 220, duration: 0.10, type: 'triangle', gain: 0.5 }, check: { freq: 880, duration: 0.15, type: 'square', gain: 0.2, repeat: 2, gap: 0.08 }, blunder: { freq: 150, duration: 0.20, type: 'sawtooth', gain: 0.3 }, victory: 'victory', defeat: 'defeat' };
+  var _audioCtx = null; var _pomodoroInterval = null; var _pomodoroRemaining = 0; var _observers = []; var _lastGameResult = null;
+
+  function getAudioCtx() { if (!_audioCtx) { try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; } } if (_audioCtx.state === 'suspended') _audioCtx.resume(); return _audioCtx; }
+  function isSoundEnabled() { return localStorage.getItem('chess_sound_enabled') !== 'false'; }
+  function getBoardTheme() { return localStorage.getItem('chess_board_theme') || 'classic'; }
+  function getFocusModePref() { return localStorage.getItem('chess_focus_mode') === 'true'; }
+  function todayKey() { return new Date().toISOString().slice(0, 10); }
+  function getPuzzleStats() { try { return JSON.parse(localStorage.getItem('chess_puzzle_stats') || '{}'); } catch(e) { return {}; } }
+  function $(sel) { return document.querySelector(sel); }
+
+  function playTone(freq, duration, type, gain) { var ctx = getAudioCtx(); if (!ctx) return; var osc = ctx.createOscillator(); var g = ctx.createGain(); osc.type = type; osc.frequency.value = freq; g.gain.value = gain; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration); osc.connect(g); g.connect(ctx.destination); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration); }
+  function playSound(name) {
+    if (!isSoundEnabled()) return; var def = SOUNDS[name]; if (!def) return;
+    if (def === 'victory') { [523.25,659.25,783.99,1046.50].forEach(function(freq, i) { setTimeout(function() { playTone(freq, 0.2, 'sine', 0.25); }, i * 120); }); return; }
+    if (def === 'defeat') { [392.00,349.23,293.66,261.63].forEach(function(freq, i) { setTimeout(function() { playTone(freq, 0.25, 'triangle', 0.2); }, i * 180); }); return; }
+    var repeats = def.repeat || 1; var gap = def.gap || 0;
+    for (var i = 0; i < repeats; i++) { (function(idx) { setTimeout(function() { playTone(def.freq, def.duration, def.type, def.gain); }, idx * (def.duration * 1000 + gap * 1000)); })(i); }
+  }
+
+  function renderFocusWidget() {
+    if (localStorage.getItem('chess_focus_dismissed_date') === todayKey()) return;
+    var boardCol = document.querySelector('.board-col'); if (!boardCol) return;
+    if (document.getElementById('focus-widget')) return;
+    var items = [];
+    var stats = getPuzzleStats(); var weakMotifs = [];
+    Object.keys(stats).forEach(function(motif) { var s = stats[motif]; if (s.total >= 3 && s.correct / s.total < 0.5) weakMotifs.push({ motif: motif, pct: Math.round((s.correct / s.total) * 100) }); });
+    weakMotifs.sort(function(a, b) { return a.pct - b.pct; });
+    weakMotifs.slice(0, 2).forEach(function(w) { items.push('Your ' + w.motif + ' accuracy is ' + w.pct + '% — try 3 puzzles to improve'); });
+    var streakEl = document.getElementById('learn-streak');
+    if (streakEl && streakEl.textContent !== '--') { var streak = parseInt(streakEl.textContent, 10); if (streak === 0 || isNaN(streak)) items.push('Start a game today to build your streak'); else if (streak >= 7) items.push(streak + '-day streak — great consistency!'); }
+    if (items.length === 0) items.push('Play a game and solve some puzzles to get personalized tips');
+    var el = document.createElement('div'); el.id = 'focus-widget'; el.className = 'focus-widget';
+    el.innerHTML = '<div class="focus-widget-icon">\u{1F3AF}</div><div class="focus-widget-body"><div class="focus-widget-title">Today\'s Focus</div><div class="focus-widget-items">' + items.map(function(item) { return '<div class="focus-item">' + item + '</div>'; }).join('') + '</div></div><button class="focus-widget-dismiss" title="Dismiss">&times;</button>';
+    boardCol.insertBefore(el, boardCol.firstChild);
+    el.querySelector('.focus-widget-dismiss').addEventListener('click', function() { el.classList.add('dismissed'); localStorage.setItem('chess_focus_dismissed_date', todayKey()); setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300); });
+    fetch('/api/srs').then(function(r) { return r.ok ? r.json() : null; }).then(function(srs) {
+      if (srs && srs.due_count > 0) { var itemsContainer = el.querySelector('.focus-widget-items'); if (itemsContainer) { var srsItem = document.createElement('div'); srsItem.className = 'focus-item'; srsItem.textContent = srs.due_count + ' SRS card' + (srs.due_count > 1 ? 's' : '') + ' overdue — review to retain your skills'; itemsContainer.appendChild(srsItem); } }
+    }).catch(function() {});
+  }
+
+  function generateInsightCard(state) {
+    if (!state || !state.is_game_over || !state.result) return null;
+    var playerColor = state.player_color || 'white'; var result = state.result;
+    var isWin = (result === '1-0' && playerColor === 'white') || (result === '0-1' && playerColor === 'black');
+    var isLoss = (result === '1-0' && playerColor === 'black') || (result === '0-1' && playerColor === 'white');
+    var isDraw = result === '1/2-1/2';
+    var annots = window._engagement_annotations || []; var blunders = 0, mistakes = 0; var biggestBlunder = null, biggestBlunderLoss = 0;
+    annots.forEach(function(a) { var cp = a.cp_loss || 0; if (a.classification === 'blunder') { blunders++; if (cp > biggestBlunderLoss) { biggestBlunderLoss = cp; biggestBlunder = a; } } else if (a.classification === 'mistake') mistakes++; });
+    var accEl = document.getElementById('acc-' + playerColor); var accuracy = accEl ? parseFloat(accEl.textContent) || 0 : 0;
+    var icon, text;
+    if (isWin) { if (blunders === 0 && accuracy >= 80) { icon = '\u{1F3C6}'; text = 'Dominant victory! ' + accuracy.toFixed(0) + '% accuracy with zero blunders.'; } else if (blunders === 0) { icon = '\u{1F389}'; text = 'Clean win with no blunders. ' + accuracy.toFixed(0) + '% accuracy.'; } else { icon = '✅'; text = 'You won despite ' + blunders + ' blunder(s).'; if (biggestBlunder) text += ' Worst moment: move ' + biggestBlunder.move + '.'; } }
+    else if (isLoss) { if (blunders >= 2) { icon = '\u{1F4A1}'; text = blunders + ' blunder(s) cost you this game.'; } else if (accuracy < 50) { icon = '\u{1F3AD}'; text = 'Tough game at ' + accuracy.toFixed(0) + '% accuracy. Consider lowering difficulty.'; } else { icon = '\u{1F607}'; text = 'Close game! ' + accuracy.toFixed(0) + '% accuracy.'; } }
+    else { icon = '\u{1F91D}'; text = 'Draw at ' + accuracy.toFixed(0) + '% accuracy.'; }
+    var resultClass = isWin ? 'win' : (isLoss ? 'loss' : 'draw');
+    return { html: '<div class="insight-card"><div class="insight-card-header"><span class="insight-card-icon">' + icon + '</span><span class="insight-card-label">Game Insight</span></div><div class="insight-card-text">' + text + '</div><div class="insight-accuracy-bar"><div class="insight-accuracy-fill ' + resultClass + '" style="width:0%"></div></div><div class="insight-accuracy-label"><span>Accuracy</span><span>' + accuracy.toFixed(1) + '%</span></div></div>', accuracy: accuracy };
+  }
+
+  function injectInsightCard() {
+    var tipEl = document.getElementById('game-over-tip'); if (!tipEl) return;
+    if (tipEl.querySelector('.insight-card')) return;
+    var stateEl = document.getElementById('current-game-state'); var state = null;
+    try { state = stateEl ? JSON.parse(stateEl.textContent) : null; } catch(e) {}
+    if (!state) { var resultText = document.getElementById('game-over-result') ? document.getElementById('game-over-result').textContent : ''; state = { is_game_over: true, result: resultText.includes('White wins') ? '1-0' : (resultText.includes('Black wins') ? '0-1' : (resultText.includes('Draw') ? '1/2-1/2' : null)), player_color: window.playerColor || 'white' }; }
+    var card = generateInsightCard(state); if (!card) return;
+    tipEl.innerHTML = card.html;
+    setTimeout(function() { var fill = tipEl.querySelector('.insight-accuracy-fill'); if (fill) fill.style.width = Math.min(card.accuracy, 100) + '%'; }, 100);
+  }
+
+  function initSoundToggle() {
+    var headerStats = document.querySelector('.header-stats'); if (!headerStats || document.getElementById('sound-toggle')) return;
+    var btn = document.createElement('button'); btn.id = 'sound-toggle'; btn.className = 'sound-toggle'; btn.title = 'Toggle sounds';
+    btn.innerHTML = isSoundEnabled() ? '\u{1F50A}' : '\u{1F507}';
+    if (isSoundEnabled()) btn.classList.add('active');
+    btn.addEventListener('click', function() { var enabled = !isSoundEnabled(); localStorage.setItem('chess_sound_enabled', enabled ? 'true' : 'false'); btn.innerHTML = enabled ? '\u{1F50A}' : '\u{1F507}'; if (enabled) btn.classList.add('active'); else btn.classList.remove('active'); });
+    headerStats.insertBefore(btn, headerStats.firstChild);
+  }
+
+  function initThemeSelector() {
+    var settingsModal = document.querySelector('.settings-modal'); if (!settingsModal || settingsModal.querySelector('.settings-theme-section')) return;
+    var section = document.createElement('div'); section.className = 'settings-theme-section';
+    section.innerHTML = '<h3>Board Theme</h3><div class="theme-options" id="theme-options"></div>';
+    settingsModal.insertBefore(section, settingsModal.querySelector('.settings-footer'));
+    var container = document.getElementById('theme-options'); var current = getBoardTheme();
+    Object.keys(BOARD_THEMES).forEach(function(key) {
+      var theme = BOARD_THEMES[key]; var opt = document.createElement('div');
+      opt.className = 'theme-option' + (key === current ? ' active' : ''); opt.dataset.theme = key;
+      opt.innerHTML = '<div class="theme-option-preview"><span class="theme-swatch" style="background:' + theme.light + '"></span><span class="theme-swatch" style="background:' + theme.dark + '"></span></div><div class="theme-option-name">' + theme.name + '</div>';
+      opt.addEventListener('click', function() { container.querySelectorAll('.theme-option').forEach(function(o) { o.classList.remove('active'); }); opt.classList.add('active'); applyBoardTheme(key); });
+      container.appendChild(opt);
+    });
+  }
+
+  function applyBoardTheme(themeKey) {
+    localStorage.setItem('chess_board_theme', themeKey);
+    Object.keys(BOARD_THEMES).forEach(function(k) { document.body.classList.remove('board-theme-' + k); });
+    if (themeKey !== 'classic') document.body.classList.add('board-theme-' + themeKey);
+  }
+
+  function initFocusBanner() {
+    var header = document.querySelector('header'); if (!header || document.getElementById('focus-banner')) return;
+    var banner = document.createElement('div'); banner.id = 'focus-banner'; banner.className = 'focus-banner';
+    banner.innerHTML = '<span>Focus Mode</span><span class="pomodoro-timer" id="pomodoro-timer" style="display:none">25:00</span><div class="pomodoro-controls" id="pomodoro-controls" style="display:none"><button class="pomodoro-btn" id="pomodoro-start">Start 25min</button><button class="pomodoro-btn" id="pomodoro-stop" style="display:none">Stop</button></div>';
+    header.parentNode.insertBefore(banner, header.nextSibling);
+    document.getElementById('pomodoro-start').addEventListener('click', startPomodoro);
+    document.getElementById('pomodoro-stop').addEventListener('click', stopPomodoro);
+  }
+
+  function toggleEnhancedFocusMode() {
+    var isActive = document.body.classList.contains('focus-mode-active');
+    var mainEl = document.getElementById('main-content'); var btn = document.getElementById('focus-toggle'); var banner = document.getElementById('focus-banner');
+    if (isActive) { document.body.classList.remove('focus-mode-active'); if (mainEl) mainEl.classList.remove('focus-mode'); if (btn) { btn.classList.remove('active'); btn.textContent = '\u{1F3AF} Focus'; } if (banner) banner.classList.remove('visible'); localStorage.setItem('chess_focus_mode', 'false'); }
+    else { document.body.classList.add('focus-mode-active'); if (mainEl) mainEl.classList.add('focus-mode'); if (btn) { btn.classList.add('active'); btn.textContent = '◀ Focus'; } if (banner) banner.classList.add('visible'); localStorage.setItem('chess_focus_mode', 'true'); }
+    setTimeout(function() { if (window.board) window.board.resize(); }, 50);
+  }
+
+  function startPomodoro() {
+    _pomodoroRemaining = 25 * 60;
+    var timerEl = document.getElementById('pomodoro-timer'); var startBtn = document.getElementById('pomodoro-start'); var stopBtn = document.getElementById('pomodoro-stop');
+    if (timerEl) timerEl.style.display = 'inline-flex'; if (startBtn) startBtn.style.display = 'none'; if (stopBtn) stopBtn.style.display = 'inline-block';
+    updatePomodoroDisplay();
+    if (_pomodoroInterval) clearInterval(_pomodoroInterval);
+    _pomodoroInterval = setInterval(function() {
+      _pomodoroRemaining--; updatePomodoroDisplay();
+      if (_pomodoroRemaining <= 0) { stopPomodoro(); playSound('victory'); }
+    }, 1000);
+  }
+  function stopPomodoro() { if (_pomodoroInterval) { clearInterval(_pomodoroInterval); _pomodoroInterval = null; } var timerEl = document.getElementById('pomodoro-timer'); var startBtn = document.getElementById('pomodoro-start'); var stopBtn = document.getElementById('pomodoro-stop'); if (timerEl) timerEl.style.display = 'none'; if (startBtn) startBtn.style.display = 'inline-block'; if (stopBtn) stopBtn.style.display = 'none'; }
+  function updatePomodoroDisplay() { var timerEl = document.getElementById('pomodoro-timer'); if (!timerEl) return; var min = Math.floor(_pomodoroRemaining / 60); var sec = _pomodoroRemaining % 60; timerEl.textContent = (min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec; }
+
+  function hookMoveSounds() {
+    var moveSubmit = document.getElementById('move-submit');
+    if (moveSubmit) { moveSubmit.addEventListener('click', function() { setTimeout(function() { var statusEl = document.getElementById('move-status'); if (statusEl && !statusEl.classList.contains('error')) checkMoveTypeAndPlaySound(); }, 300); }, true); }
+    var boardEl = document.getElementById('board');
+    if (boardEl) { boardEl.addEventListener('mouseup', function() { setTimeout(function() { checkMoveTypeAndPlaySound(); }, 200); }); }
+  }
+  function checkMoveTypeAndPlaySound() {
+    var moveHistoryEl = document.getElementById('move-history'); if (!moveHistoryEl) return;
+    var moves = moveHistoryEl.querySelectorAll('.mv-cell'); if (moves.length === 0) return;
+    var lastMove = moves[moves.length - 1]; var isCapture = lastMove.textContent.indexOf('x') >= 0;
+    var checkStatusEl = document.getElementById('check-status');
+    if (checkStatusEl && (checkStatusEl.textContent === 'Check' || checkStatusEl.textContent === 'Check!')) playSound('check');
+    else if (isCapture) playSound('capture'); else playSound('move');
+  }
+
+  function hookGameOver() {
+    var tipEl = document.getElementById('game-over-tip'); if (!tipEl) return;
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        if (m.type === 'childList' || m.type === 'characterData') {
+          var banner = document.getElementById('game-over');
+          if (banner && banner.classList.contains('visible') && !tipEl.querySelector('.insight-card')) setTimeout(injectInsightCard, 150);
+        }
+      });
+    });
+    observer.observe(tipEl, { childList: true, subtree: true, characterData: true }); _observers.push(observer);
+    var bannerEl = document.getElementById('game-over');
+    if (bannerEl) {
+      var bannerObs = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+          if (m.type === 'attributes' && m.attributeName === 'class') {
+            var banner = document.getElementById('game-over');
+            if (banner && banner.classList.contains('visible') && !_lastGameResult) {
+              _lastGameResult = true;
+              setTimeout(function() {
+                var resultText = document.getElementById('game-over-result') ? document.getElementById('game-over-result').textContent : '';
+                if (!resultText.includes('Draw')) {
+                  var playerColor = window.playerColor || 'white';
+                  var isWin = (resultText.includes('White wins') && playerColor === 'white') || (resultText.includes('Black wins') && playerColor === 'black');
+                  playSound(isWin ? 'victory' : 'defeat');
+                }
+              }, 500);
+            }
+          }
+        });
+      });
+      bannerObs.observe(bannerEl, { attributes: true }); _observers.push(bannerObs);
+    }
+  }
+
+  function hookBlunderWarning() {
+    var blunderWarning = document.getElementById('blunder-warning'); if (!blunderWarning) return;
+    var observer = new MutationObserver(function(mutations) { mutations.forEach(function(m) { if (m.type === 'attributes' && m.attributeName === 'style') { var el = document.getElementById('blunder-warning'); if (el && el.style.display !== 'none') playSound('blunder'); } }); });
+    observer.observe(blunderWarning, { attributes: true }); _observers.push(observer);
+  }
+
+  function wireFocusToggle() {
+    var focusToggle = document.getElementById('focus-toggle'); if (!focusToggle) return;
+    var newBtn = focusToggle.cloneNode(true); focusToggle.parentNode.replaceChild(newBtn, focusToggle);
+    newBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); toggleEnhancedFocusMode(); });
+  }
+
+  function hookAnnotations() {
+    var origInterval = setInterval(function() {
+      var moves = document.querySelectorAll('.mv-cell'); var annots = [];
+      moves.forEach(function(cell) {
+        var badge = cell.querySelector('.badge'); var classif = '';
+        if (badge) { if (badge.classList.contains('badge-best')) classif = 'best'; else if (badge.classList.contains('badge-great')) classif = 'great'; else if (badge.classList.contains('badge-good')) classif = 'good'; else if (badge.classList.contains('badge-inaccuracy')) classif = 'inaccuracy'; else if (badge.classList.contains('badge-mistake')) classif = 'mistake'; else if (badge.classList.contains('badge-blunder')) classif = 'blunder'; }
+        if (classif) { var moveText = cell.textContent.trim(); var moveNum = ''; var prev = cell.previousElementSibling; if (prev && prev.classList.contains('move-num')) moveNum = prev.textContent.trim(); annots.push({ classification: classif, move: moveNum + moveText, phase: parseInt(moveNum, 10) <= 10 ? 'opening' : (parseInt(moveNum, 10) <= 30 ? 'middlegame' : 'endgame'), cp_loss: classif === 'blunder' ? 300 : (classif === 'mistake' ? 200 : (classif === 'inaccuracy' ? 100 : 0)) }); }
+      });
+      window._engagement_annotations = annots;
+    }, 2000);
+    _observers.push({ disconnect: function() { clearInterval(origInterval); } });
+  }
+
+  function init() {
+    initSoundToggle(); initThemeSelector(); initFocusBanner(); wireFocusToggle(); applyBoardTheme(getBoardTheme());
+    if (getFocusModePref()) { setTimeout(function() { if (!document.body.classList.contains('focus-mode-active')) toggleEnhancedFocusMode(); }, 500); }
+    setTimeout(renderFocusWidget, 1500);
+    hookMoveSounds(); hookGameOver(); hookBlunderWarning(); hookAnnotations();
+  }
+
+  function destroy() {
+    var focusWidget = document.getElementById('focus-widget'); if (focusWidget) focusWidget.remove();
+    var soundToggle = document.getElementById('sound-toggle'); if (soundToggle) soundToggle.remove();
+    var focusBanner = document.getElementById('focus-banner'); if (focusBanner) focusBanner.remove();
+    var themeSection = document.querySelector('.settings-theme-section'); if (themeSection) themeSection.remove();
+    Object.keys(BOARD_THEMES).forEach(function(k) { document.body.classList.remove('board-theme-' + k); });
+    document.body.classList.remove('focus-mode-active');
+    var mainEl = document.getElementById('main-content'); if (mainEl) mainEl.classList.remove('focus-mode');
+    stopPomodoro();
+    _observers.forEach(function(o) { try { o.disconnect(); } catch(e) {} }); _observers = [];
+    delete window._engagement_annotations; _lastGameResult = null;
+  }
+
+  window.DashboardModules = window.DashboardModules || {};
+  window.DashboardModules.Engagement = { init: init, destroy: destroy, playSound: playSound, generateInsightCard: generateInsightCard };
+})();
+
+/* ── 5. Progress Tracking Module ── */
+(function() {
+  'use strict';
+
+  var STORAGE_KEYS = { personalBests: 'chess_personal_bests', weeklyStats: 'chess_weekly_stats', eloHistory: 'chess_elo_history', sessionStart: 'chess_session_start' };
+  var _sessionTimer = null; var _sessionStartTime = null; var _sessionGamesPlayed = 0; var _sessionTotalMoves = 0; var _sessionAccuracies = []; var _sessionEligible = false; var _sessionEligTimer = null;
+
+  function loadJSON(key, fallback) { try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch(e) { return fallback; } }
+  function saveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {} }
+  function formatDate(d) { if (!d) return '--'; var date = d instanceof Date ? d : new Date(d); if (isNaN(date.getTime())) return '--'; return (date.getMonth() + 1) + '/' + date.getDate(); }
+  function shortDate(d) { if (!d) return '--'; var date = d instanceof Date ? d : new Date(d); return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+  function getMonday(d) { var date = new Date(d); var day = date.getDay(); date.setDate(date.getDate() - day + (day === 0 ? -6 : 1)); date.setHours(0,0,0,0); return date.toISOString().split('T')[0]; }
+  function todayStr() { return new Date().toISOString().split('T')[0]; }
+  function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  var personalBests = { highestAccuracy: { value: 0, date: null, label: 'Best Accuracy', unit: '%' }, longestPuzzleStreak: { value: 0, date: null, label: 'Puzzle Streak', unit: '' }, fastestPuzzleSolve: { value: Infinity, date: null, label: 'Fastest Solve', unit: 's' }, mostGamesInDay: { value: 0, date: null, label: 'Games in a Day', unit: '' }, longestWinStreak: { value: 0, date: null, label: 'Win Streak', unit: '' } };
+
+  function loadPersonalBests() { var saved = loadJSON(STORAGE_KEYS.personalBests, null); if (!saved) return; var keys = Object.keys(personalBests); for (var i = 0; i < keys.length; i++) { var k = keys[i]; if (saved[k] && typeof saved[k].value !== 'undefined') { personalBests[k].value = saved[k].value; personalBests[k].date = saved[k].date; } } }
+  function savePersonalBests() { var out = {}; var keys = Object.keys(personalBests); for (var i = 0; i < keys.length; i++) { var k = keys[i]; var v = personalBests[k].value; if (v === Infinity) v = 9999; out[k] = { value: v, date: personalBests[k].date }; } saveJSON(STORAGE_KEYS.personalBests, out); }
+
+  function checkBest(key, newValue) {
+    var pb = personalBests[key]; var isNew = false;
+    if (key === 'fastestPuzzleSolve') { if (newValue < pb.value && newValue > 0) { pb.value = newValue; pb.date = new Date().toISOString(); isNew = true; } }
+    else { if (newValue > pb.value) { pb.value = newValue; pb.date = new Date().toISOString(); isNew = true; } }
+    if (isNew) { savePersonalBests(); renderPersonalBests(); }
+    return isNew;
+  }
+
+  var weeklyStats = { currentWeek: null, data: { gamesPlayed: 0, totalAccuracy: 0, puzzlesSolved: 0, sessions: 0, accuracyCount: 0 }, previousWeek: null };
+  function loadWeeklyStats() {
+    var saved = loadJSON(STORAGE_KEYS.weeklyStats, null);
+    if (!saved) { weeklyStats.currentWeek = getMonday(new Date()); return; }
+    weeklyStats.currentWeek = saved.currentWeek || getMonday(new Date());
+    weeklyStats.data = saved.data || { gamesPlayed: 0, totalAccuracy: 0, puzzlesSolved: 0, sessions: 0, accuracyCount: 0 };
+    weeklyStats.previousWeek = saved.previousWeek || null;
+    var thisMonday = getMonday(new Date());
+    if (weeklyStats.currentWeek !== thisMonday) { weeklyStats.previousWeek = { date: weeklyStats.currentWeek, data: JSON.parse(JSON.stringify(weeklyStats.data)) }; weeklyStats.currentWeek = thisMonday; weeklyStats.data = { gamesPlayed: 0, totalAccuracy: 0, puzzlesSolved: 0, sessions: 0, accuracyCount: 0 }; saveWeeklyStats(); }
+  }
+  function saveWeeklyStats() { saveJSON(STORAGE_KEYS.weeklyStats, { currentWeek: weeklyStats.currentWeek, data: weeklyStats.data, previousWeek: weeklyStats.previousWeek }); }
+  function recordWeeklyGame(accuracy) { loadWeeklyStats(); weeklyStats.data.gamesPlayed++; if (typeof accuracy === 'number' && accuracy >= 0) { weeklyStats.data.totalAccuracy += accuracy; weeklyStats.data.accuracyCount++; } saveWeeklyStats(); renderWeeklyStats(); }
+  function recordWeeklyPuzzle() { loadWeeklyStats(); weeklyStats.data.puzzlesSolved++; saveWeeklyStats(); renderWeeklyStats(); }
+  function recordWeeklySession() { loadWeeklyStats(); weeklyStats.data.sessions++; saveWeeklyStats(); renderWeeklyStats(); }
+
+  var eloHistory = [];
+  function loadEloHistory() { eloHistory = loadJSON(STORAGE_KEYS.eloHistory, []); }
+  function saveEloHistory() { saveJSON(STORAGE_KEYS.eloHistory, eloHistory); }
+  function recordElo(elo) { eloHistory.push({ elo: elo, date: new Date().toISOString() }); if (eloHistory.length > 200) eloHistory = eloHistory.slice(-200); saveEloHistory(); renderEloGraph(); }
+  function projectElo() { var n = 5; var slice = eloHistory.slice(-n); if (slice.length < 2) return null; var sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0; for (var i = 0; i < slice.length; i++) { sumX += i; sumY += slice[i].elo; sumXY += i * slice[i].elo; sumX2 += i * i; } var denom = (slice.length * sumX2 - sumX * sumX); if (denom === 0) return slice[slice.length - 1].elo; return Math.round((sumY - (slice.length * sumXY - sumX * sumY) / denom * sumX / slice.length)); }
+
+  function initSessionTimer() {
+    var saved = loadJSON(STORAGE_KEYS.sessionStart, null); var now = Date.now();
+    if (saved && (now - saved) < 6 * 60 * 60 * 1000) _sessionStartTime = saved; else { _sessionStartTime = now; saveJSON(STORAGE_KEYS.sessionStart, now); }
+    _sessionGamesPlayed = 0; _sessionTotalMoves = 0; _sessionAccuracies = []; _sessionEligible = false;
+    clearTimeout(_sessionEligTimer);
+    _sessionEligTimer = setTimeout(function() { _sessionEligible = true; }, 5000);
+    _sessionTimer = setInterval(renderSessionTimer, 1000); renderSessionTimer();
+  }
+  function stopSessionTimer() { if (_sessionTimer) { clearInterval(_sessionTimer); _sessionTimer = null; } clearTimeout(_sessionEligTimer); }
+  function renderSessionTimer() {
+    var el = document.getElementById('progress-session-timer'); if (!el) return;
+    var elapsed = Math.floor((Date.now() - _sessionStartTime) / 1000); var h = Math.floor(elapsed / 3600); var m = Math.floor((elapsed % 3600) / 60); var s = elapsed % 60;
+    var timeStr = ''; if (h > 0) timeStr += h + 'h '; timeStr += (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; el.textContent = timeStr;
+  }
+
+  function renderPersonalBests() {
+    var container = document.getElementById('progress-personal-bests'); if (!container) return;
+    var keys = Object.keys(personalBests);
+    var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">';
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i]; var pb = personalBests[k]; var displayValue = pb.value === Infinity || pb.value === 0 ? '--' : pb.value;
+      var dateDisplay = pb.date ? shortDate(pb.date) : '';
+      html += '<div style="background:var(--surface);border-radius:var(--radius-sm);padding:6px 8px;text-align:center;"><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;">' + escapeHtml(pb.label) + '</div><div style="font-size:1.1rem;font-weight:700;color:var(--accent);">' + escapeHtml(String(displayValue) + pb.unit) + '</div>' + (dateDisplay ? '<div style="font-size:0.6rem;color:var(--text-dim);margin-top:1px;">' + escapeHtml(dateDisplay) + '</div>' : '') + '</div>';
+    }
+    html += '</div>'; container.innerHTML = html;
+  }
+
+  function renderWeeklyStats() {
+    var container = document.getElementById('progress-weekly-stats'); if (!container) return; loadWeeklyStats();
+    var metrics = [{ label: 'Games', current: weeklyStats.data.gamesPlayed, key: 'gamesPlayed' }, { label: 'Avg Acc', current: weeklyStats.data.accuracyCount > 0 ? Math.round(weeklyStats.data.totalAccuracy / weeklyStats.data.accuracyCount) : 0, key: 'avgAccuracy' }, { label: 'Puzzles', current: weeklyStats.data.puzzlesSolved, key: 'puzzlesSolved' }, { label: 'Sessions', current: weeklyStats.data.sessions, key: 'sessions' }];
+    var prevData = weeklyStats.previousWeek ? weeklyStats.previousWeek.data : null; var prevAvg = prevData && prevData.accuracyCount > 0 ? Math.round(prevData.totalAccuracy / prevData.accuracyCount) : 0;
+    var html = '<div style="display:flex;gap:12px;flex-wrap:wrap;">';
+    for (var i = 0; i < metrics.length; i++) {
+      var m = metrics[i]; var prevVal = 0; if (prevData) { prevVal = m.key === 'avgAccuracy' ? prevAvg : (prevData[m.key] || 0); }
+      var diff = m.current - prevVal; var arrow = ''; var arrowColor = 'var(--text-dim)';
+      if (prevVal > 0 || m.current > 0) { if (diff > 0) { arrow = '▲'; arrowColor = 'var(--green)'; } else if (diff < 0) { arrow = '▼'; arrowColor = 'var(--red)'; } else { arrow = '▶'; } }
+      html += '<div style="text-align:center;min-width:60px;"><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;">' + escapeHtml(m.label) + '</div><div style="font-size:1rem;font-weight:600;color:var(--text);">' + escapeHtml(String(m.current)) + '</div>' + (arrow ? '<div style="font-size:0.7rem;color:' + arrowColor + ';">' + arrow + ' ' + (diff !== 0 ? Math.abs(diff) : '') + '</div>' : '<div style="font-size:0.7rem;color:var(--text-dim);">--</div>') + '</div>';
+    }
+    html += '</div>'; container.innerHTML = html;
+  }
+
+  function renderEloGraph() {
+    var container = document.getElementById('progress-elo-graph'); if (!container) return; loadEloHistory();
+    var currentElo = eloHistory.length > 0 ? eloHistory[eloHistory.length - 1].elo : 0; var projected = projectElo();
+    var W = 320, H = 60, PAD = 4;
+    var minElo = Infinity, maxElo = -Infinity;
+    for (var i = 0; i < eloHistory.length; i++) { if (eloHistory[i].elo < minElo) minElo = eloHistory[i].elo; if (eloHistory[i].elo > maxElo) maxElo = eloHistory[i].elo; }
+    if (currentElo > 0) { if (currentElo < minElo) minElo = currentElo; if (currentElo > maxElo) maxElo = currentElo; }
+    if (projected !== null) { if (projected < minElo) minElo = projected; if (projected > maxElo) maxElo = projected; }
+    if (!isFinite(minElo)) { minElo = 0; maxElo = 100; }
+    minElo = Math.floor(minElo / 50) * 50 - 50; maxElo = Math.ceil(maxElo / 50) * 50 + 50; var range = maxElo - minElo;
+    function eloToY(e) { return PAD + H - PAD - ((e - minElo) / range * (H - 2 * PAD)); }
+    function idxToX(i, total) { if (total <= 1) return W / 2; return PAD + (i / (total - 1)) * (W - 2 * PAD); }
+    var svg = '<defs><linearGradient id="eloGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.4"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>';
+    svg += '<g class="milestones">'; var start100 = Math.ceil(minElo / 100) * 100;
+    for (var milestone = start100; milestone <= maxElo; milestone += 100) { var my = eloToY(milestone); if (my < PAD || my > H - PAD) continue; svg += '<line x1="' + PAD + '" y1="' + my.toFixed(1) + '" x2="' + (W - PAD) + '" y2="' + my.toFixed(1) + '" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3,3"/><text x="' + (W - PAD + 2) + '" y="' + (my + 3).toFixed(1) + '" fill="rgba(255,255,255,0.15)" font-size="6" font-family="monospace">' + milestone + '</text>'; }
+    svg += '</g>';
+    if (eloHistory.length >= 2) {
+      var points = []; for (var j = 0; j < eloHistory.length; j++) { points.push(idxToX(j, eloHistory.length).toFixed(1) + ',' + eloToY(eloHistory[j].elo).toFixed(1)); }
+      svg += '<polyline points="' + points.join(' ') + '" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>';
+      var lastX = idxToX(eloHistory.length - 1, eloHistory.length); var baseY = eloToY(minElo);
+      svg += '<polygon points="' + points.join(' ') + ' ' + lastX.toFixed(1) + ',' + baseY.toFixed(1) + ' ' + idxToX(0, eloHistory.length).toFixed(1) + ',' + baseY.toFixed(1) + '" fill="url(#eloGrad)" opacity="0.3"/>';
+    }
+    if (eloHistory.length > 0) { var cx = eloHistory.length === 1 ? W / 2 : idxToX(eloHistory.length - 1, eloHistory.length); var cy = eloToY(currentElo); svg += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="3" fill="var(--accent)" stroke="var(--bg)" stroke-width="1.5"/>'; }
+    if (projected !== null && eloHistory.length >= 2) { var lpx = idxToX(eloHistory.length - 1, eloHistory.length); var lpy = eloToY(currentElo); var projX = W - PAD; var projY = eloToY(projected); svg += '<line x1="' + lpx.toFixed(1) + '" y1="' + lpy.toFixed(1) + '" x2="' + projX.toFixed(1) + '" y2="' + projY.toFixed(1) + '" stroke="var(--yellow)" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/><circle cx="' + projX.toFixed(1) + '" cy="' + projY.toFixed(1) + '" r="2.5" fill="var(--yellow)" opacity="0.7"/><text x="' + projX.toFixed(1) + '" y="' + (projY - 5).toFixed(1) + '" fill="var(--yellow)" font-size="7" font-family="monospace" text-anchor="end" opacity="0.9">~' + projected + '</text>'; }
+    if (eloHistory.length === 0) svg += '<text x="' + (W / 2) + '" y="' + (H / 2 + 2) + '" fill="var(--text-dim)" font-size="8" font-family="sans-serif" text-anchor="middle" dominant-baseline="middle">Play games to see Elo trend</text>';
+    container.innerHTML = '<div style="margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;">Elo Trajectory</span>' + (eloHistory.length > 0 ? '<span style="font-size:0.7rem;color:var(--accent);">Current: ' + currentElo + '</span>' : '') + '</div><svg width="100%" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="display:block;">' + svg + '</svg>';
+  }
+
+  function renderSessionStats() {
+    var headerStats = document.querySelector('.header-stats'); if (!headerStats) return;
+    var old = document.getElementById('progress-session-timer-wrap'); if (old) old.remove();
+    var wrap = document.createElement('span'); wrap.id = 'progress-session-timer-wrap';
+    wrap.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:0.8rem;color:var(--text-dim);';
+    wrap.innerHTML = '<span style="font-size:0.7rem;" title="Session time">⏱</span> <span id="progress-session-timer" title="Session time">00:00</span>';
+    if (_sessionGamesPlayed > 0) wrap.innerHTML += '<span style="margin-left:4px;font-size:0.7rem;color:var(--accent);">#' + _sessionGamesPlayed + '</span>';
+    headerStats.insertBefore(wrap, headerStats.firstChild);
+  }
+
+  var _lastGameState = null;
+  function onStateUpdate(state) {
+    if (!state) return;
+    if (state.is_game_over && _lastGameState && !_lastGameState.is_game_over) onGameComplete(state);
+    if (state.move_history && _sessionEligible) { var mc = Array.isArray(state.move_history) ? state.move_history.length : state.move_history.split(/\s+/).filter(function(w) { return w.length > 0 && !/^\d+\.$/.test(w); }).length; if (mc > _sessionTotalMoves) _sessionTotalMoves = mc; }
+    _lastGameState = state;
+  }
+  function onGameComplete(state) {
+    if (!_sessionEligible) return; _sessionGamesPlayed++;
+    var accuracy = null;
+    if (state.accuracy !== undefined) accuracy = state.accuracy;
+    else if (state.evaluations && Array.isArray(state.evaluations) && state.evaluations.length > 0) { var good = 0; for (var i = 0; i < state.evaluations.length; i++) { if (state.evaluations[i].cp_loss !== undefined && state.evaluations[i].cp_loss <= 50) good++; } accuracy = Math.round((good / state.evaluations.length) * 100); }
+    recordWeeklyGame(accuracy); recordWeeklySession();
+    if (accuracy !== null && accuracy >= 0) checkBest('highestAccuracy', accuracy);
+    checkBest('mostGamesInDay', _sessionGamesPlayed);
+    if (state.result) {
+      var playerWon = false;
+      if (state.player_color === 'black' && state.result.indexOf('0-1') === 0) playerWon = true;
+      else if (state.player_color !== 'black' && state.result.indexOf('1-0') === 0) playerWon = true;
+      if (playerWon) checkBest('longestWinStreak', personalBests.longestWinStreak.value + 1);
+      else if (state.result.indexOf('1/2-1/2') !== 0) { personalBests.longestWinStreak.value = 0; savePersonalBests(); }
+    }
+    var eloEl = document.getElementById('learn-elo');
+    if (eloEl) { var eloText = eloEl.textContent.replace(/[^0-9]/g, ''); var eloNum = parseInt(eloText, 10); if (!isNaN(eloNum) && eloNum > 0) recordElo(eloNum); }
+    renderSessionStats(); renderEloGraph(); renderPersonalBests();
+  }
+
+  var _pollInterval = null;
+  function startPolling() { _pollInterval = setInterval(function() { try { var stateEl = document.getElementById('current-game-data'); if (!stateEl) return; var raw = stateEl.textContent.trim(); if (!raw) return; onStateUpdate(JSON.parse(raw)); } catch(e) {} }, 2000); }
+  function stopPolling() { if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; } }
+
+  function injectUI() {
+    var learnPanel = document.querySelector('[data-panel-id="learning"]'); if (!learnPanel) return;
+    var phaseProgress = learnPanel.querySelector('.phase-progress'); if (!phaseProgress) return;
+    var graphSection = document.createElement('div'); graphSection.id = 'progress-elo-graph'; graphSection.style.cssText = 'margin-top:10px;';
+    phaseProgress.parentNode.insertBefore(graphSection, phaseProgress.nextSibling);
+    var bestsSection = document.createElement('div'); bestsSection.style.cssText = 'margin-top:12px;';
+    bestsSection.innerHTML = '<div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Personal Bests</div><div id="progress-personal-bests"></div>';
+    var graphEl = document.getElementById('progress-elo-graph');
+    if (graphEl && graphEl.nextSibling) graphEl.parentNode.insertBefore(bestsSection, graphEl.nextSibling);
+    else learnPanel.appendChild(bestsSection);
+    var weeklySection = document.createElement('div'); weeklySection.style.cssText = 'margin-top:12px;';
+    weeklySection.innerHTML = '<div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">This Week</div><div id="progress-weekly-stats"></div>';
+    bestsSection.parentNode.insertBefore(weeklySection, bestsSection.nextSibling);
+    renderEloGraph(); renderPersonalBests(); renderWeeklyStats(); renderSessionStats();
+  }
+
+  var ProgressTracking = {
+    init: function() { loadPersonalBests(); loadWeeklyStats(); loadEloHistory(); injectUI(); initSessionTimer(); startPolling(); },
+    destroy: function() { stopSessionTimer(); stopPolling(); clearTimeout(_sessionEligTimer); ['progress-elo-graph','progress-personal-bests','progress-weekly-stats'].forEach(function(id) { var el = document.getElementById(id); if (el) el.remove(); }); var timerWrap = document.getElementById('progress-session-timer-wrap'); if (timerWrap) timerWrap.remove(); },
+    recordPuzzleSolve: function(timeMs, motif) { loadWeeklyStats(); weeklyStats.data.puzzlesSolved++; saveWeeklyStats(); renderWeeklyStats(); if (typeof timeMs === 'number' && timeMs > 0) checkBest('fastestPuzzleSolve', Math.round(timeMs / 1000)); },
+    recordPuzzleStreak: function(count) { if (typeof count === 'number' && count > 0) checkBest('longestPuzzleStreak', count); },
+    recordAccuracy: function(pct) { if (typeof pct === 'number' && pct >= 0 && pct <= 100) { checkBest('highestAccuracy', pct); _sessionAccuracies.push(pct); } },
+    getPersonalBests: function() { var out = {}; var keys = Object.keys(personalBests); for (var i = 0; i < keys.length; i++) { var k = keys[i]; out[k] = { value: personalBests[k].value, date: personalBests[k].date }; } return out; },
+    getSessionStats: function() { var avgAcc = 0; if (_sessionAccuracies.length > 0) { var sum = 0; for (var i = 0; i < _sessionAccuracies.length; i++) sum += _sessionAccuracies[i]; avgAcc = Math.round(sum / _sessionAccuracies.length); } return { gamesPlayed: _sessionGamesPlayed, totalMoves: _sessionTotalMoves, averageAccuracy: avgAcc, elapsedSeconds: Math.floor((Date.now() - _sessionStartTime) / 1000) }; }
+  };
+
+  window.DashboardModules = window.DashboardModules || {};
+  window.DashboardModules.ProgressTracking = ProgressTracking;
+})();
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODULE INITIALIZATION & CLEANUP
+   All modules are initialized after DOM is ready. Cleanup runs on unload.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  var MODULES = [
+    'VisualFeedback',
+    'Gamification',
+    'LearningViz',
+    'Engagement',
+    'ProgressTracking'
+  ];
+
+  function initModules() {
+    MODULES.forEach(function (name) {
+      try {
+        if (window.DashboardModules && window.DashboardModules[name] && typeof window.DashboardModules[name].init === 'function') {
+          window.DashboardModules[name].init();
+        }
+      } catch (e) {
+        console.warn('[DashboardModules] Failed to init ' + name + ':', e);
+      }
+    });
+  }
+
+  function destroyModules() {
+    MODULES.forEach(function (name) {
+      try {
+        if (window.DashboardModules && window.DashboardModules[name] && typeof window.DashboardModules[name].destroy === 'function') {
+          window.DashboardModules[name].destroy();
+        }
+      } catch (e) {
+        console.warn('[DashboardModules] Failed to destroy ' + name + ':', e);
+      }
+    });
+  }
+
+  // Initialize when DOM is ready (the dashboard template may clone elements
+  // after this script runs, so modules that inject into panels use a
+  // MutationObserver fallback internally).
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initModules);
+  } else {
+    initModules();
+  }
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', destroyModules);
 })();
 </script>
 </body>
