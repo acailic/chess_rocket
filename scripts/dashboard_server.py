@@ -104,6 +104,32 @@ def _classify_move(cp_loss: int) -> str:
     return "blunder"
 
 
+def _convert_solution_to_san(fen: str, uci_moves: list[str]) -> list[str] | None:
+    """Convert a puzzle's UCI solution moves to SAN by replaying them.
+
+    Returns None if the FEN is invalid or any solution move is illegal —
+    python-chess raises AssertionError (not ValueError) for san()/push() on
+    illegal moves, and invalid FENs raise plain ValueError (there is no
+    chess.InvalidBoardError). Callers should skip puzzles for which this
+    returns None.
+    """
+    if not fen or not uci_moves:
+        return list(uci_moves)
+    try:
+        board = chess.Board(fen)
+    except ValueError:
+        return None
+    san_list: list[str] = []
+    for uci_str in uci_moves:
+        try:
+            move = chess.Move.from_uci(uci_str)
+            san_list.append(board.san(move))
+            board.push(move)
+        except (ValueError, AssertionError):
+            return None
+    return san_list
+
+
 def _generate_coaching_tip(
     classification: str,
     move_san: str,
@@ -1262,7 +1288,7 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
 
         try:
             board = chess.Board(fen)
-        except (ValueError, chess.InvalidBoardError):
+        except ValueError:
             self._json_response({"error": "invalid fen"}, 400)
             return
 
@@ -1397,6 +1423,9 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
+        # Always revalidate the dashboard so browsers never run stale JS
+        # after the HTML is updated (pieceTheme and libs are still cached).
+        self.send_header("Cache-Control", "no-cache")
         self._cors_headers()
         self.end_headers()
         self.wfile.write(data)
@@ -1603,23 +1632,12 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
         response_puzzles = []
         for puzzle in selected_puzzles:
             # Convert UCI solution moves to SAN for frontend matching
-            san_solutions = []
             fen = puzzle.get("fen", "")
             uci_moves = puzzle.get("solution_moves", [])
-            if fen and uci_moves:
-                try:
-                    pboard = chess.Board(fen)
-                    for uci_str in uci_moves:
-                        try:
-                            mv = chess.Move.from_uci(uci_str)
-                            san_solutions.append(pboard.san(mv))
-                            pboard.push(mv)
-                        except (ValueError, chess.InvalidMoveError):
-                            san_solutions.append(uci_str)
-                except (ValueError, chess.InvalidBoardError):
-                    san_solutions = uci_moves
-            else:
-                san_solutions = uci_moves
+            san_solutions = _convert_solution_to_san(fen, uci_moves)
+            if san_solutions is None:
+                # Corrupt puzzle data (illegal move or bad FEN) — skip it
+                continue
 
             response_puzzle = {
                 "fen": fen,
