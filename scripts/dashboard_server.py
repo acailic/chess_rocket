@@ -417,6 +417,22 @@ def _count_pieces(board: chess.Board) -> int:
     )
 
 
+def _phase_from_fen(fen: str, ply: int) -> str:
+    """Classify a position as opening/middlegame/endgame.
+
+    Endgame by material (few non-pawn pieces left), opening by ply count.
+    """
+    try:
+        board = chess.Board(fen)
+    except ValueError:
+        return "middlegame"
+    if _count_pieces(board) <= 6:
+        return "endgame"
+    if ply < 20:
+        return "opening"
+    return "middlegame"
+
+
 def _annotate_player_move(
     board_before: chess.Board,
     player_move: chess.Move,
@@ -958,6 +974,8 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._serve_curriculum()
         elif path == "/api/puzzles":
             self._serve_puzzles()
+        elif path == "/api/mistakes":
+            self._serve_mistakes()
         elif path == "/api/games":
             self._serve_games()
         elif path.startswith("/api/references/"):
@@ -976,6 +994,8 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._handle_switch_game()
         elif self.path == "/api/thinking-coach":
             self._handle_thinking_coach()
+        elif self.path == "/api/undo":
+            self._handle_undo()
         else:
             self.send_error(404)
 
@@ -1031,6 +1051,125 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
 
         # Return the updated state along with ok flag
         self._json_response({"ok": True, "move": move_san, "state": new_state})
+
+    def _handle_undo(self) -> None:
+        """Take back the last player move (and the engine's reply).
+
+        Reverts the game to the position before the player's most recent
+        move, truncating the move list, annotations, and FEN history to
+        match. Implements the "Intervene: offer undo" coaching policy.
+        """
+        length = int(self.headers.get("Content-Length", 0))
+        if length:
+            try:
+                self.rfile.read(length)
+            except OSError:
+                pass
+
+        if not _GAME_FILE.exists():
+            self._json_response({"error": "no active game"}, 400)
+            return
+
+        with _game_lock:
+            try:
+                game_state = json.loads(_GAME_FILE.read_text())
+            except (json.JSONDecodeError, OSError) as exc:
+                self._json_response({"error": str(exc)}, 400)
+                return
+
+            move_list = game_state.get("move_list", [])
+            if not move_list:
+                self._json_response({"error": "nothing to take back"}, 400)
+                return
+
+            # Find the ply of the player's most recent move
+            parity = 0 if game_state.get("player_color", "white") == "white" else 1
+            last_player_ply = None
+            for ply in range(len(move_list) - 1, -1, -1):
+                if ply % 2 == parity:
+                    last_player_ply = ply
+                    break
+            if last_player_ply is None:
+                self._json_response({"error": "no player move to take back"}, 400)
+                return
+
+            # Rebuild the revert position by replaying the truncated move
+            # list. fen_history cannot be indexed by ply: the server appends
+            # one FEN per /api/move call (after the engine's reply), not per
+            # ply, so replay is the only reliable reconstruction.
+            board = chess.Board()
+            try:
+                for san in move_list[:last_player_ply]:
+                    board.push_san(san)
+            except ValueError:
+                self._json_response(
+                    {"error": "cannot reconstruct position: corrupt move list"}, 400
+                )
+                return
+
+            truncated_moves = move_list[:last_player_ply]
+            truncated_annotations = [
+                a
+                for a in game_state.get("move_annotations", [])
+                if isinstance(a, dict) and a.get("ply", -1) < last_player_ply
+            ]
+
+            is_game_over = board.is_game_over()
+            result = (
+                board.outcome().result()
+                if is_game_over and board.outcome() is not None
+                else None
+            )
+
+            new_state = dict(game_state)
+            new_state["fen"] = board.fen()
+            new_state["board_display"] = _build_board_display(board)
+            new_state["move_list"] = truncated_moves
+            new_state["last_move"] = None
+            new_state["last_move_san"] = (
+                truncated_moves[-1] if truncated_moves else None
+            )
+            new_state["is_game_over"] = is_game_over
+            new_state["result"] = result
+            new_state["legal_moves"] = [board.san(m) for m in board.legal_moves]
+            new_state["accuracy"] = _compute_accuracy(truncated_annotations)
+            new_state["current_opening"] = _identify_opening(board)
+            new_state["material"] = _compute_material(board)
+            new_state["captured_pieces"] = _compute_captured_pieces(board)
+            new_state["is_check"] = board.is_check()
+            new_state["is_checkmate"] = board.is_checkmate()
+            new_state["is_stalemate"] = board.is_stalemate()
+            new_state["move_annotations"] = truncated_annotations
+            # Keep fen_history in its per-move-call convention: [start] plus
+            # one FEN per completed player+engine round, last entry = the
+            # restored position.
+            keep_count = last_player_ply // 2 + 1
+            new_fen_history = list(
+                game_state.get("fen_history", [])[:keep_count]
+            )
+            if new_fen_history:
+                new_fen_history[-1] = board.fen()
+            else:
+                new_fen_history = [board.fen()]
+            new_state["fen_history"] = new_fen_history
+            new_state["undo_count"] = game_state.get("undo_count", 0) + 1
+            new_state["coaching_tip"] = {
+                "type": "undo",
+                "message": "Position restored. Take your time — look at checks, "
+                "captures and threats before moving.",
+            }
+            # Re-evaluate the restored position (best effort)
+            eval_score = _compute_eval(board, game_state.get("player_color", "white"))
+            new_state["eval_score"] = eval_score
+
+            _atomic_write_json(_GAME_FILE, new_state)
+
+            game_id = new_state.get("game_id")
+            if game_id:
+                game_file = _get_game_file(game_id)
+                _atomic_write_json(game_file, new_state)
+
+        self._json_response({"ok": True, "state": new_state})
 
     def _handle_evaluate_move(self) -> None:
         """Evaluate a chess move using Stockfish engine for blunder checking.
@@ -1654,6 +1793,166 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             "puzzles": response_puzzles,
             "total": len(all_puzzles),
             "mode": mode,
+        }
+
+        self._json_response(response)
+
+    def _serve_mistakes(self) -> None:
+        """Serve aggregated mistake cards + stats mined from saved games.
+
+        Each card is a replayable "find the best move" position built from a
+        move annotation (inaccuracy/mistake/blunder) in a saved game.
+
+        Query parameters:
+        - game_id: Only include mistakes from this game (optional)
+        - limit: Max cards to return (default 30, max 100)
+        """
+        query = self.path.split("?", 1)[1] if "?" in self.path else ""
+        params = {}
+        for pair in query.split("&"):
+            if "=" in pair:
+                key, value = pair.split("=", 1)
+                params[key] = value
+
+        game_filter = params.get("game_id", "")
+        try:
+            limit = min(int(params.get("limit", 30)), 100)
+        except ValueError:
+            limit = 30
+
+        classification_rank = {"blunder": 0, "mistake": 1, "inaccuracy": 2}
+        cards = []
+        totals = {"blunder": 0, "mistake": 0, "inaccuracy": 0}
+        phase_stats: dict[str, dict] = {}
+        games_analyzed = 0
+        player_moves_total = 0
+
+        if _GAMES_DIR.exists():
+            for game_file in sorted(_GAMES_DIR.glob("*.json")):
+                try:
+                    state = json.loads(game_file.read_text())
+                except (json.JSONDecodeError, OSError):
+                    continue
+                if not isinstance(state, dict):
+                    continue
+                game_id = state.get("game_id", game_file.stem)
+                if game_filter and game_id != game_filter:
+                    continue
+                games_analyzed += 1
+
+                annotations = state.get("move_annotations", [])
+                move_list = state.get("move_list", [])
+                player_moves_total += len(annotations)
+
+                # Reconstruct "position before ply p" by replay: fen_history
+                # is appended once per /api/move call (after the engine's
+                # reply), so indexing it by ply drifts — replaying move_list
+                # is the only reliable mapping.
+                fen_before_by_ply: dict[int, str] = {}
+                replay_ok = True
+                replay_board = chess.Board()
+                for i, san in enumerate(move_list):
+                    fen_before_by_ply[i] = replay_board.fen()
+                    try:
+                        replay_board.push_san(san)
+                    except ValueError:
+                        replay_ok = False
+                        break
+
+                try:
+                    modified = time.strftime(
+                        "%Y-%m-%d %H:%M", time.localtime(game_file.stat().st_mtime)
+                    )
+                except OSError:
+                    modified = ""
+
+                for ann in annotations:
+                    if not isinstance(ann, dict):
+                        continue
+                    classification = ann.get("classification")
+                    if classification not in classification_rank:
+                        continue
+                    totals[classification] += 1
+
+                    ply = ann.get("ply")
+                    cp_loss = ann.get("cp_loss", 0) or 0
+                    fen_before = (
+                        fen_before_by_ply.get(ply)
+                        if isinstance(ply, int) and replay_ok
+                        else None
+                    )
+                    phase = (
+                        _phase_from_fen(fen_before, ply)
+                        if fen_before and isinstance(ply, int)
+                        else "middlegame"
+                    )
+                    stats = phase_stats.setdefault(
+                        phase, {"count": 0, "cp_loss_sum": 0}
+                    )
+                    stats["count"] += 1
+                    stats["cp_loss_sum"] += cp_loss
+
+                    # Training cards need a reconstructable position and a
+                    # known better move; skip corrupt/incomplete annotations.
+                    best_move = ann.get("best_move")
+                    move_played = ann.get("move")
+                    if (
+                        not fen_before
+                        or not best_move
+                        or not move_played
+                        or best_move == move_played
+                        or cp_loss < 80
+                    ):
+                        continue
+
+                    cards.append(
+                        {
+                            "game_id": game_id,
+                            "game_number": state.get("game_number", 1),
+                            "date": modified,
+                            "ply": ply,
+                            "move_number": (ply // 2 + 1) if isinstance(ply, int) else 0,
+                            "phase": phase,
+                            "fen": fen_before,
+                            "move_played": move_played,
+                            "best_move": best_move,
+                            "cp_loss": cp_loss,
+                            "classification": classification,
+                            "result": state.get("result"),
+                        }
+                    )
+
+        # Worst first: blunders before mistakes, biggest losses on top
+        cards.sort(
+            key=lambda c: (
+                classification_rank.get(c["classification"], 9),
+                -c["cp_loss"],
+            )
+        )
+
+        phases = {
+            phase: {
+                "count": s["count"],
+                "avg_cp_loss": round(s["cp_loss_sum"] / s["count"]) if s["count"] else 0,
+            }
+            for phase, s in phase_stats.items()
+        }
+        focus = None
+        if phase_stats:
+            worst_phase = max(
+                phase_stats, key=lambda p: phase_stats[p]["cp_loss_sum"]
+            )
+            focus = worst_phase
+
+        response = {
+            "stats": {
+                "games_analyzed": games_analyzed,
+                "player_moves": player_moves_total,
+                "totals": totals,
+                "phases": phases,
+                "focus": focus,
+            },
+            "cards": cards[:limit],
         }
 
         self._json_response(response)

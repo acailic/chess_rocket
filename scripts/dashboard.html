@@ -1214,6 +1214,32 @@
   .puzzle-feedback.incorrect { display: block; background: rgba(244,67,54,0.15); color: var(--red); }
   .puzzle-feedback.hint { display: block; background: rgba(255,193,7,0.15); color: var(--yellow); }
 
+  /* Mistake trainer */
+  .mistake-controls { display: flex; gap: 8px; margin: 8px 0; align-items: center; flex-wrap: wrap; }
+  .mistake-controls button {
+    padding: 6px 14px; background: var(--surface2); color: var(--text); border: none;
+    border-radius: 4px; font-size: 0.85rem; cursor: pointer;
+  }
+  .mistake-controls button:hover { opacity: 0.85; }
+  .mistake-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .mistake-controls button.primary { background: var(--red); color: #fff; }
+  .mistake-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .mistake-chip { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: var(--surface2); color: var(--text-dim); }
+  .mistake-chip.blunder { background: rgba(244,67,54,0.15); color: var(--red); font-weight: 600; }
+  .mistake-chip.mistake { background: rgba(255,152,0,0.15); color: var(--orange); font-weight: 600; }
+  .mistake-chip.inaccuracy { background: rgba(255,235,59,0.10); color: var(--yellow); }
+  .mistake-phase-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.75rem; color: var(--text-dim); }
+  .mistake-phase-bar { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .mistake-phase-fill { height: 100%; background: var(--orange); border-radius: 3px; transition: width 0.4s ease; }
+  .undo-retry-btn {
+    display: block; width: 100%; margin-top: 8px; padding: 7px 10px;
+    background: rgba(244,67,54,0.12); color: var(--red); border: 1px solid rgba(244,67,54,0.35);
+    border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .undo-retry-btn:hover { background: rgba(244,67,54,0.2); transform: translateY(-1px); }
+  .undo-retry-btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+
   /* Settings modal */
   .settings-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -1795,6 +1821,73 @@
   .insight-phase-dot.middlegame { background: #8b5cf6; }
   .insight-phase-dot.endgame { background: #f59e0b; }
   @keyframes insightSlideIn { from { opacity: 0; transform: translateY(12px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  /* ══ Game Review panel (Chess.com-style) ══ */
+  .review-panel { border-left-color: #ab47bc !important; }
+  .review-evalgraph-wrap { position: relative; margin: 8px 0 4px; }
+  #review-evalgraph { display: block; width: 100%; height: 120px; cursor: crosshair; border-radius: var(--radius-sm); background: rgba(0,0,0,0.18); touch-action: none; }
+  .evalgraph-tip { position: absolute; pointer-events: none; background: var(--surface2); border: 1px solid var(--surface3); border-radius: 6px; padding: 4px 8px; font-size: 0.72rem; white-space: nowrap; transform: translate(-50%, -130%); opacity: 0; transition: opacity 0.12s; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .evalgraph-tip.visible { opacity: 1; }
+  .evalgraph-legend { display: flex; gap: 10px; font-size: 0.68rem; color: var(--text-dim); margin-top: 4px; justify-content: center; }
+  .review-summary-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 10px; background: var(--surface3); }
+  .rsb-seg { min-width: 2px; transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .rsb-seg.rsb-best { background: #4caf50; } .rsb-seg.rsb-great { background: #8bc34a; }
+  .rsb-seg.rsb-good { background: #2196f3; } .rsb-seg.rsb-inaccuracy { background: #ffc107; }
+  .rsb-seg.rsb-mistake { background: #ff9800; } .rsb-seg.rsb-blunder { background: #f44336; }
+  .review-summary-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.7rem; margin-top: 6px; }
+  .rsb-legend-item { display: inline-flex; align-items: center; gap: 4px; color: var(--text-dim); }
+  .rsb-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .review-perf { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 10px; border-radius: var(--radius-sm); background: rgba(171,71,188,0.08); border: 1px solid rgba(171,71,188,0.25); }
+  .review-perf-icon { font-size: 1.3rem; }
+  .review-perf-text { font-size: 0.85rem; }
+  .review-perf-rating { font-weight: 700; color: #ce93d8; font-size: 1rem; }
+  .review-perf-sub { font-size: 0.7rem; color: var(--text-dim); }
+  .review-phases { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .phase-row { display: grid; grid-template-columns: 88px 1fr 46px 52px; align-items: center; gap: 8px; font-size: 0.78rem; }
+  .phase-name { display: flex; align-items: center; gap: 5px; color: var(--text-dim); }
+  .phase-bar { height: 8px; border-radius: 4px; background: var(--surface3); overflow: hidden; }
+  .phase-fill { height: 100%; border-radius: 4px; transition: width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .phase-acc { text-align: right; font-weight: 600; font-size: 0.76rem; }
+  .phase-rtg { text-align: right; color: var(--text-dim); font-size: 0.72rem; }
+  .phase-row.weakest .phase-name { color: #ffab91; }
+  .review-keymoments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .km-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; font-size: 0.74rem; cursor: pointer; border: 1px solid var(--surface3); background: var(--surface2); transition: transform 0.15s, border-color 0.15s; }
+  .km-chip:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .km-chip .km-clsf { font-weight: 700; }
+  .km-chip.km-blunder { border-color: rgba(244,67,54,0.5); } .km-chip.km-blunder .km-clsf { color: var(--red); }
+  .km-chip.km-mistake { border-color: rgba(255,152,0,0.5); } .km-chip.km-mistake .km-clsf { color: var(--orange); }
+  .km-chip.km-inaccuracy { border-color: rgba(255,193,7,0.5); } .km-chip.km-inaccuracy .km-clsf { color: var(--yellow); }
+  .review-empty { font-size: 0.78rem; color: var(--text-dim); font-style: italic; padding: 10px 0; text-align: center; }
+  .review-divider { border: none; border-top: 1px solid var(--surface3); margin: 12px 0 8px; }
+
+  /* Trends (Chess.com Insights style) */
+  .review-trends-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; margin-bottom: 6px; }
+  .trend-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 6px; }
+  .trend-tile { padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--surface3); }
+  .trend-tile-label { font-size: 0.66rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.03em; }
+  .trend-tile-value { font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
+  .trend-tile-delta { font-size: 0.7rem; margin-top: 2px; }
+  .trend-up { color: #4ade80; } .trend-down { color: #f87171; } .trend-flat { color: var(--text-dim); }
+
+  /* Puzzle Streak & Rush */
+  .puzzle-mode-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+  .pm-tab { flex: 1; padding: 5px 4px; border: 1px solid var(--surface3); background: var(--surface2); color: var(--text); border-radius: 6px; font-size: 0.76rem; cursor: pointer; transition: all 0.15s; }
+  .pm-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .pm-tab .pm-tab-icon { margin-right: 2px; }
+  .rush-hud { display: flex; align-items: center; gap: 10px; margin: 8px 0; padding: 8px 10px; border-radius: var(--radius-sm); background: rgba(33,150,243,0.08); border: 1px solid rgba(33,150,243,0.3); }
+  .rush-timer { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 64px; }
+  .rush-timer.low { color: #f87171; animation: pulse 1s infinite; }
+  .rush-score { font-size: 0.85rem; }
+  .rush-score b { font-size: 1.1rem; }
+  .rush-combo { font-size: 0.78rem; color: #fbbf24; font-weight: 700; margin-left: auto; }
+  .rush-end { text-align: center; padding: 8px 0; }
+  .rush-end-score { font-size: 1.6rem; font-weight: 800; }
+  .rush-end-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; }
+  .streak-hud { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 0.85rem; }
+  .streak-count { font-size: 1.2rem; font-weight: 700; }
+  .streak-best { color: var(--text-dim); font-size: 0.74rem; margin-left: auto; }
+  .timebonus-pop { position: absolute; right: 12px; top: 6px; color: #4ade80; font-weight: 700; font-size: 0.8rem; animation: bonusFloat 0.9s ease forwards; pointer-events: none; }
+  @keyframes bonusFloat { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-14px); } }
   .sound-toggle {
     background: var(--surface2, #1e1e2e); color: var(--text, #e0e0e0);
     border: 1px solid var(--surface2, #1e1e2e); border-radius: 4px;
@@ -1903,6 +1996,9 @@
     <div class="panel coach-panel" data-panel-id="coach" id="coach-panel">
       <h2>Coach</h2>
       <div id="coach-message"><span class="coach-empty">Tips will appear here during the game</span></div>
+      <div id="undo-retry-wrap" style="display:none;">
+        <button class="undo-retry-btn" id="undo-retry-btn">&#8617; Take Back &amp; Try Again</button>
+      </div>
             <button class="thinking-btn" id="thinking-coach-btn">&#9889; How should I think here?</button>
       <div class="thinking-output" id="thinking-coach-output" style="display:none;"></div>
       
@@ -2026,7 +2122,12 @@
     </div>
     <div class="panel" style="border-left-color: var(--accent); display: none;" id="puzzle-panel">
       <h2>Puzzle Training</h2>
-      <div class="puzzle-controls">
+      <div class="puzzle-mode-tabs" id="puzzle-mode-tabs">
+        <button class="pm-tab active" data-pm-mode="practice"><span class="pm-tab-icon">📘</span>Practice</button>
+        <button class="pm-tab" data-pm-mode="streak" title="Sudden death — one wrong answer ends the run (Lichess-style)"><span class="pm-tab-icon">🔥</span>Streak</button>
+        <button class="pm-tab" data-pm-mode="rush" title="3 minutes — correct answers add time (Chess.com Rush / Lichess Storm-style)"><span class="pm-tab-icon">⚡</span>Rush</button>
+      </div>
+      <div class="puzzle-controls" id="puzzle-practice-controls">
         <select id="puzzle-motif">
           <option value="">All Motifs (Mixed)</option>
           <option value="forks">Forks</option>
@@ -2046,7 +2147,18 @@
         <button id="puzzle-hint-btn" disabled>Hint</button>
         <button id="puzzle-skip-btn" disabled>Skip</button>
       </div>
-      <div class="puzzle-info">
+      <div class="streak-hud" id="streak-hud" style="display:none;">
+        <span>🔥</span><span class="streak-count" id="streak-count">0</span>
+        <span style="color:var(--text-dim);font-size:0.75rem;" id="streak-diff-note">difficulty ramps up</span>
+        <span class="streak-best" id="streak-best">best: --</span>
+        <button id="streak-skip-btn" class="pm-tab" style="flex:none;padding:3px 10px;">Skip (1)</button>
+      </div>
+      <div class="rush-hud" id="rush-hud" style="display:none;">
+        <span class="rush-timer" id="rush-timer">3:00</span>
+        <span class="rush-score" id="rush-score"><b>0</b> solved</span>
+        <span class="rush-combo" id="rush-combo"></span>
+      </div>
+      <div class="puzzle-info" id="puzzle-practice-info">
         <span class="status-label">Motif:</span>
         <span class="status-value" id="puzzle-motif-display">--</span>
         <span class="status-label">Difficulty:</span>
@@ -2056,9 +2168,47 @@
       </div>
       <div class="puzzle-feedback" id="puzzle-feedback"></div>
     </div>
+    <div class="panel" data-panel-id="mistakes" style="border-left-color: var(--red);">
+      <h2>Mistake Trainer</h2>
+      <div id="mistake-summary"><span class="coach-empty">Analyzing your games...</span></div>
+      <div class="mistake-controls">
+        <button id="mistake-train-btn">&#127919; Train My Mistakes</button>
+        <button id="mistake-hint-btn" disabled>Hint</button>
+        <button id="mistake-next-btn" style="display:none;">Next &#9654;</button>
+        <button id="mistake-exit-btn" style="display:none;">&#10006; Exit Training</button>
+      </div>
+      <div class="puzzle-info">
+        <span class="status-label">Card:</span>
+        <span class="status-value" id="mistake-progress">--</span>
+        <span class="status-label">Solved:</span>
+        <span class="status-value" id="mistake-score">--</span>
+      </div>
+      <div class="puzzle-feedback" id="mistake-feedback"></div>
+    </div>
     <div class="panel" data-panel-id="history" style="border-left-color: var(--orange);">
       <h2>Move History</h2>
       <div class="move-history" id="move-history"></div>
+    </div>
+    <div class="panel review-panel" data-panel-id="review" style="border-left-color: #ab47bc;">
+      <h2>Game Review</h2>
+      <div class="review-empty" id="review-empty">Eval graph appears as moves are played</div>
+      <div class="review-evalgraph-wrap" id="review-graph-wrap" style="display:none;">
+        <svg id="review-evalgraph" viewBox="0 0 600 120" preserveAspectRatio="none"></svg>
+        <div class="evalgraph-tip" id="evalgraph-tip"></div>
+        <div class="evalgraph-legend"><span>◤ Black advantage</span><span>White advantage ◥</span></div>
+      </div>
+      <div id="review-body" style="display:none;">
+        <div class="review-summary-bar" id="review-summary-bar"></div>
+        <div class="review-summary-legend" id="review-summary-legend"></div>
+        <div class="review-perf" id="review-perf"></div>
+        <div class="review-phases" id="review-phases"></div>
+        <div class="review-keymoments" id="review-keymoments"></div>
+      </div>
+      <div id="review-trends" style="display:none;">
+        <hr class="review-divider">
+        <div class="review-trends-title">Progress Trends</div>
+        <div class="trend-tiles" id="trend-tiles"></div>
+      </div>
     </div>
     <div class="panel learn-panel" data-panel-id="learn" style="border-left-color: var(--blue);">
       <h2>Learn</h2>
@@ -2083,6 +2233,7 @@
       <div class="game-over-srs" id="game-over-srs" style="display:none;"></div>
       <div class="game-over-actions">
         <button class="btn-play-again" id="btn-play-again">Play Again</button>
+        <button class="btn-review" id="btn-train-mistakes">Train My Mistakes</button>
         <button class="btn-review" id="btn-review">Review</button>
       </div>
     </div>
@@ -2119,6 +2270,14 @@
     <div class="settings-row">
       <span class="settings-label">Move History<small>Move list with annotations</small></span>
       <label class="toggle-switch"><input type="checkbox" data-panel="history" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Game Review<small>Eval graph, phases, key moments</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="review" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Mistake Trainer<small>Train positions from your games</small></span>
+      <label class="toggle-switch"><input type="checkbox" data-panel="mistakes" checked><span class="toggle-slider"></span></label>
     </div>
     <div class="settings-row">
       <span class="settings-label">Learn<small>Curriculum, tactics, tips</small></span>
@@ -3052,6 +3211,14 @@
           return 'snapback';
         }
 
+        // Check if in mistake trainer mode
+        if (trainerMode) {
+          checkTrainerAnswer(move.san, move);
+          chessGame.undo();
+          board.position(chessGame.fen(), false);
+          return 'snapback';
+        }
+
         // Check for blunders before submitting (only in normal game mode)
         checkMoveSafety(move.san).then(data => {
           if (data.classification === 'blunder' && data.cp_loss >= 300) {
@@ -3189,7 +3356,7 @@
 
     // Show legal move dots on piece hover (before drag starts)
     $('#board').on('mouseover', '[class*="square-"]', function() {
-      if (chessGame.game_over() || puzzleMode) return;
+      if (chessGame.game_over() || puzzleMode || trainerMode) return;
       if (chessGame.turn() !== playerColor[0]) return;
       var cls = $(this).attr('class') || '';
       var match = cls.match(/square-([a-h][1-8])/);
@@ -3222,6 +3389,20 @@
     if (puzzleHintBtn) puzzleHintBtn.addEventListener('click', showHint);
     const puzzleSkipBtn = document.getElementById('puzzle-skip-btn');
     if (puzzleSkipBtn) puzzleSkipBtn.addEventListener('click', function() { puzzleTotal++; updatePuzzleScore(); loadNextPuzzle(); });
+    initPuzzleModeTabs();
+
+    // Wire up mistake trainer buttons
+    const mistakeTrainBtn = document.getElementById('mistake-train-btn');
+    if (mistakeTrainBtn) mistakeTrainBtn.addEventListener('click', function() { startMistakeTraining(); });
+    const mistakeHintBtn = document.getElementById('mistake-hint-btn');
+    if (mistakeHintBtn) mistakeHintBtn.addEventListener('click', mistakeHint);
+    const mistakeNextBtn = document.getElementById('mistake-next-btn');
+    if (mistakeNextBtn) mistakeNextBtn.addEventListener('click', nextMistakeCard);
+    const mistakeExitBtn = document.getElementById('mistake-exit-btn');
+    if (mistakeExitBtn) mistakeExitBtn.addEventListener('click', exitMistakeTraining);
+    const undoRetryBtn = document.getElementById('undo-retry-btn');
+    if (undoRetryBtn) undoRetryBtn.addEventListener('click', undoLastMove);
+    loadMistakeSummary();
 
     // SRS review link — opens puzzle mode with from-games motif
     var srsReviewLink = document.getElementById('srs-review-link');
@@ -3347,6 +3528,14 @@
       pendingBlunderMove = null;
     });
 
+    // Train Mistakes button — reviews this game's errors in the mistake trainer
+    var trainMistakesBtn = document.getElementById('btn-train-mistakes');
+    if (trainMistakesBtn) trainMistakesBtn.addEventListener('click', function() {
+      var b = document.getElementById('game-over');
+      if (b) b.classList.remove('visible');
+      startMistakeTraining(currentGameId);
+    });
+
     // Play Again button — closes finished game, creates new one with auto-adjusted difficulty
     var playAgainBtn = document.getElementById('btn-play-again');
     if (playAgainBtn) playAgainBtn.addEventListener('click', function() {
@@ -3414,6 +3603,14 @@
       // Undo the move to stay in puzzle position
       chessGame.undo();
       board.position(chessGame.fen());
+      return;
+    }
+
+    // Check if in mistake trainer mode
+    if (trainerMode) {
+      checkTrainerAnswer(move.san, move);
+      chessGame.undo();
+      board.position(chessGame.fen(), false);
       return;
     }
 
@@ -3620,6 +3817,68 @@
   let hintLevel = 0;
   let pendingBlunderMove = null;
 
+  // Puzzle sub-modes: 'practice' | 'streak' (Lichess) | 'rush' (Chess.com Rush / Lichess Storm)
+  let puzzleSubMode = 'practice';
+  let streakCount = 0;
+  let streakSkipUsed = false;
+  let rushScore = 0;
+  let rushCombo = 0;
+  let rushTimeLeft = 0;          // seconds
+  let rushLives = 3;
+  let rushTimerId = null;
+  let rushActive = false;
+  let puzzleAutoAdvanceId = null;
+
+  // === MISTAKE TRAINER ===
+  let trainerMode = false;
+  let mistakeCards = [];
+  let mistakeIndex = 0;
+  let mistakeSolved = 0;
+  let mistakeAttempts = 0;
+  let mistakeHintLevel = 0;
+  let currentMistakeCard = null;
+  let mistakeSummaryData = null;
+
+  function puzzleBestGet(key) { try { return parseInt(localStorage.getItem(key) || '0', 10) || 0; } catch (e) { return 0; } }
+  function puzzleBestSet(key, val) { try { localStorage.setItem(key, String(val)); } catch (e) {} }
+
+  function initPuzzleModeTabs() {
+    var tabs = document.getElementById('puzzle-mode-tabs');
+    if (!tabs) return;
+    tabs.querySelectorAll('.pm-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () { setPuzzleSubMode(tab.getAttribute('data-pm-mode')); });
+    });
+    var streakBestEl = document.getElementById('streak-best');
+    if (streakBestEl) streakBestEl.textContent = 'best: ' + puzzleBestGet('chess_puzzle_streak_best');
+    var streakSkipBtn = document.getElementById('streak-skip-btn');
+    if (streakSkipBtn) streakSkipBtn.addEventListener('click', streakSkip);
+  }
+
+  function setPuzzleSubMode(mode) {
+    if (mode === puzzleSubMode && puzzleMode) return;
+    stopRushTimer();
+    if (puzzleAutoAdvanceId) { clearTimeout(puzzleAutoAdvanceId); puzzleAutoAdvanceId = null; }
+    puzzleSubMode = mode;
+    var tabs = document.getElementById('puzzle-mode-tabs');
+    if (tabs) tabs.querySelectorAll('.pm-tab').forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-pm-mode') === mode);
+    });
+    var practiceControls = document.getElementById('puzzle-practice-controls');
+    var practiceInfo = document.getElementById('puzzle-practice-info');
+    var streakHud = document.getElementById('streak-hud');
+    var rushHud = document.getElementById('rush-hud');
+    var hintBtn = document.getElementById('puzzle-hint-btn');
+    if (practiceControls) practiceControls.style.display = mode === 'practice' ? 'flex' : 'none';
+    if (practiceInfo) practiceInfo.style.display = mode === 'practice' ? 'flex' : 'none';
+    if (streakHud) streakHud.style.display = mode === 'streak' ? 'flex' : 'none';
+    if (rushHud) rushHud.style.display = mode === 'rush' ? 'flex' : 'none';
+    if (hintBtn) hintBtn.disabled = mode !== 'practice';
+    if (!puzzleMode) togglePuzzleMode();
+    else if (mode === 'streak') startStreakRun();
+    else if (mode === 'rush') startRushRun();
+    else loadPuzzles();
+  }
+
   function togglePuzzleMode() {
     puzzleMode = !puzzleMode;
     const panel = document.getElementById('puzzle-panel');
@@ -3628,15 +3887,161 @@
       panel.style.display = 'block';
       btn.style.background = 'var(--accent)';
       btn.style.color = '#fff';
-      loadPuzzles();
+      if (puzzleSubMode === 'streak') startStreakRun();
+      else if (puzzleSubMode === 'rush') startRushRun();
+      else loadPuzzles();
     } else {
       panel.style.display = 'none';
       btn.style.background = 'var(--surface2)';
       btn.style.color = 'var(--text)';
+      stopRushTimer();
+      if (puzzleAutoAdvanceId) { clearTimeout(puzzleAutoAdvanceId); puzzleAutoAdvanceId = null; }
     }
   }
 
+  // ── Streak mode: sudden death, ramping difficulty, one skip ──
+  async function startStreakRun() {
+    stopRushTimer();
+    streakCount = 0;
+    streakSkipUsed = false;
+    updateStreakHud();
+    await fetchPuzzleQueue(50);
+    if (puzzleQueue.length) loadNextPuzzle();
+    else showPuzzleFeedback('No puzzles available.', 'incorrect');
+    showPuzzleFeedback('🔥 Streak started — one wrong answer ends the run!', 'hint');
+  }
+
+  function updateStreakHud() {
+    var countEl = document.getElementById('streak-count');
+    var bestEl = document.getElementById('streak-best');
+    var skipBtn = document.getElementById('streak-skip-btn');
+    if (countEl) countEl.textContent = streakCount;
+    if (bestEl) {
+      var best = puzzleBestGet('chess_puzzle_streak_best');
+      bestEl.textContent = 'best: ' + best + (streakCount > best ? ' 🎉 new!' : '');
+    }
+    if (skipBtn) {
+      skipBtn.disabled = streakSkipUsed;
+      skipBtn.textContent = streakSkipUsed ? 'Skip used' : 'Skip (1)';
+    }
+  }
+
+  function streakSkip() {
+    if (puzzleSubMode !== 'streak' || streakSkipUsed || !currentPuzzle) return;
+    streakSkipUsed = true;
+    showPuzzleFeedback('Skipped — no penalty this once. Next puzzle...', 'hint');
+    updateStreakHud();
+    if (puzzleAutoAdvanceId) clearTimeout(puzzleAutoAdvanceId);
+    puzzleAutoAdvanceId = setTimeout(function () { puzzleAutoAdvanceId = null; loadNextPuzzle(); }, 800);
+  }
+
+  function endStreakRun(finalCount) {
+    var best = puzzleBestGet('chess_puzzle_streak_best');
+    var isRecord = finalCount > best && finalCount > 0;
+    if (isRecord) puzzleBestSet('chess_puzzle_streak_best', finalCount);
+    updateStreakHud();
+    showPuzzleFeedback(
+      '🔥 Streak over: <b>' + finalCount + '</b> in a row' +
+      (isRecord ? ' — new best! 🏆' : ' (best: ' + Math.max(best, finalCount) + ')') +
+      ' · <a href="#" onclick="puzzleRestart();return false;" style="color:var(--accent);text-decoration:underline;">Play again</a>',
+      finalCount >= 5 ? 'correct' : 'incorrect'
+    );
+    if (isRecord && finalCount >= 3) { try { Animations.celebrationEffect(true); } catch (e) {} }
+    currentPuzzle = null;
+  }
+
+  // ── Rush mode: 3:00 countdown, +2s per solve, −10s per miss, 3 lives ──
+  async function startRushRun() {
+    rushScore = 0;
+    rushCombo = 0;
+    rushLives = 3;
+    rushTimeLeft = 180;
+    rushActive = true;
+    puzzleIndex = 0;
+    puzzleQueue = [];
+    updateRushHud();
+    await fetchPuzzleQueue(50);
+    if (puzzleQueue.length) loadNextPuzzle();
+    stopRushTimer();
+    rushTimerId = setInterval(rushTick, 250);
+    showPuzzleFeedback('⚡ Rush started — 3:00 on the clock. Correct = +2s, miss = −10s!', 'hint');
+  }
+
+  function rushTick() {
+    if (!rushActive) return;
+    rushTimeLeft -= 0.25;
+    if (rushTimeLeft <= 0) { rushTimeLeft = 0; endRushRun('time'); return; }
+    updateRushHud();
+  }
+
+  function stopRushTimer() {
+    if (rushTimerId) { clearInterval(rushTimerId); rushTimerId = null; }
+    rushActive = false;
+  }
+
+  function updateRushHud() {
+    var timerEl = document.getElementById('rush-timer');
+    var scoreEl = document.getElementById('rush-score');
+    var comboEl = document.getElementById('rush-combo');
+    if (timerEl) {
+      var m = Math.floor(rushTimeLeft / 60), s = Math.floor(rushTimeLeft % 60);
+      timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+      timerEl.classList.toggle('low', rushTimeLeft <= 15);
+    }
+    if (scoreEl) scoreEl.innerHTML = '<b>' + rushScore + '</b> solved · ' + rushLives + ' ♥';
+    if (comboEl) comboEl.textContent = rushCombo >= 3 ? 'COMBO ×' + (rushCombo >= 6 ? 3 : 2) : '';
+  }
+
+  function rushTimeBonusPopup() {
+    var hud = document.getElementById('rush-hud');
+    if (!hud) return;
+    var pop = document.createElement('span');
+    pop.className = 'timebonus-pop';
+    pop.textContent = '+2s';
+    hud.style.position = 'relative';
+    hud.appendChild(pop);
+    setTimeout(function () { pop.remove(); }, 900);
+  }
+
+  function endRushRun(reason) {
+    stopRushTimer();
+    var best = puzzleBestGet('chess_puzzle_rush_best');
+    var isRecord = rushScore > best && rushScore > 0;
+    if (isRecord) puzzleBestSet('chess_puzzle_rush_best', rushScore);
+    var why = reason === 'lives' ? '3 misses — out of lives' : "time's up";
+    showPuzzleFeedback(
+      '⚡ Rush over (' + why + '): <b>' + rushScore + '</b> solved' +
+      (isRecord ? ' — new best! 🏆' : ' (best: ' + Math.max(best, rushScore) + ')') +
+      ' · <a href="#" onclick="puzzleRestart();return false;" style="color:var(--accent);text-decoration:underline;">Play again</a>',
+      rushScore >= 5 ? 'correct' : 'incorrect'
+    );
+    if (isRecord) { try { Animations.celebrationEffect(true); } catch (e) {} }
+    currentPuzzle = null;
+  }
+
+  // Shared queue loader: streak ramps (sorted ascending), rush mixes
+  async function fetchPuzzleQueue(count) {
+    var motifEl = document.getElementById('puzzle-motif');
+    var motif = motifEl ? motifEl.value : '';
+    var mode = puzzleSubMode === 'streak' ? 'sorted' : 'interleaved';
+    try {
+      var resp = await fetch('/api/puzzles?mode=' + mode + '&motif=' + encodeURIComponent(motif) + '&count=' + count);
+      if (!resp.ok) return false;
+      var data = await resp.json();
+      var fresh = data.puzzles || [];
+      if (puzzleSubMode === 'rush') {
+        puzzleQueue = puzzleQueue.concat(fresh);   // refill mid-run
+      } else {
+        puzzleQueue = fresh;
+        puzzleIndex = 0;
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
   async function loadPuzzles() {
+    if (puzzleSubMode === 'streak') { startStreakRun(); return; }
+    if (puzzleSubMode === 'rush') { startRushRun(); return; }
     const motif = document.getElementById('puzzle-motif').value;
     const mode = motif ? 'sorted' : 'interleaved';
     try {
@@ -3653,21 +4058,29 @@
   }
 
   function loadNextPuzzle() {
+    if (puzzleSubMode === 'rush' && puzzleIndex >= puzzleQueue.length - 5) {
+      fetchPuzzleQueue(50);   // async refill, don't await
+    }
     if (puzzleIndex >= puzzleQueue.length) {
+      if (puzzleSubMode === 'streak') { endStreakRun(streakCount); return; }
+      if (puzzleSubMode === 'rush') { endRushRun('time'); return; }
       showPuzzleFeedback('All puzzles complete! Score: ' + puzzleCorrect + '/' + puzzleTotal, 'correct');
       return;
     }
     currentPuzzle = puzzleQueue[puzzleIndex];
     hintLevel = 0;
-    // Set up the board with puzzle position
-    board.position(currentPuzzle.fen);
+    // Set up the board with puzzle position (instant: animated position()
+    // freezes mid-transition in a hidden tab)
+    board.position(currentPuzzle.fen, false);
     chessGame.load(currentPuzzle.fen);
     lastFen = currentPuzzle.fen;
     // Update UI
     document.getElementById('puzzle-motif-display').textContent = currentPuzzle.motif || 'Mixed';
-    document.getElementById('puzzle-difficulty').textContent = currentPuzzle.difficulty || '--';
-    document.getElementById('puzzle-hint-btn').disabled = false;
-    document.getElementById('puzzle-skip-btn').disabled = false;
+    document.getElementById('puzzle-difficulty').textContent =
+      currentPuzzle.difficulty_rating ? currentPuzzle.difficulty_rating : (currentPuzzle.difficulty || '--');
+    document.getElementById('puzzle-hint-btn').disabled = puzzleSubMode !== 'practice';
+    document.getElementById('puzzle-skip-btn').disabled = true;
+    if (puzzleAutoAdvanceId) { clearTimeout(puzzleAutoAdvanceId); puzzleAutoAdvanceId = null; }
     hidePuzzleFeedback();
     // Clear arrows
     clearArrows();
@@ -3677,6 +4090,49 @@
     if (!currentPuzzle) return;
     const solutions = currentPuzzle.solution_moves || [];
     const isCorrect = solutions.some(s => s.toLowerCase() === san.toLowerCase());
+
+    if (puzzleSubMode === 'streak') {
+      if (isCorrect) {
+        streakCount++;
+        var best = puzzleBestGet('chess_puzzle_streak_best');
+        if (streakCount > best) puzzleBestSet('chess_puzzle_streak_best', streakCount);
+        updateStreakHud();
+        showPuzzleFeedback('Correct! ' + streakCount + ' in a row 🔥 ' + (currentPuzzle.explanation || ''), 'correct');
+        puzzleIndex++;
+        if (puzzleAutoAdvanceId) clearTimeout(puzzleAutoAdvanceId);
+        puzzleAutoAdvanceId = setTimeout(function () { puzzleAutoAdvanceId = null; loadNextPuzzle(); }, 900);
+      } else {
+        showPuzzleFeedback('Wrong — the answer was ' + (solutions[0] || '?') + '. Streak ended at ' + streakCount + '.', 'incorrect');
+        endStreakRun(streakCount);
+      }
+      return;
+    }
+
+    if (puzzleSubMode === 'rush') {
+      if (!rushActive) return;
+      if (isCorrect) {
+        rushCombo++;
+        var mult = rushCombo >= 6 ? 3 : (rushCombo >= 3 ? 2 : 1);
+        rushScore += mult;
+        rushTimeLeft = Math.min(180, rushTimeLeft + 2);
+        rushTimeBonusPopup();
+        showPuzzleFeedback('Correct +' + mult + (mult > 1 ? ' (combo!)' : '') + ' · +2s ' + (currentPuzzle.explanation || ''), 'correct');
+      } else {
+        rushCombo = 0;
+        rushLives--;
+        rushTimeLeft = Math.max(0, rushTimeLeft - 10);
+        showPuzzleFeedback('Miss! −10s · ' + rushLives + ' ♥ left. Answer was ' + (solutions[0] || '?'), 'incorrect');
+      }
+      updateRushHud();
+      if (rushLives <= 0) { endRushRun('lives'); return; }
+      if (rushTimeLeft <= 0) { endRushRun('time'); return; }
+      puzzleIndex++;
+      if (puzzleAutoAdvanceId) clearTimeout(puzzleAutoAdvanceId);
+      puzzleAutoAdvanceId = setTimeout(function () { puzzleAutoAdvanceId = null; loadNextPuzzle(); }, 750);
+      return;
+    }
+
+    // practice mode (original behavior)
     puzzleTotal++;
     if (isCorrect) {
       puzzleCorrect++;
@@ -3701,9 +4157,16 @@
 
   function showPuzzleFeedback(text, cls) {
     const el = document.getElementById('puzzle-feedback');
-    el.textContent = text;
+    el.innerHTML = text;
     el.className = 'puzzle-feedback ' + cls;
   }
+
+  // Exposed for inline "Play again" links in streak/rush end screens
+  window.setPuzzleSubMode = function (mode) { setPuzzleSubMode(mode); };
+  window.puzzleRestart = function () {
+    if (puzzleSubMode === 'streak') startStreakRun();
+    else if (puzzleSubMode === 'rush') startRushRun();
+  };
 
   function hidePuzzleFeedback() {
     const el = document.getElementById('puzzle-feedback');
@@ -3713,6 +4176,234 @@
 
   function updatePuzzleScore() {
     document.getElementById('puzzle-score').textContent = puzzleCorrect + '/' + puzzleTotal;
+  }
+
+  // === MISTAKE TRAINER FUNCTIONS ===
+
+  async function loadMistakeSummary() {
+    var el = document.getElementById('mistake-summary');
+    if (!el) return;
+    try {
+      const resp = await fetch('/api/mistakes?limit=50');
+      if (!resp.ok) throw new Error('bad status');
+      const data = await resp.json();
+      mistakeSummaryData = data;
+      var stats = data.stats || {};
+      var totals = stats.totals || {};
+      var cards = data.cards || [];
+
+      if (!stats.games_analyzed) {
+        el.innerHTML = '<span class="coach-empty">Play some games — your mistakes will show up here as training cards.</span>';
+        var trainBtn = document.getElementById('mistake-train-btn');
+        if (trainBtn) trainBtn.disabled = true;
+        return;
+      }
+      var trainBtn2 = document.getElementById('mistake-train-btn');
+      if (trainBtn2) trainBtn2.disabled = cards.length === 0;
+
+      var html = '<div class="mistake-chips">' +
+        '<span class="mistake-chip blunder">' + (totals.blunder || 0) + ' blunders</span>' +
+        '<span class="mistake-chip mistake">' + (totals.mistake || 0) + ' mistakes</span>' +
+        '<span class="mistake-chip inaccuracy">' + (totals.inaccuracy || 0) + ' inaccuracies</span>' +
+        '<span class="mistake-chip">' + stats.games_analyzed + ' games</span>' +
+        '</div>';
+
+      // Per-phase severity bars (share of total cp loss by phase)
+      var phases = stats.phases || {};
+      var phaseOrder = ['opening', 'middlegame', 'endgame'];
+      var sums = phaseOrder.map(function(p) { return (phases[p] && phases[p].count) ? phases[p].avg_cp_loss * phases[p].count : 0; });
+      var maxSum = Math.max.apply(null, sums.concat([1]));
+      phaseOrder.forEach(function(p, i) {
+        if (!phases[p] || !phases[p].count) return;
+        var pct = Math.round((sums[i] / maxSum) * 100);
+        var label = p.charAt(0).toUpperCase() + p.slice(1);
+        html += '<div class="mistake-phase-row"><span style="width:64px;">' + label + '</span>' +
+          '<div class="mistake-phase-bar"><div class="mistake-phase-fill" style="width:' + pct + '%;"></div></div>' +
+          '<span>' + phases[p].count + ' · ~' + phases[p].avg_cp_loss + 'cp</span></div>';
+      });
+
+      if (stats.focus && cards.length) {
+        html += '<div style="margin-top:6px;font-size:0.8rem;color:var(--text-dim);">Focus: most damage happens in the <b style="color:var(--orange);">' + stats.focus + '</b>.</div>';
+      }
+      if (!cards.length) {
+        html += '<div style="margin-top:6px;font-size:0.8rem;color:var(--green);">No big mistakes recorded yet — keep it up! &#127942;</div>';
+      }
+      el.innerHTML = html;
+    } catch (e) {
+      el.innerHTML = '<span class="coach-empty">Could not load mistake data.</span>';
+    }
+  }
+
+  async function startMistakeTraining(filterGameId) {
+    try {
+      var url = '/api/mistakes?limit=50' + (filterGameId ? '&game_id=' + encodeURIComponent(filterGameId) : '');
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      mistakeCards = data.cards || [];
+    } catch (e) { mistakeCards = []; }
+
+    if (!mistakeCards.length) {
+      showMistakeFeedback('No training cards found — play more games first!', 'hint');
+      return;
+    }
+
+    // Make sure the panel is visible even if hidden in settings
+    var panel = document.querySelector('.panel[data-panel-id="mistakes"]');
+    if (panel) panel.style.display = '';
+
+    trainerMode = true;
+    mistakeIndex = 0;
+    mistakeSolved = 0;
+    mistakeAttempts = 0;
+    setTrainerControls(true);
+    loadMistakeCard();
+  }
+
+  function setTrainerControls(active) {
+    var trainBtn = document.getElementById('mistake-train-btn');
+    var exitBtn = document.getElementById('mistake-exit-btn');
+    var hintBtn = document.getElementById('mistake-hint-btn');
+    var nextBtn = document.getElementById('mistake-next-btn');
+    if (trainBtn) trainBtn.style.display = active ? 'none' : '';
+    if (exitBtn) exitBtn.style.display = active ? '' : 'none';
+    if (hintBtn) hintBtn.disabled = !active;
+    if (!active && nextBtn) nextBtn.style.display = 'none';
+  }
+
+  function loadMistakeCard() {
+    if (mistakeIndex >= mistakeCards.length) {
+      showMistakeFeedback('Training complete! Solved ' + mistakeSolved + '/' + mistakeCards.length +
+        '. These positions are now reviewable anytime.', 'correct');
+      var nextBtn = document.getElementById('mistake-next-btn');
+      if (nextBtn) nextBtn.style.display = 'none';
+      var hintBtn = document.getElementById('mistake-hint-btn');
+      if (hintBtn) hintBtn.disabled = true;
+      return;
+    }
+    currentMistakeCard = mistakeCards[mistakeIndex];
+    mistakeHintLevel = 0;
+    // Instant (non-animated) positioning: animated moves can leave the
+    // board mid-transition if another client updates the live game.
+    board.position(currentMistakeCard.fen, false);
+    try { chessGame.load(currentMistakeCard.fen); } catch(e) {}
+    lastFen = currentMistakeCard.fen;
+    clearArrows();
+
+    var progress = document.getElementById('mistake-progress');
+    if (progress) progress.textContent = (mistakeIndex + 1) + '/' + mistakeCards.length +
+      ' · Game #' + (currentMistakeCard.game_number || '?') + ', move ' + (currentMistakeCard.move_number || '?') +
+      ' (' + currentMistakeCard.phase + ')';
+    updateMistakeScore();
+    showMistakeFeedback('You played <b>' + esc(currentMistakeCard.move_played) + '</b> here and lost ~' +
+      Math.round(currentMistakeCard.cp_loss / 100) + ' pawn(s). Find the best move for ' +
+      (currentMistakeCard.fen.split(' ')[1] === 'b' ? 'Black' : 'White') + '!', 'hint');
+    var nextBtn = document.getElementById('mistake-next-btn');
+    if (nextBtn) nextBtn.style.display = 'none';
+  }
+
+  function checkTrainerAnswer(san, moveObj) {
+    if (!currentMistakeCard || !trainerMode) return;
+    mistakeAttempts++;
+    var best = (currentMistakeCard.best_move || '').toLowerCase();
+    var played = (currentMistakeCard.move_played || '').toLowerCase();
+
+    if (san.toLowerCase() === best) {
+      mistakeSolved++;
+      showMistakeFeedback('&#10004; Correct! <b>' + esc(currentMistakeCard.best_move) + '</b> was the engine\u2019s top choice here.', 'correct');
+      if (moveObj && moveObj.from && moveObj.to) {
+        drawArrow(moveObj.from, moveObj.to, '#4caf50');
+      }
+      var hintBtn = document.getElementById('mistake-hint-btn');
+      if (hintBtn) hintBtn.disabled = true;
+      var nextBtn = document.getElementById('mistake-next-btn');
+      if (nextBtn) nextBtn.style.display = '';
+    } else if (san.toLowerCase() === played) {
+      showMistakeFeedback('That\u2019s exactly what you played in the game — it cost ~' +
+        Math.round(currentMistakeCard.cp_loss / 100) + ' pawn(s). Look for something better!', 'incorrect');
+    } else {
+      showMistakeFeedback('Not the best move here. Check checks, captures and threats, then try again!', 'incorrect');
+    }
+    updateMistakeScore();
+  }
+
+  function mistakeHint() {
+    if (!currentMistakeCard || mistakeHintLevel >= 3) return;
+    mistakeHintLevel++;
+    var best = currentMistakeCard.best_move || '';
+    var hints = [];
+    if (mistakeHintLevel === 1) {
+      var pieceCode = best.charAt(0);
+      var pieceNames = { 'N': 'knight', 'B': 'bishop', 'R': 'rook', 'Q': 'queen', 'K': 'king' };
+      var pieceName = pieceNames[pieceCode] || 'pawn';
+      hints.push('Hint: the best move is a <b>' + pieceName + '</b> move.');
+    } else if (mistakeHintLevel === 2) {
+      hints.push('Hint: think about piece safety, checks and what your opponent threatens.');
+    } else {
+      hints.push('The answer is: <b>' + esc(best) + '</b>');
+    }
+    showMistakeFeedback(hints[mistakeHintLevel - 1], 'hint');
+  }
+
+  function nextMistakeCard() {
+    mistakeIndex++;
+    loadMistakeCard();
+  }
+
+  function exitMistakeTraining() {
+    trainerMode = false;
+    currentMistakeCard = null;
+    setTrainerControls(false);
+    showMistakeFeedback('', '');
+    var progress = document.getElementById('mistake-progress');
+    if (progress) progress.textContent = '--';
+    // Re-sync board with the live game instantly. Animated position() can
+    // freeze mid-transition in a hidden tab (requestAnimationFrame paused),
+    // so poll()'s animated update is not reliable here.
+    fetch('/api/game').then(function(r) { return r.json(); }).then(function(state) {
+      if (state && state.fen) {
+        board.position(state.fen, false);
+        try { chessGame.load(state.fen); } catch(e) {}
+        lastFen = state.fen;
+        applyHighlights(state);
+      }
+    }).catch(function() { lastFen = null; poll(); });
+  }
+
+  function showMistakeFeedback(html, cls) {
+    var el = document.getElementById('mistake-feedback');
+    if (!el) return;
+    el.innerHTML = html;
+    el.className = 'puzzle-feedback ' + cls;
+  }
+
+  function updateMistakeScore() {
+    var el = document.getElementById('mistake-score');
+    if (el) el.textContent = mistakeSolved + '/' + mistakeAttempts;
+  }
+
+  async function undoLastMove() {
+    var btn = document.getElementById('undo-retry-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Taking back...'; }
+    try {
+      const resp = await fetch('/api/undo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        setMoveStatus('Position restored — find a better move!', 'ok');
+        lastFen = null;   // force poll to re-render the reverted position
+        poll();
+        loadGameTabs();
+      } else {
+        setMoveStatus('Error: ' + (data.error || 'cannot take back'), 'error');
+      }
+    } catch (e) {
+      setMoveStatus('Connection error', 'error');
+    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '&#8617; Take Back &amp; Try Again'; }
   }
 
   // === BEST-MOVE ARROW RENDERING ===
@@ -4357,6 +5048,18 @@
     historyEl.innerHTML = html;
     historyEl.scrollTop = historyEl.scrollHeight;
 
+    // Re-apply historical-view highlight (innerHTML rebuild above wipes it each poll)
+    if (viewingHistoricalPly >= 0) {
+      var histCell = historyEl.querySelectorAll('.move-san')[viewingHistoricalPly];
+      if (histCell) {
+        histCell.classList.add('active-move');
+        activeMoveEl = histCell;
+      }
+    }
+
+    // Game Review panel (eval graph, summary bar, phases, key moments, trends)
+    updateGameReview(state);
+
     // Draw best-move arrow for suboptimal moves
     if (annotations.length > 0) {
       const lastAnnot = annotations[annotations.length - 1];
@@ -4384,10 +5087,28 @@
       coachEl.innerHTML = '<span class="coach-empty">Tips will appear here during the game</span>';
     }
 
+    // Take-back offer: visible when the player's last move was a real mistake
+    // and it's their turn again (engine already replied)
+    var undoWrap = document.getElementById('undo-retry-wrap');
+    if (undoWrap) {
+      var undoAnnots = state.move_annotations || [];
+      var lastUndoAnnot = undoAnnots[undoAnnots.length - 1];
+      var fenTurn = (state.fen || '').split(' ')[1];
+      var playerTurnNow = fenTurn === (playerColor || 'white').charAt(0);
+      var canUndo = lastUndoAnnot &&
+        (lastUndoAnnot.classification === 'blunder' || lastUndoAnnot.classification === 'mistake') &&
+        !state.is_game_over &&
+        (state.move_list || []).length > 0 &&
+        playerTurnNow;
+      undoWrap.style.display = canUndo ? 'block' : 'none';
+    }
+
     // Game over banner
     const banner = document.getElementById('game-over');
     if (state.is_game_over && state.result) {
       banner.classList.add('visible');
+      // Refresh mistake trainer stats with the finished game included
+      loadMistakeSummary();
       // Celebration animation
       var isWin = (state.result === '1-0' && playerColor === 'white') || (state.result === '0-1' && playerColor === 'black');
       Animations.celebrationEffect(isWin);
@@ -4637,15 +5358,22 @@
     el.classList.add('active-move');
     activeMoveEl = el;
 
-    // Navigate to that position if fen_history is available
-    var fenArr = latestFenHistory;
-    if (fenArr && fenArr.length > plyIndex) {
-      var targetFen = fenArr[plyIndex];
+    // Navigate to the position AFTER this move.
+    // Prefer exact per-ply FENs replayed from move_list (fen_history is per-round,
+    // so its indexing drifts once the engine has replied).
+    var targetFen = null;
+    if (reviewCurrent && reviewCurrent.plyFens.length > plyIndex + 1) {
+      targetFen = reviewCurrent.plyFens[plyIndex + 1];
+    } else {
+      var fenArr = latestFenHistory;
+      if (fenArr && fenArr.length > plyIndex) targetFen = fenArr[plyIndex];
+    }
+    if (targetFen) {
       board.position(targetFen, false);
       viewingHistoricalPly = plyIndex;
 
       // Show arrow for best move if this move was a mistake/blunder
-      var annot = latestAnnotations[plyIndex];
+      var annot = (reviewCurrent && reviewCurrent.byPly[plyIndex]) || latestAnnotations[plyIndex];
       if (annot && annot.best_arrow) {
         drawArrow(annot.best_arrow.from, annot.best_arrow.to, '#4caf50');
       } else {
@@ -4671,6 +5399,468 @@
     if (indicator) indicator.style.display = 'none';
   };
 
+  // ═══════════════════════════════════════════════════════════════════
+  // GAME REVIEW — Chess.com-style eval graph + review stats
+  // (ideas from chess.com Game Review + Aimchess phase ratings, improved)
+  // ═══════════════════════════════════════════════════════════════════
+
+  var liveEvals = {};         // gameId -> { plyCount -> eval cp, player perspective }
+  var recordedGameIds = {};   // gameId -> true once saved into history
+  var reviewCurrent = null;   // { state, plyFens, byPly, N } for event handlers
+  var reviewLastPerf = null;
+
+  function reviewLsGet(key, fb) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fb; } catch (e) { return fb; } }
+  function reviewLsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+
+  // Win probability (0-100) from white-perspective centipawns (lichess conversion)
+  function reviewWinPct(whiteCp) {
+    return 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * Math.max(-2500, Math.min(2500, whiteCp)))) - 1);
+  }
+
+  // Replay move_list from the start position to get exact per-ply FENs
+  function reviewPlyFens(state) {
+    try {
+      var g = new Chess();
+      if (state.fen_history && state.fen_history.length && state.fen_history[0]) {
+        g.load(state.fen_history[0]);
+      }
+      var fens = [g.fen()];
+      var moves = state.move_list || [];
+      for (var i = 0; i < moves.length; i++) {
+        if (!g.move(moves[i])) break;
+        fens.push(g.fen());
+      }
+      return fens;
+    } catch (e) { return null; }
+  }
+
+  // Reconstruct eval-per-ply (player perspective, cp) from cp_loss chain,
+  // anchored at the start, every live-eval sample, and the current eval.
+  function reviewEvalSeries(state, N) {
+    var gid = state.game_id || 'g';
+    var live = liveEvals[gid] || {};
+    var byPly = reviewCurrent ? reviewCurrent.byPly : {};
+    var series = new Array(N + 1).fill(null);
+
+    var playerWhite = (state.player_color || 'white') === 'white';
+    var anchors = [{ ply: 0, cp: playerWhite ? 25 : -25 }];
+    Object.keys(live).forEach(function (k) {
+      var p = parseInt(k, 10);
+      if (p >= 1 && p <= N) anchors.push({ ply: p, cp: live[k] });
+    });
+    if (state.eval_score != null && N > 0) anchors.push({ ply: N, cp: state.eval_score * 100 });
+    anchors.sort(function (a, b) { return a.ply - b.ply; });
+
+    var step = function (prevEval, ply) {
+      var a = byPly[ply];
+      return -prevEval - (a ? (a.cp_loss || 0) : 0);
+    };
+
+    // Fill between consecutive anchor pairs, blending forward/backward chains to kill drift
+    for (var i = 0; i < anchors.length - 1; i++) {
+      var lo = anchors[i].ply, hi = anchors[i + 1].ply;
+      if (hi - lo < 2) continue;
+      var fwd = [series[lo]];
+      for (var j = lo + 1; j <= hi; j++) fwd.push(step(fwd[fwd.length - 1], j));
+      var bwd = new Array(hi - lo + 1).fill(null);
+      bwd[hi - lo] = series[hi];
+      for (var k = hi - 1; k >= lo; k--) {
+        var a = byPly[k + 1];
+        bwd[k - lo] = -(bwd[k - lo + 1] + (a ? (a.cp_loss || 0) : 0));
+      }
+      for (var m = lo + 1; m < hi; m++) {
+        var t = (m - lo) / (hi - lo);
+        series[m] = fwd[m - lo] * (1 - t) + bwd[m - lo] * t;
+      }
+    }
+    // Sweep any remaining nulls (outside anchor coverage) with forward recurrence
+    var prev = null;
+    for (var p = 0; p <= N; p++) {
+      if (series[p] != null) { prev = series[p]; continue; }
+      if (prev != null) { prev = step(prev, p); series[p] = prev; }
+    }
+    return series;
+  }
+
+  function reviewPerfRating(accuracy, engineElo) {
+    var expAcc = 92 - (engineElo - 400) * 0.028;   // expected accuracy vs engine of this strength
+    var diff = accuracy - expAcc;
+    // Below-expectation play costs rating faster than above-expectation play gains it
+    var perf = engineElo + (diff >= 0 ? diff * 25 : diff * 45);
+    return Math.max(300, Math.min(engineElo + 500, Math.round(perf / 10) * 10));
+  }
+
+  var REVIEW_CLS = {
+    best:       { label: 'Best',       color: '#4caf50' },
+    great:      { label: 'Great',      color: '#8bc34a' },
+    good:       { label: 'Good',       color: '#2196f3' },
+    inaccuracy: { label: 'Inaccuracy', color: '#ffc107' },
+    mistake:    { label: 'Mistake',    color: '#ff9800' },
+    blunder:    { label: 'Blunder',    color: '#f44336' }
+  };
+  var REVIEW_ACC_W = { best: 1.0, great: 0.95, good: 0.8, inaccuracy: 0.6, mistake: 0.35, blunder: 0.0 };
+
+  function renderEvalGraph(state, plyFens, series) {
+    var svg = document.getElementById('review-evalgraph');
+    var wrap = document.getElementById('review-graph-wrap');
+    if (!svg || !wrap) return;
+    var N = series.length - 1;
+    if (N < 2 || !plyFens) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+
+    var W = 600, H = 120, mid = H / 2;
+    var playerWhite = (state.player_color || 'white') === 'white';
+
+    var pts = [];
+    for (var j = 0; j <= N; j++) {
+      var whiteCp = playerWhite ? series[j] : -series[j];
+      pts.push({ x: (j / N) * W, y: H - (reviewWinPct(whiteCp) / 100) * H });
+    }
+
+    var lineD = 'M' + pts.map(function (p) { return p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' L');
+    var areaD = lineD + ' L' + W + ' ' + mid + ' L0 ' + mid + ' Z';
+
+    var dots = '';
+    state.move_annotations.forEach(function (a) {
+      if (!a || a.classification === 'best' || a.classification === 'great' || a.classification === 'good') return;
+      var p = a.ply + 1; if (p > N) return;
+      var c = REVIEW_CLS[a.classification]; if (!c) return;
+      dots += '<rect x="' + (pts[p].x - 3).toFixed(1) + '" y="' + (pts[p].y - 3).toFixed(1) +
+              '" width="6" height="6" rx="1.5" fill="' + c.color + '" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>';
+    });
+
+    var lastX = pts[N].x;
+    svg.innerHTML =
+      '<defs>' +
+      '<clipPath id="revclip-top"><rect x="0" y="0" width="' + W + '" height="' + mid + '"/></clipPath>' +
+      '<clipPath id="revclip-bot"><rect x="0" y="' + mid + '" width="' + W + '" height="' + mid + '"/></clipPath>' +
+      '</defs>' +
+      '<line x1="0" y1="' + mid + '" x2="' + W + '" y2="' + mid + '" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>' +
+      '<path d="' + areaD + '" fill="rgba(255,255,255,0.85)" clip-path="url(#revclip-top)"/>' +
+      '<path d="' + areaD + '" fill="rgba(20,22,40,0.9)" clip-path="url(#revclip-bot)"/>' +
+      '<path d="' + lineD + '" fill="none" stroke="rgba(129,140,248,0.9)" stroke-width="1.6"/>' +
+      dots +
+      '<line id="review-hover-line" x1="0" y1="0" x2="0" y2="' + H + '" stroke="rgba(255,255,255,0.5)" stroke-width="1" visibility="hidden"/>' +
+      '<line x1="' + lastX + '" y1="0" x2="' + lastX + '" y2="' + H + '" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-dasharray="3 3"/>';
+
+    if (svg.dataset.wired !== '1') {
+      svg.dataset.wired = '1';
+      wireEvalGraphEvents(svg, wrap);
+    }
+  }
+
+  function reviewPlyFromEvent(e, svg) {
+    var rc = reviewCurrent;
+    if (!rc || rc.N < 1) return -1;
+    var rect = svg.getBoundingClientRect();
+    var relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    return Math.round(relX * rc.N);
+  }
+
+  function wireEvalGraphEvents(svg, wrap) {
+    var tip = document.getElementById('evalgraph-tip');
+    var hoverLine = null;
+    var scrubbing = false;
+
+    var hover = function (e) {
+      if (!reviewCurrent || puzzleMode) return;
+      var j = reviewPlyFromEvent(e, svg);
+      if (j < 1 || j > reviewCurrent.N) { if (tip) tip.classList.remove('visible'); return; }
+      var rc = reviewCurrent;
+      var state = rc.state;
+      var san = (state.move_list || [])[j - 1] || '';
+      var annot = rc.byPly[j - 1];
+      var moveNum = Math.ceil(j / 2);
+      var clsTxt = annot && REVIEW_CLS[annot.classification]
+        ? '<span style="color:' + REVIEW_CLS[annot.classification].color + ';font-weight:700">' + REVIEW_CLS[annot.classification].label + '</span>'
+        : '<span style="opacity:0.7">Engine</span>';
+      var whiteCp = ((state.player_color === 'white') ? 1 : -1) * (rc.series[j] || 0);
+      var evalTxt = (whiteCp > 0 ? '+' : '') + (whiteCp / 100).toFixed(1);
+      if (tip) {
+        tip.innerHTML = moveNum + '. ' + esc(san) + ' · ' + clsTxt + ' · ' + evalTxt;
+        var rect = wrap.getBoundingClientRect();
+        tip.style.left = Math.max(60, Math.min(rect.width - 60, e.clientX - rect.left)) + 'px';
+        tip.style.top = (e.clientY - rect.top) + 'px';
+        tip.classList.add('visible');
+      }
+      hoverLine = hoverLine || svg.querySelector('#review-hover-line');
+      if (hoverLine) {
+        hoverLine.setAttribute('x1', (j / rc.N) * 600);
+        hoverLine.setAttribute('x2', (j / rc.N) * 600);
+        hoverLine.setAttribute('visibility', 'visible');
+      }
+    };
+    var leave = function () {
+      if (tip) tip.classList.remove('visible');
+      if (hoverLine) hoverLine.setAttribute('visibility', 'hidden');
+    };
+    var scrub = function (e) {
+      if (!reviewCurrent || puzzleMode) return;
+      var j = reviewPlyFromEvent(e, svg);
+      reviewNavigateToPly(j);
+    };
+
+    svg.addEventListener('mousemove', function (e) { hover(e); if (scrubbing) scrub(e); });
+    svg.addEventListener('mouseleave', leave);
+    svg.addEventListener('mousedown', function (e) { scrubbing = true; scrub(e); e.preventDefault(); });
+    window.addEventListener('mouseup', function () { scrubbing = false; });
+    svg.addEventListener('touchstart', function (e) { scrub(e.touches[0]); }, { passive: true });
+    svg.addEventListener('touchmove', function (e) { scrub(e.touches[0]); }, { passive: true });
+  }
+
+  // Navigate the board to the position after ply j (graph scrub / key moment click)
+  function reviewNavigateToPly(j) {
+    var rc = reviewCurrent;
+    if (!rc || !window.board || j < 1 || j >= rc.plyFens.length) return;
+    var cells = document.querySelectorAll('#move-history .move-san');
+    var el = cells[j - 1];
+    if (el && window.onMoveClick) { window.onMoveClick(el, j - 1); }
+    else {
+      board.position(rc.plyFens[j], false);
+      viewingHistoricalPly = j - 1;
+      var ind = document.getElementById('history-indicator');
+      if (ind) ind.style.display = 'flex';
+    }
+  }
+
+  function renderSummaryBar(state) {
+    var bar = document.getElementById('review-summary-bar');
+    var legend = document.getElementById('review-summary-legend');
+    if (!bar || !legend) return;
+    var counts = {};
+    var total = 0;
+    (state.move_annotations || []).forEach(function (a) {
+      if (!a || !REVIEW_CLS[a.classification]) return;
+      counts[a.classification] = (counts[a.classification] || 0) + 1;
+      total++;
+    });
+    if (!total) { bar.innerHTML = ''; legend.innerHTML = ''; return; }
+    var segs = '', items = '';
+    ['best', 'great', 'good', 'inaccuracy', 'mistake', 'blunder'].forEach(function (c) {
+      var n = counts[c] || 0;
+      if (n > 0) {
+        segs += '<div class="rsb-seg rsb-' + c + '" style="width:' + (n / total * 100) + '%"></div>';
+        items += '<span class="rsb-legend-item"><span class="rsb-dot" style="background:' + REVIEW_CLS[c].color + '"></span>' + n + ' ' + REVIEW_CLS[c].label.toLowerCase() + '</span>';
+      }
+    });
+    bar.innerHTML = segs;
+    legend.innerHTML = items;
+  }
+
+  function renderPerf(state) {
+    var el = document.getElementById('review-perf');
+    if (!el) return;
+    var acc = (state.accuracy || {})[state.player_color || 'white'] || 0;
+    var elo = state.target_elo || 800;
+    var perf = reviewPerfRating(acc, elo);
+    reviewLastPerf = perf;
+    var delta = perf - elo;
+    var deltaTxt = delta >= 0 ? '<span style="color:#4ade80">+' + delta + '</span>' : '<span style="color:#f87171">' + delta + '</span>';
+    var verb = state.is_game_over ? 'Played like' : 'Playing like';
+    el.innerHTML =
+      '<span class="review-perf-icon">♟</span>' +
+      '<div class="review-perf-text">' + verb + ' <span class="review-perf-rating">~' + perf + '</span>' +
+      '<div class="review-perf-sub">' + deltaTxt + ' vs engine ' + elo + ' · accuracy ' + acc.toFixed(1) + '%</div></div>';
+  }
+
+  // Aimchess-style phase split: opening = first 10 moves, endgame = ≤12 pieces on board
+  function reviewPhaseRanges(state, plyFens) {
+    var N = plyFens ? plyFens.length - 1 : 0;
+    var openEnd = Math.min(20, N);
+    var endStart = N + 1;
+    if (plyFens) {
+      for (var j = 1; j <= N; j++) {
+        var boardPart = plyFens[j].split(' ')[0];
+        var pieces = 0;
+        for (var c = 0; c < boardPart.length; c++) {
+          var ch = boardPart[c];
+          if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) pieces++;
+        }
+        if (pieces <= 12) { endStart = j; break; }
+      }
+    }
+    var ranges = [
+      { key: 'opening', label: 'Opening', icon: '♟', from: 1, to: openEnd, motif: 'opening-moves' },
+      { key: 'middlegame', label: 'Middlegame', icon: '♞', from: openEnd + 1, to: endStart - 1, motif: 'forks' },
+      { key: 'endgame', label: 'Endgame', icon: '♚', from: endStart, to: N, motif: 'beginner-endgames' }
+    ];
+    return ranges.filter(function (r) { return r.to >= r.from; });
+  }
+
+  function renderPhases(state, plyFens) {
+    var el = document.getElementById('review-phases');
+    if (!el) return;
+    var byPly = reviewCurrent.byPly;
+    var elo = state.target_elo || 800;
+    var ranges = reviewPhaseRanges(state, plyFens);
+    var rows = '';
+    var weakest = null;
+    var phaseStats = [];
+    ranges.forEach(function (r) {
+      var scores = [];
+      for (var p = r.from; p <= r.to; p++) {
+        var a = byPly[p];
+        if (a && REVIEW_ACC_W[a.classification] != null) scores.push(REVIEW_ACC_W[a.classification]);
+      }
+      var acc = scores.length ? (scores.reduce(function (s, v) { return s + v; }, 0) / scores.length) * 100 : null;
+      var rtg = acc != null ? reviewPerfRating(acc, elo) : null;
+      if (acc != null && scores.length >= 2 && (!weakest || acc < weakest.acc)) weakest = { acc: acc, key: r.key };
+      phaseStats.push({ r: r, acc: acc, rtg: rtg, n: scores.length });
+    });
+    phaseStats.forEach(function (s) {
+      var accTxt = s.acc != null ? s.acc.toFixed(0) + '%' : '—';
+      var width = s.acc != null ? s.acc : 0;
+      var color = s.acc == null ? '#555' : (s.acc >= 80 ? '#4caf50' : s.acc >= 60 ? '#ffc107' : '#f44336');
+      rows += '<div class="phase-row" data-phase-motif="' + s.r.motif + '" title="' + s.n + ' moves analyzed — click to train this phase">' +
+        '<span class="phase-name">' + s.r.icon + ' ' + s.r.label + '</span>' +
+        '<div class="phase-bar"><div class="phase-fill" style="width:' + width + '%;background:' + color + '"></div></div>' +
+        '<span class="phase-acc">' + accTxt + '</span>' +
+        '<span class="phase-rtg">' + (s.rtg != null ? '~' + s.rtg : '—') + '</span>' +
+        '</div>';
+    });
+    el.innerHTML = rows || '<div class="review-empty">Not enough moves yet</div>';
+    var rowEls = el.querySelectorAll('.phase-row');
+    if (weakest && rowEls.length) {
+      var idx = ranges.map(function (r) { return r.key; }).indexOf(weakest.key);
+      if (idx >= 0 && rowEls[idx]) rowEls[idx].classList.add('weakest');
+    }
+    rowEls.forEach(function (row) {
+      row.addEventListener('click', function () {
+        var motif = row.getAttribute('data-phase-motif');
+        var sel = document.getElementById('puzzle-motif');
+        if (sel && motif) sel.value = motif;
+        if (!puzzleMode) togglePuzzleMode();
+        else loadPuzzles();
+      });
+    });
+  }
+
+  function renderKeyMoments(state) {
+    var el = document.getElementById('review-keymoments');
+    if (!el) return;
+    var key = (state.move_annotations || [])
+      .filter(function (a) { return a && ['inaccuracy', 'mistake', 'blunder'].indexOf(a.classification) >= 0; })
+      .sort(function (a, b) { return (b.cp_loss || 0) - (a.cp_loss || 0); })
+      .slice(0, 3);
+    if (!key.length) { el.innerHTML = ''; return; }
+    var html = '';
+    key.forEach(function (a) {
+      var moveNum = Math.floor(a.ply / 2) + 1;
+      var loss = ((a.cp_loss || 0) / 100).toFixed(1);
+      var best = a.best_move ? 'Best: ' + esc(a.best_move) : '';
+      html += '<span class="km-chip km-' + a.classification + '" data-ply="' + (a.ply + 1) + '" title="' + best + '">' +
+        moveNum + '. ' + esc(a.move || '') + ' <span class="km-clsf">' + REVIEW_CLS[a.classification].label + '</span> −' + loss + '</span>';
+    });
+    el.innerHTML = html;
+    el.querySelectorAll('.km-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        reviewNavigateToPly(parseInt(chip.getAttribute('data-ply'), 10));
+      });
+    });
+  }
+
+  function reviewRecordGame(state) {
+    var gid = state.game_id;
+    if (!gid || recordedGameIds[gid]) return;
+    recordedGameIds[gid] = true;
+    var hist = reviewLsGet('chess_game_history', []);
+    for (var i = 0; i < hist.length; i++) if (hist[i].gid === gid) return;
+    var b = 0, m = 0;
+    (state.move_annotations || []).forEach(function (a) {
+      if (!a) return;
+      if (a.classification === 'blunder') b++;
+      else if (a.classification === 'mistake') m++;
+    });
+    var acc = (state.accuracy || {})[state.player_color || 'white'] || 0;
+    hist.push({
+      ts: Date.now(), gid: gid, result: state.result, acc: acc,
+      blunders: b, mistakes: m,
+      moves: Math.ceil((state.move_list || []).length / 2),
+      perf: reviewLastPerf, elo: state.target_elo || 800
+    });
+    reviewLsSet('chess_game_history', hist.slice(-60));
+  }
+
+  // Chess.com-Insights-style: last 30 days vs previous 30 days
+  function renderTrends() {
+    var el = document.getElementById('review-trends');
+    var tilesEl = document.getElementById('trend-tiles');
+    if (!el || !tilesEl) return;
+    var hist = reviewLsGet('chess_game_history', []);
+    if (hist.length < 2) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    var now = Date.now(), D30 = 30 * 86400000;
+    var cur = hist.filter(function (g) { return now - g.ts <= D30; });
+    var prev = hist.filter(function (g) { return now - g.ts > D30 && now - g.ts <= 2 * D30; });
+    function avg(arr, f) {
+      if (!arr.length) return null;
+      return arr.reduce(function (s, g) { return s + (f(g) || 0); }, 0) / arr.length;
+    }
+    function tile(label, curV, prevV, fmt, lowerIsBetter) {
+      var delta = (curV != null && prevV != null) ? curV - prevV : null;
+      var dHtml = '<span class="trend-flat">—</span>';
+      if (delta != null && Math.abs(delta) > 0.005) {
+        var good = lowerIsBetter ? delta < 0 : delta > 0;
+        dHtml = '<span class="' + (good ? 'trend-up' : 'trend-down') + '">' + (delta > 0 ? '▲+' : '▼') + (Math.abs(delta) < 10 ? Math.abs(delta).toFixed(1) : Math.round(Math.abs(delta))) + '</span>';
+      }
+      return '<div class="trend-tile"><div class="trend-tile-label">' + label + '</div>' +
+        '<div class="trend-tile-value">' + (curV != null ? fmt(curV) : '—') + '</div>' +
+        '<div class="trend-tile-delta">vs prev: ' + dHtml + '</div></div>';
+    }
+    var html =
+      tile('Games (30d)', cur.length, prev.length, function (v) { return Math.round(v); }, false) +
+      tile('Accuracy', avg(cur, function (g) { return g.acc; }), avg(prev, function (g) { return g.acc; }), function (v) { return v.toFixed(1) + '%'; }, false) +
+      tile('Blunders/game', avg(cur, function (g) { return g.blunders; }), avg(prev, function (g) { return g.blunders; }), function (v) { return v.toFixed(1); }, true) +
+      tile('Perf rating', avg(cur, function (g) { return g.perf; }), avg(prev, function (g) { return g.perf; }), function (v) { return '~' + Math.round(v); }, false);
+    tilesEl.innerHTML = html;
+  }
+
+  function updateGameReview(state) {
+    var emptyEl = document.getElementById('review-empty');
+    var bodyEl = document.getElementById('review-body');
+    if (!emptyEl || !bodyEl) return;
+    var moves = state.move_list || [];
+    if (!moves.length) {
+      emptyEl.textContent = 'Eval graph appears as moves are played';
+      emptyEl.style.display = 'block';
+      bodyEl.style.display = 'none';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    bodyEl.style.display = 'block';
+
+    // Record a live eval anchor for the current position (player perspective, cp)
+    var gid = state.game_id || 'g';
+    if (state.eval_score != null) {
+      var m = liveEvals[gid] || (liveEvals[gid] = {});
+      m[moves.length] = state.eval_score * 100;
+    }
+
+    var byPly = {};
+    (state.move_annotations || []).forEach(function (a) { if (a && typeof a.ply === 'number') byPly[a.ply] = a; });
+
+    var plyFens = reviewPlyFens(state) || [state.fen];
+    var N = Math.min(moves.length, plyFens.length - 1);
+    if (N < 2) {
+      // Graph needs at least 2 plies — tell the user instead of hiding silently
+      emptyEl.textContent = 'Play a couple more moves — the eval graph grows live';
+      emptyEl.style.display = 'block';
+    }
+    reviewCurrent = { state: state, plyFens: plyFens, byPly: byPly, N: N, series: null };
+
+    var series = reviewEvalSeries(state, N);
+    reviewCurrent.series = series;
+
+    renderEvalGraph(state, plyFens, series);
+    renderSummaryBar(state);
+    renderPerf(state);
+    renderPhases(state, plyFens);
+    renderKeyMoments(state);
+    renderTrends();
+
+    if (state.is_game_over && state.result) reviewRecordGame(state);
+  }
+
   // --- Utility ---
 
 
@@ -4694,7 +5884,7 @@
         initBoard(state.player_color || 'white');
       }
 
-      if (state.fen !== lastFen) {
+      if (state.fen !== lastFen && !puzzleMode && !trainerMode) {
         board.position(state.fen, true);
         // Keep chess.js in sync with server state
         try { chessGame.load(state.fen); } catch(e) {}
