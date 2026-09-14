@@ -148,6 +148,8 @@ Claude adjusts explanation depth to your level:
 - Current opening name + ECO code
 - Material balance tracker
 - Real-time board updates via polling
+- **Game Review panel** (chess.com-style): scrubbable eval graph with win probability + mistake markers, move-classification summary bar, "played like ~X Elo" performance estimate, opening/middlegame/endgame phase accuracy (Aimchess-style) with click-to-train, key-moment chips, and 30-day progress trend tiles
+- **Puzzle modes** (Lichess/chess.com-style): Practice, 🔥 Streak (sudden death, ramping difficulty, 1 skip, best-streak record), ⚡ Rush (3:00 timer, +2s per solve, combo multipliers, −10s per miss, 3 lives)
 
 ### Post-Game Analysis
 - Batch SRS card creation for all mistakes (>80cp loss)
