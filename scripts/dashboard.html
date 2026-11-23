@@ -1888,6 +1888,22 @@
   .streak-best { color: var(--text-dim); font-size: 0.74rem; margin-left: auto; }
   .timebonus-pop { position: absolute; right: 12px; top: 6px; color: #4ade80; font-weight: 700; font-size: 0.8rem; animation: bonusFloat 0.9s ease forwards; pointer-events: none; }
   @keyframes bonusFloat { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-14px); } }
+
+  /* ══ 3D board view ══ */
+  #board-3d-holder {
+    width: 100%;
+    aspect-ratio: 1 / 0.9;
+    min-height: 320px;
+    max-height: 620px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 28%, rgba(124, 111, 240, 0.10), rgba(0, 0, 0, 0.22) 75%);
+    cursor: grab;
+    touch-action: none;
+  }
+  #board-3d-holder:active { cursor: grabbing; }
+  #board3d-toggle.active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+  #board-3d-holder canvas { outline: none; }
   .sound-toggle {
     background: var(--surface2, #1e1e2e); color: var(--text, #e0e0e0);
     border: 1px solid var(--surface2, #1e1e2e); border-radius: 4px;
@@ -1950,6 +1966,7 @@
     <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle panels">▶ Panels</button>
     <button class="sidebar-toggle" id="focus-toggle" title="Focus mode: board + coach only">🎯 Focus</button>
     <button id="puzzle-mode-btn" style="background: var(--surface2); color: var(--text); border: 1px solid var(--surface2); border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 0.85rem;">Puzzles</button>
+    <button id="board3d-toggle" title="Switch board view: 2D ⇄ 3D" style="background: var(--surface2); color: var(--text); border: 1px solid var(--surface2); border-radius: 4px; padding: 4px 12px; cursor: pointer; font-size: 0.85rem;">&#9726; 3D</button>
     <button class="sidebar-toggle" id="settings-btn" title="Panel settings">&#9881; Settings</button>
   </div>
 </header>
@@ -2286,6 +2303,18 @@
     <div class="settings-row">
       <span class="settings-label">Animations<small>Toggle UI animations &amp; effects</small></span>
       <label class="toggle-switch"><input type="checkbox" id="animations-toggle" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="boardview-section" style="margin-top: 12px;">
+      <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 8px;">Board View</h3>
+      <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+        <label style="flex: 1; display: flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--surface3); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.82rem;">
+          <input type="radio" name="board-view" id="bv-2d" checked> 2D (classic)
+        </label>
+        <label style="flex: 1; display: flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--surface3); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.82rem;">
+          <input type="radio" name="board-view" id="bv-3d"> 3D (three.js)
+        </label>
+      </div>
+      <p style="font-size: 0.68rem; color: var(--text-dim); margin: 0;">3D pieces &copy; Jarlan Perez, <a href="https://poly.pizza" target="_blank" rel="noopener" style="color: var(--accent);">CC-BY 3.0</a> · drag to rotate, scroll to zoom, click piece → click square to move</p>
     </div>
     <div class="settings-footer" style="margin-top: 14px;">
       <button class="btn-reset" id="settings-reset">Reset to defaults</button>
@@ -3031,6 +3060,17 @@
       cb.addEventListener('change', function() { applyPanelVisibility(); });
     });
 
+    // Board view radios (2D / 3D)
+    var bv2 = document.getElementById('bv-2d');
+    var bv3 = document.getElementById('bv-3d');
+    if (bv2 && bv3) {
+      var savedView = localStorage.getItem('chess_board_view') || '2d';
+      bv2.checked = savedView !== '3d';
+      bv3.checked = savedView === '3d';
+      bv2.addEventListener('change', function() { if (bv2.checked) setBoardView('2d'); });
+      bv3.addEventListener('change', function() { if (bv3.checked) setBoardView('3d'); });
+    }
+
     // Animations toggle (separate from panel visibility)
     var animToggle = document.getElementById('animations-toggle');
     if (animToggle) {
@@ -3168,19 +3208,12 @@
     return !gameActive ? false : chessGame.turn() === playerColor[0];
   }
 
-  function initBoard(orientation) {
-    playerColor = orientation || 'white';
-    const main = document.getElementById('main-content');
-    const tmpl = document.getElementById('game-template');
-    main.innerHTML = '';
-    main.appendChild(tmpl.content.cloneNode(true));
-    initPanelToggles();
-    initSettings();
-    syncCheckboxes();
-    initLearnPanel();
-    board = Chessboard('board', {
+  // ── Shared board config + move routing (used by 2D drag and 3D click) ──
+
+  function buildBoard2DConfig() {
+    return {
       position: 'start',
-      orientation: orientation || 'white',
+      orientation: playerColor || 'white',
       draggable: true,
       pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
       onDragStart: function(source, piece, position, orientation) {
@@ -3191,60 +3224,193 @@
         showLegalMoveDots(source);
       },
       onDrop: function(source, target) {
-        clearLegalMoveDots();
-        const move = chessGame.move({
-          from: source,
-          to: target,
-          promotion: 'q'
-        });
-        if (move === null) return 'snapback';
-
-        // Trigger capture animation
-        if (move.captured) Animations.captureEffect(target, move.captured);
-
-        // Check if in puzzle mode
-        if (puzzleMode) {
-          checkPuzzleAnswer(move.san);
-          // Undo the move to stay in puzzle position
-          chessGame.undo();
-          board.position(chessGame.fen());
-          return 'snapback';
-        }
-
-        // Check if in mistake trainer mode
-        if (trainerMode) {
-          checkTrainerAnswer(move.san, move);
-          chessGame.undo();
-          board.position(chessGame.fen(), false);
-          return 'snapback';
-        }
-
-        // Check for blunders before submitting (only in normal game mode)
-        checkMoveSafety(move.san).then(data => {
-          if (data.classification === 'blunder' && data.cp_loss >= 300) {
-            // Show blunder warning dialog
-            pendingBlunderMove = move.san;
-            const warningEl = document.getElementById('blunder-warning');
-            const warningText = document.getElementById('blunder-warning-text');
-            warningText.textContent = 'Losing ~' + Math.round(data.cp_loss / 100) + ' pawn(s). Sure?';
-            warningEl.style.display = 'block';
-            // Undo the move for now
-            chessGame.undo();
-            board.position(chessGame.fen());
-          } else {
-            // Proceed with normal submission
-            submitMove(move.san);
-          }
-        });
+        return handleBoardMove(source, target);
       },
       onSnapEnd: function() {
         clearLegalMoveDots();
         board.position(chessGame.fen());
       }
+    };
+  }
+
+  function handleBoardMove(source, target) {
+    clearLegalMoveDots();
+    const move = chessGame.move({
+      from: source,
+      to: target,
+      promotion: 'q'
     });
+    if (move === null) return 'snapback';
+
+    // Trigger capture animation
+    if (move.captured) Animations.captureEffect(target, move.captured);
+
+    // Check if in puzzle mode
+    if (puzzleMode) {
+      checkPuzzleAnswer(move.san);
+      // Undo the move to stay in puzzle position
+      chessGame.undo();
+      board.position(chessGame.fen());
+      return 'snapback';
+    }
+
+    // Check if in mistake trainer mode
+    if (trainerMode) {
+      checkTrainerAnswer(move.san, move);
+      chessGame.undo();
+      board.position(chessGame.fen(), false);
+      return 'snapback';
+    }
+
+    // Check for blunders before submitting (only in normal game mode)
+    checkMoveSafety(move.san).then(data => {
+      if (data.classification === 'blunder' && data.cp_loss >= 300) {
+        // Show blunder warning dialog
+        pendingBlunderMove = move.san;
+        const warningEl = document.getElementById('blunder-warning');
+        const warningText = document.getElementById('blunder-warning-text');
+        warningText.textContent = 'Losing ~' + Math.round(data.cp_loss / 100) + ' pawn(s). Sure?';
+        warningEl.style.display = 'block';
+        // Undo the move for now
+        chessGame.undo();
+        board.position(chessGame.fen());
+      } else {
+        // Proceed with normal submission
+        submitMove(move.san);
+      }
+    });
+  }
+
+  // ── 3D board mode (three.js module at the end of <body>) ──
+
+  var boardMode3D = false;
+  var sel3DSquare = null;
+
+  // Click-to-move on the 3D board: first click selects own piece (shows dots),
+  // second click on a target square plays the move via the shared routing above.
+  function handle3DClick(sq) {
+    if (!boardMode3D || !board) return;
+    if (sel3DSquare) {
+      var from = sel3DSquare;
+      sel3DSquare = null;
+      board.setSelected(null);
+      board.clearDots();
+      if (sq !== from) handleBoardMove(from, sq);
+      return;
+    }
+    if (!chessGame || chessGame.game_over()) return;
+    if (chessGame.turn() !== playerColor[0]) return;
+    var piece = chessGame.get(sq);
+    if (!piece || piece.color !== playerColor[0]) return;
+    sel3DSquare = sq;
+    board.setSelected(sq);
+    var targets = {};
+    chessGame.moves({ verbose: true }).forEach(function (m) {
+      if (m.from === sq) targets[m.to] = chessGame.get(m.to);
+    });
+    board.showDots(Object.keys(targets).map(function (t) {
+      return { square: t, capture: !!targets[t] };
+    }));
+  }
+
+  function waitFor3DModule(timeoutMs) {
+    timeoutMs = timeoutMs || 15000;
+    return new Promise(function (resolve) {
+      var t0 = Date.now();
+      (function pollMod() {
+        if (window.ChessBoard3D) return resolve(true);
+        if (Date.now() - t0 > timeoutMs) return resolve(false);
+        setTimeout(pollMod, 120);
+      })();
+    });
+  }
+
+  async function setBoardView(mode) {
+    var want3D = (mode === '3d');
+    if (want3D === boardMode3D) { localStorage.setItem('chess_board_view', mode); return; }
+    var btn = document.getElementById('board3d-toggle');
+    var fenNow = (chessGame && chessGame.fen) ? chessGame.fen() : 'start';
+
+    if (want3D) {
+      if (!window.ChessBoard3D) await waitFor3DModule();
+      if (!(window.ChessBoard3D && window.ChessBoard3D.supported())) {
+        setMoveStatus('3D view unavailable (WebGL / three.js failed to load)', 'error');
+        return;
+      }
+      try { if (board && board.destroy) board.destroy(); } catch (e) {}
+      var el2d = document.getElementById('board');
+      if (!el2d) return;
+      el2d.style.display = 'none';
+      var holder = document.createElement('div');
+      holder.id = 'board-3d-holder';
+      el2d.parentNode.insertBefore(holder, el2d);
+      try {
+        board = await window.ChessBoard3D.create(holder, {
+          orientation: playerColor || 'white',
+          position: fenNow,
+          onSquareClick: handle3DClick,
+          getTheme: function () { return localStorage.getItem('chess_board_theme') || 'classic'; }
+        });
+      } catch (e) {
+        holder.remove();
+        el2d.style.display = '';
+        board = Chessboard('board', buildBoard2DConfig());
+        board.orientation(playerColor || 'white');
+        board.position(fenNow, false);
+        setMoveStatus('3D view failed: ' + (e.message || e), 'error');
+        return;
+      }
+      boardMode3D = true;
+      if (btn) { btn.classList.add('active'); btn.innerHTML = '&#9634; 2D'; }
+    } else {
+      try { if (board && board.destroy) board.destroy(); } catch (e) {}
+      var h = document.getElementById('board-3d-holder');
+      if (h) h.remove();
+      var el = document.getElementById('board');
+      if (!el) return;
+      el.style.display = '';
+      board = Chessboard('board', buildBoard2DConfig());
+      board.orientation(playerColor || 'white');
+      board.position(fenNow, false);
+      boardMode3D = false;
+      sel3DSquare = null;
+      if (btn) { btn.classList.remove('active'); btn.innerHTML = '&#9726; 3D'; }
+    }
+    localStorage.setItem('chess_board_view', want3D ? '3d' : '2d');
+    var r3 = document.getElementById('bv-3d'), r2 = document.getElementById('bv-2d');
+    if (r3) r3.checked = want3D;
+    if (r2) r2.checked = !want3D;
+  }
+  window.setBoardView = setBoardView;
+
+  function initBoard(orientation) {
+    playerColor = orientation || 'white';
+    const main = document.getElementById('main-content');
+    const tmpl = document.getElementById('game-template');
+    main.innerHTML = '';
+    main.appendChild(tmpl.content.cloneNode(true));
+    initPanelToggles();
+    initSettings();
+    syncCheckboxes();
+    initLearnPanel();
+    board = Chessboard('board', buildBoard2DConfig());
     window.addEventListener('resize', () => board.resize());
     gameActive = true;
     Animations.init();
+
+    // 3D board toggle (header button is static — wire once)
+    var b3btn = document.getElementById('board3d-toggle');
+    if (b3btn && b3btn.dataset.wired !== '1') {
+      b3btn.dataset.wired = '1';
+      b3btn.addEventListener('click', function () {
+        setBoardView(boardMode3D ? '2d' : '3d');
+      });
+      if (boardMode3D) { b3btn.classList.add('active'); b3btn.innerHTML = '&#9634; 2D'; }
+    }
+    // Restore saved 3D preference
+    if (localStorage.getItem('chess_board_view') === '3d' && !boardMode3D) {
+      setBoardView('3d');
+    }
 
     // === PIECE SAFETY HIGHLIGHTER ===
 
@@ -4409,6 +4575,8 @@
   // === BEST-MOVE ARROW RENDERING ===
 
   function drawArrow(fromSq, toSq, color) {
+    // 3D board renders arrows in the scene instead of SVG overlays
+    if (boardMode3D && board && board.drawArrow) { board.drawArrow(fromSq, toSq, color); return; }
     // Remove existing arrows
     clearArrows();
     const boardEl = document.getElementById('board');
@@ -4434,6 +4602,7 @@
   }
 
   function clearArrows() {
+    if (boardMode3D && board && board.clearArrows) board.clearArrows();
     document.querySelectorAll('.arrow-overlay').forEach(function(el) { el.remove(); });
   }
 
@@ -5305,6 +5474,17 @@
    * Called from poll() after the board position is updated.
    */
   function applyHighlights(state) {
+    // 3D board keeps its own markers in the scene
+    if (boardMode3D && board && board.highlightSquares) {
+      var last = (state.last_move && state.last_move.length >= 4)
+        ? [state.last_move.substring(0, 2), state.last_move.substring(2, 4)] : null;
+      board.highlightSquares({
+        last: last,
+        check: state.is_check ? findKingInCheck(state.fen) : null
+      });
+      if (state.is_check) Animations.checkPulse();
+      return;
+    }
     clearHighlights();
     highlightLastMove(state.last_move);
     highlightCheck(state.is_check, state.fen);
@@ -7366,6 +7546,462 @@
   // Cleanup on page unload
   window.addEventListener('beforeunload', destroyModules);
 })();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     3D BOARD MODULE (three.js + WebGL)
+     Exposes window.ChessBoard3D.create(container, config) → Promise<adapter>.
+     The adapter mirrors the chessboard.js API subset this dashboard uses
+     (position / orientation / resize / destroy) plus 3D extras
+     (drawArrow / highlightSquares / showDots / setSelected).
+     Piece models: CC-BY 3.0 Jarlan Perez (poly.pizza) — see assets/3d/.
+     ═══════════════════════════════════════════════════════════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const FILE_CHARS = 'abcdefgh';
+const PIECE_SCALE = 3.6;
+const THEMES = {
+  classic:  { light: 0xead9b9, dark: 0x9a6f4f, frame: 0x4a3826 },
+  midnight: { light: 0x3d4f8a, dark: 0x22304f, frame: 0x161d33 },
+  neon:     { light: 0x232342, dark: 0x121224, frame: 0x0a0a16 }
+};
+const PIECE_COLORS = { w: 0xede7da, b: 0x33323b };
+
+function squareToWorld(sq) {
+  const file = FILE_CHARS.indexOf(sq[0]);
+  const rank = parseInt(sq[1], 10);
+  return { x: file - 3.5, z: 3.5 - (rank - 1) };
+}
+function parseFen(fen) {
+  const map = {};
+  if (!fen || fen === 'start') {
+    const start = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+    fen = start + ' w KQkq - 0 1';
+  }
+  const rows = fen.split(' ')[0].split('/');
+  for (let r = 0; r < 8; r++) {
+    let file = 0;
+    for (const ch of rows[r]) {
+      if (/\d/.test(ch)) { file += parseInt(ch, 10); continue; }
+      const sq = FILE_CHARS[file] + (8 - r);
+      map[sq] = { color: ch === ch.toUpperCase() ? 'w' : 'b', type: ch.toLowerCase() };
+      file++;
+    }
+  }
+  return map;
+}
+
+async function loadPieceGeometries() {
+  const loader = new GLTFLoader();
+  const geoms = {};
+  for (const t of ['K', 'Q', 'B', 'N', 'R', 'P']) {
+    const gltf = await loader.loadAsync('/assets3d/pieces/' + t + '.glb');
+    let mesh = null;
+    gltf.scene.traverse(o => { if (o.isMesh && !mesh) mesh = o; });
+    const geometry = mesh.geometry.clone();
+    geometry.computeBoundingBox();
+    geoms[t] = {
+      geometry,
+      minY: geometry.boundingBox.min.y,
+      maxX: Math.max(Math.abs(geometry.boundingBox.min.x), Math.abs(geometry.boundingBox.max.x),
+                     Math.abs(geometry.boundingBox.min.z), Math.abs(geometry.boundingBox.max.z))
+    };
+  }
+  return geoms;
+}
+
+function createBoardGroup(theme) {
+  const group = new THREE.Group();
+  const squareMeshes = {};
+  const lightMat = new THREE.MeshStandardMaterial({ color: theme.light, roughness: 0.75 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: theme.dark, roughness: 0.75 });
+  const sqGeo = new THREE.BoxGeometry(1, 0.1, 1);
+  for (let f = 0; f < 8; f++) {
+    for (let r = 1; r <= 8; r++) {
+      const sq = FILE_CHARS[f] + r;
+      const isLight = (f + r) % 2 === 1;
+      const mesh = new THREE.Mesh(sqGeo, isLight ? lightMat : darkMat);
+      const w = squareToWorld(sq);
+      mesh.position.set(w.x, -0.05, w.z);
+      mesh.receiveShadow = true;
+      mesh.userData.sq = sq;
+      group.add(mesh);
+      squareMeshes[sq] = mesh;
+    }
+  }
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(9.0, 0.26, 9.0),
+    new THREE.MeshStandardMaterial({ color: theme.frame, roughness: 0.6 })
+  );
+  frame.position.y = -0.18;
+  frame.receiveShadow = true;
+  group.add(frame);
+  return { group, squareMeshes };
+}
+
+function makeMarker(color, opacity) {
+  return new THREE.Mesh(
+    new THREE.PlaneGeometry(0.96, 0.96),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false })
+  );
+}
+
+window.ChessBoard3D = {
+  supported: function () {
+    try {
+      const c = document.createElement('canvas');
+      return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
+    } catch (e) { return false; }
+  },
+
+  create: async function (container, config) {
+    config = config || {};
+    const themeKey = (config.getTheme ? config.getTheme() : 'classic') in THEMES ? (config.getTheme ? config.getTheme() : 'classic') : 'classic';
+    const theme = THEMES[themeKey];
+
+    const geoms = await loadPieceGeometries();
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.display = 'block';
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
+    keyLight.position.set(5, 11, 6);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.shadow.camera.left = -7; keyLight.shadow.camera.right = 7;
+    keyLight.shadow.camera.top = 7; keyLight.shadow.camera.bottom = -7;
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xbcc7ff, 0.28);
+    fillLight.position.set(-6, 8, -5);
+    scene.add(fillLight);
+
+    const { group: boardGroup, squareMeshes } = createBoardGroup(theme);
+    scene.add(boardGroup);
+
+    // Overlay groups (markers, dots, arrows)
+    const markerGroup = new THREE.Group(); scene.add(markerGroup);
+    const dotGroup = new THREE.Group(); scene.add(dotGroup);
+    const arrowGroup = new THREE.Group(); scene.add(arrowGroup);
+
+    const pieceGroup = new THREE.Group(); scene.add(pieceGroup);
+    const materials = {
+      w: new THREE.MeshStandardMaterial({ color: PIECE_COLORS.w, roughness: 0.38, metalness: 0.05 }),
+      b: new THREE.MeshStandardMaterial({ color: PIECE_COLORS.b, roughness: 0.38, metalness: 0.05 })
+    };
+    const pieces = {};   // square -> { mesh, type, color }
+    const tweens = [];
+
+    function makePieceMesh(type, color, sq) {
+      const g = geoms[type.toUpperCase()];
+      const mesh = new THREE.Mesh(g.geometry, materials[color]);
+      mesh.scale.setScalar(PIECE_SCALE);
+      mesh.castShadow = true;
+      mesh.userData.sq = sq;
+      mesh.userData.type = type;
+      mesh.userData.color = color;
+      if (type === 'n') mesh.rotation.y = color === 'w' ? 0 : Math.PI;
+      placePiece(mesh, sq);
+      return mesh;
+    }
+    function placePiece(mesh, sq) {
+      const w = squareToWorld(sq);
+      mesh.position.x = w.x;
+      mesh.position.z = w.z;
+      mesh.position.y = -geoms[mesh.userData.type.toUpperCase()].minY * PIECE_SCALE;
+    }
+
+    function addTween(fn, dur, onDone) {
+      tweens.push({ start: performance.now(), dur, fn, onDone });
+    }
+    function stepTweens(now) {
+      for (let i = tweens.length - 1; i >= 0; i--) {
+        const tw = tweens[i];
+        let t = (now - tw.start) / tw.dur;
+        if (t >= 1) { t = 1; }
+        const eased = 1 - Math.pow(1 - t, 3);   // easeOutCubic
+        tw.fn(Math.min(t, 1), eased);
+        if (t >= 1) { tweens.splice(i, 1); if (tw.onDone) tw.onDone(); }
+      }
+    }
+
+    // ── position sync with move animation ──
+    function setPosition(fen, useAnimation) {
+      const target = parseFen(fen);
+      const prev = {};
+      for (const sq in pieces) prev[sq] = pieces[sq];
+      const removed = Object.keys(prev).filter(sq => !target[sq]);
+      const added = Object.keys(target).filter(sq => !pieces[sq]);
+      const changedSq = Object.keys(target).filter(sq => pieces[sq] &&
+        (pieces[sq].type !== target[sq].type || pieces[sq].color !== target[sq].color));
+      const animatable = useAnimation !== false && (removed.length + added.length + changedSq.length) <= 6;
+      const claimed = {};
+
+      // moves: match removed → added by color+type
+      const movePairs = [];
+      if (animatable) {
+        for (const to of added) {
+          const from = removed.find(r => !claimed[r] && prev[r].type === target[to].type && prev[r].color === target[to].color);
+          if (from !== undefined) { claimed[from] = true; claimed['to:' + to] = true; movePairs.push({ from, to }); }
+        }
+      }
+
+      // fade out removed (captures / promotions / big rebuilds)
+      for (const sq of removed) {
+        const p = prev[sq]; delete pieces[sq];
+        if (claimed[sq]) continue;
+        const mesh = p.mesh;
+        addTween((t, e) => mesh.scale.setScalar(PIECE_SCALE * (1 - e)),
+          animatable ? 200 : 0, () => pieceGroup.remove(mesh));
+      }
+      // swap changed in place (promotion on same square)
+      for (const sq of changedSq) {
+        const old = pieces[sq]; delete pieces[sq];
+        const mesh = old.mesh;
+        addTween((t, e) => mesh.scale.setScalar(PIECE_SCALE * (1 - e)), animatable ? 160 : 0, () => pieceGroup.remove(mesh));
+        const np = makePieceMesh(target[sq].type, target[sq].color, sq);
+        np.scale.setScalar(0.01);
+        pieces[sq] = { mesh: np, type: target[sq].type, color: target[sq].color };
+        pieceGroup.add(np);
+        addTween((t, e) => np.scale.setScalar(0.01 + (PIECE_SCALE - 0.01) * e), animatable ? 220 : 0);
+      }
+      // animate moves
+      for (const pair of movePairs) {
+        const p = prev[pair.from]; delete pieces[pair.from];
+        const mesh = p.mesh;
+        mesh.userData.sq = pair.to;
+        pieces[pair.to] = { mesh, type: p.type, color: p.color };
+        const from3 = squareToWorld(pair.from), to3 = squareToWorld(pair.to);
+        const y0 = mesh.position.y, yLift = y0 + 0.55;
+        addTween((t, e) => {
+          mesh.position.x = from3.x + (to3.x - from3.x) * e;
+          mesh.position.z = from3.z + (to3.z - from3.z) * e;
+          mesh.position.y = t < 0.5 ? y0 + (yLift - y0) * (t * 2) : yLift + (y0 - yLift) * ((t - 0.5) * 2);
+        }, animatable ? 280 : 0);
+      }
+      // pop in remaining added
+      for (const to of added) {
+        if (claimed['to:' + to]) continue;
+        const np = makePieceMesh(target[to].type, target[to].color, to);
+        np.scale.setScalar(0.01);
+        pieces[to] = { mesh: np, type: target[to].type, color: target[to].color };
+        pieceGroup.add(np);
+        addTween((t, e) => np.scale.setScalar(0.01 + (PIECE_SCALE - 0.01) * e), animatable ? 220 : 0);
+      }
+      // unchanged squares: ensure type/color correct (safety net)
+      for (const sq in target) {
+        if (!pieces[sq]) {
+          const np = makePieceMesh(target[sq].type, target[sq].color, sq);
+          pieces[sq] = { mesh: np, type: target[sq].type, color: target[sq].color };
+          pieceGroup.add(np);
+        }
+      }
+    }
+
+    // ── overlays ──
+    let lastHi = null, checkHi = null, selectedSq = null;
+    function highlightSquares(opts) {
+      opts = opts || {};
+      if ('last' in opts) lastHi = opts.last || null;
+      if ('check' in opts) checkHi = opts.check || null;
+      if ('selected' in opts) selectedSq = opts.selected || null;
+      markerGroup.clear();
+      if (lastHi) {
+        for (const sq of lastHi) {
+          const m = makeMarker(0xf6d76b, 0.42);
+          const w = squareToWorld(sq);
+          m.rotation.x = -Math.PI / 2;
+          m.position.set(w.x, 0.062, w.z);
+          markerGroup.add(m);
+        }
+      }
+      if (checkHi) {
+        const m = makeMarker(0xf4511e, 0.5);
+        const w = squareToWorld(checkHi);
+        m.rotation.x = -Math.PI / 2;
+        m.position.set(w.x, 0.066, w.z);
+        markerGroup.add(m);
+      }
+      if (selectedSq) {
+        const m = makeMarker(0x7c6ff0, 0.5);
+        const w = squareToWorld(selectedSq);
+        m.rotation.x = -Math.PI / 2;
+        m.position.set(w.x, 0.064, w.z);
+        markerGroup.add(m);
+      }
+    }
+    function showDots(targets) {
+      dotGroup.clear();
+      const dotGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.02, 20);
+      const ringGeo = new THREE.TorusGeometry(0.36, 0.05, 10, 32);
+      const dotMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false });
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false });
+      for (const t of targets) {
+        const w = squareToWorld(t.square);
+        let obj;
+        if (t.capture) { obj = new THREE.Mesh(ringGeo, ringMat); obj.rotation.x = -Math.PI / 2; obj.position.set(w.x, 0.07, w.z); }
+        else { obj = new THREE.Mesh(dotGeo, dotMat); obj.position.set(w.x, 0.075, w.z); }
+        dotGroup.add(obj);
+      }
+    }
+    function clearDots() { dotGroup.clear(); }
+
+    function drawArrow3D(fromSq, toSq, color) {
+      arrowGroup.clear();
+      const from = squareToWorld(fromSq), to = squareToWorld(toSq);
+      const start = new THREE.Vector3(from.x, 0.45, from.z);
+      const end = new THREE.Vector3(to.x, 0.45, to.z);
+      const dir = end.clone().sub(start);
+      const len = dir.length();
+      if (len < 0.3) return;
+      const col = new THREE.Color(color || '#4caf50');
+      const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, depthWrite: false });
+      const shaftLen = len - 0.42;
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, shaftLen, 14), mat);
+      const head = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.42, 16), mat);
+      const mid = start.clone().add(dir.clone().multiplyScalar(0.5 / len));
+      const shaftMid = start.clone().add(dir.clone().multiplyScalar((0.42 / 2 + shaftLen / 2) / len));
+      shaft.position.copy(shaftMid);
+      head.position.copy(start.clone().add(dir.clone().multiplyScalar((len - 0.21) / len)));
+      const up = new THREE.Vector3(0, 1, 0);
+      shaft.quaternion.setFromUnitVectors(up, dir.clone().normalize());
+      head.quaternion.setFromUnitVectors(up, dir.clone().normalize());
+      arrowGroup.add(shaft); arrowGroup.add(head);
+    }
+    function clearArrows3D() { arrowGroup.clear(); }
+
+    // ── camera / controls ──
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 6;
+    controls.maxDistance = 22;
+    controls.maxPolarAngle = Math.PI / 2 - 0.06;
+    controls.enablePan = false;
+    controls.target.set(0, 0.35, 0);
+
+    let orientation_ = config.orientation || 'white';
+    function setOrientation(color, animate) {
+      orientation_ = color === 'black' ? 'black' : 'white';
+      const z = orientation_ === 'white' ? 8.6 : -8.6;
+      const targetPos = new THREE.Vector3(0, 8.4, z);
+      if (!animate) { camera.position.copy(targetPos); controls.update(); return; }
+      const from = camera.position.clone();
+      addTween((t, e) => {
+        camera.position.lerpVectors(from, targetPos, e);
+        controls.update();
+      }, 450);
+    }
+    setOrientation(orientation_, false);
+
+    // ── picking (click vs orbit-drag) ──
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let downX = 0, downY = 0, downTime = 0;
+    function pickSquare(ev) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const pieceMeshes = Object.values(pieces).map(p => p.mesh);
+      const hits = raycaster.intersectObjects(pieceMeshes.concat(Object.values(squareMeshes)), false);
+      for (const h of hits) {
+        if (h.object.userData.sq) return h.object.userData.sq;
+      }
+      return null;
+    }
+    function onPointerDown(ev) {
+      downX = ev.clientX; downY = ev.clientY; downTime = performance.now();
+    }
+    function onPointerUp(ev) {
+      const moved = Math.hypot(ev.clientX - downX, ev.clientY - downY);
+      if (window.__dbg3d) console.log('[3d pointerup]', 'moved=' + moved.toFixed(1), 'dt=' + (performance.now() - downTime).toFixed(0), 'sq=' + pickSquare(ev));
+      if (moved > 6 || performance.now() - downTime > 600) return;   // was a drag/orbit
+      const sq = pickSquare(ev);
+      if (sq && config.onSquareClick) config.onSquareClick(sq);
+    }
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+
+    // ── sizing / render loop ──
+    function resize() {
+      const w = container.clientWidth || 480;
+      const h = container.clientHeight || 420;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+    }
+    const ro = new ResizeObserver(resize);
+    ro.observe(container);
+    resize();
+
+    let rafId = null;
+    function tick(now) {
+      rafId = requestAnimationFrame(tick);
+      controls.update();
+      stepTweens(now);
+      renderer.render(scene, camera);
+    }
+    rafId = requestAnimationFrame(tick);
+
+    // initial position
+    if (config.position) setPosition(config.position, false);
+
+    let destroyed = false;
+    return {
+      position: function (fen, useAnimation) {
+        if (destroyed) return;
+        setPosition(fen, useAnimation);
+      },
+      orientation: function (color) {
+        if (color === undefined) return orientation_;
+        if (destroyed) return;
+        setOrientation(color, true);
+      },
+      resize: function () { if (!destroyed) resize(); },
+      drawArrow: function (from, to, color) { if (!destroyed) drawArrow3D(from, to, color); },
+      clearArrows: function () { clearArrows3D(); },
+      highlightSquares: function (opts) { if (!destroyed) highlightSquares(opts || {}); },
+      showDots: function (targets) { if (!destroyed) showDots(targets || []); },
+      clearDots: function () { clearDots(); },
+      setSelected: function (sq) {
+        if (destroyed) return;
+        highlightSquares({ selected: sq || null });
+      },
+      pickSquareAt: function (clientX, clientY) {
+        if (destroyed) return null;
+        return pickSquare({ clientX: clientX, clientY: clientY });
+      },
+      destroy: function () {
+        destroyed = true;
+        if (rafId) cancelAnimationFrame(rafId);
+        ro.disconnect();
+        controls.dispose();
+        renderer.dispose();
+        renderer.domElement.remove();
+      }
+    };
+  }
+};
 </script>
 </body>
 </html>

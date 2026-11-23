@@ -150,6 +150,7 @@ Claude adjusts explanation depth to your level:
 - Real-time board updates via polling
 - **Game Review panel** (chess.com-style): scrubbable eval graph with win probability + mistake markers, move-classification summary bar, "played like ~X Elo" performance estimate, opening/middlegame/endgame phase accuracy (Aimchess-style) with click-to-train, key-moment chips, and 30-day progress trend tiles
 - **Puzzle modes** (Lichess/chess.com-style): Practice, 🔥 Streak (sudden death, ramping difficulty, 1 skip, best-streak record), ⚡ Rush (3:00 timer, +2s per solve, combo multipliers, −10s per miss, 3 lives)
+- **3D board view** (three.js/WebGL): toggle 2D ⇄ 3D from the header or Settings — real 3D piece models (CC-BY Jarlan Perez), drag to rotate the camera, scroll to zoom, click piece → click square to move, 3D last-move/check highlights, legal-move dots, and best-move arrows; the layout, eval graph, puzzles, and review flows all work in 3D
 
 ### Post-Game Analysis
 - Batch SRS card creation for all mistakes (>80cp loss)

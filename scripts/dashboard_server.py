@@ -980,8 +980,20 @@ class DashboardHandler(http.server.BaseHTTPRequestHandler):
             self._serve_games()
         elif path.startswith("/api/references/"):
             self._serve_reference(path)
+        elif path.startswith("/assets3d/"):
+            self._serve_3d_asset(path)
         else:
             self.send_error(404)
+
+    def _serve_3d_asset(self, path: str) -> None:
+        """Serve 3D chess assets (GLB piece models) from assets/3d/."""
+        rel = path[len("/assets3d/"):]
+        base = _DASHBOARD_HTML.parent.parent / "assets" / "3d"
+        target = (base / rel).resolve()
+        if not str(target).startswith(str(base.resolve())) or not target.is_file():
+            self.send_error(404)
+            return
+        self._serve_file(target, "model/gltf-binary")
 
     def do_POST(self) -> None:
         if self.path == "/api/move":
